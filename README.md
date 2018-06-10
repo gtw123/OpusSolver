@@ -15,11 +15,9 @@ Example solutions: https://imgur.com/a/DBzN0wi
 ## What can't it solve?
 
 * Production puzzles
-* Puzzles which have molecules that can't be reduced to single atoms, e.g.
-  * Puzzles which don't allow the Glyph of Bonding and the Glyph of Unbonding (except for trivial puzzles).
-  * Puzzles that have triplex bonds in the products but don't allow the Glyph of Triplex bonding.
+* Puzzles which have molecules that can't be reduced to single atoms (e.g. if the Glyph of Unbonding isn’t allowed).
 * Puzzles using features not in the standard editor, like triplex bonds between non-fire atoms, partial triplex bonds, or disconnected atoms.
-* Very large puzzles. (In theory it can solve arbitrarily large puzzles, but it has problems as the game starts to slow down a lot when there are many instructions - see "Known Issues" below.)
+* Very large puzzles. (In *theory* it can solve arbitrarily large puzzles, but it has problems as the game starts to slow down a lot when there are many instructions.)
 
 ## Building
 
@@ -46,3 +44,11 @@ Currently supports Windows only.
 * May get confused if the Steam overlay comes up while it's generating a solution.
 * Has trouble rendering program instructions for very large puzzles. This is because the game slows down as you add more and more instructions, especially when you have a few thousand. The solver does try to slow down the rendering to compensate for this but eventually it will get out of sync with what's on the screen and will fail.
 * For repeating molecules it "cheats" by only generating the first 6 copies of the molecule, which is enough to solve a puzzle.
+
+**How does it work?**
+
+It starts off by analyzing the game window to see what glyphs/mechanisms are available, and what the reagents/products are. To analyze atoms it drags each molecule onto the hex grid so that it’s the correct size, then matches the center of each atom against a set of reference images. Because of the specular lighting, it can’t do an exact pixel match. Instead it applies a brightness threshold to the image so that it can detect the symbol at the center of each atom.
+
+Once it’s analyzed everything it then constructs a solution. It uses a fairly “brute-force” algorithm that involves unbonding all reagents to single atoms, then transporting them through a linear “pipeline” to convert them to other elements. Each component of the pipeline can do one type of conversion (e.g. cardinal to salt, or two salt to mors/vitae), or can pass an atom through unchanged. Finally, each atom is supplied to an assembly area which builds a product one row at a time. Some optimization is also applied to avoid creating redundant arms, tracks or glyphs.
+
+Finally, it renders the solution by dragging the reagents/products/glyphs/mechanisms onto the grid and then writing all the program instructions. The game slows down a lot when you have many instructions, which means the renderer starts missing instructions. To compensate it checks each row after it’s rendered and if it finds an error it will slow down slightly and try again. For a really large program it will still eventually get out of sync and fail though.
