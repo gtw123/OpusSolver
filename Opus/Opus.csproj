@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{193959C5-6207-403E-8CD7-F2D3E12283F3}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Opus</RootNamespace>
+    <AssemblyName>Opus</AssemblyName>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CodeAnalysisRuleSet>..\Opus.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <LangVersion>default</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>..\ThirdParty\log4net-2.0.8\bin\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Game\Direction.cs" />
+    <Compile Include="Game\PeriodicTable.cs" />
+    <Compile Include="Solution\Solver\AtomGenerator.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Input\SimpleInputArea.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Input\TrivialInputArea.cs" />
+    <Compile Include="Solution\Solver\CostOptimizer.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\OutputGenerator.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\AtomBuffer.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Output\ComplexMoleculeAssembler.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Input\MoleculeInput.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Input\ComplexInputArea.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Input\LinearMoleculeInput.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Input\MultiAtomInput.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\MetalProjector.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\MetalPurifier.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\MorsVitaeGenerator.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\QuintessenceDisperser.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\QuintessenceGenerator.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\SaltGenerator.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Input\SingleAtomInput.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Output\SimpleMoleculeAssembler.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Output\TrivialMoleculeAssembler.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\VanBerloGenerator.cs" />
+    <Compile Include="Solution\Solver\ElementPipeline.cs" />
+    <Compile Include="Solution\Solver\InstructionWriter.cs" />
+    <Compile Include="Solution\Solver\SolutionGenerator.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\InputGenerator.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\ElementBuffer.cs" />
+    <Compile Include="Solution\Solver\Command.cs" />
+    <Compile Include="Solution\Solver\CommandSequence.cs" />
+    <Compile Include="Solution\Solver\ElementGenerator.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\MetalProjector.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\MetalPurifier.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\MetalGenerator.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\MorsVitaeGenerator.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\ElementInput.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\QuintessenceDisperser.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\QuintessenceGenerator.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\SaltGenerator.cs" />
+    <Compile Include="Solution\Solver\ElementGenerators\VanBerloGenerator.cs" />
+    <Compile Include="UI\Analysis\AnalysisException.cs" />
+    <Compile Include="UI\Analysis\Analyzer.cs" />
+    <Compile Include="UI\Analysis\InstructionAnalyzer.cs" />
+    <Compile Include="UI\Analysis\GlyphPaletteAnalyzer.cs" />
+    <Compile Include="UI\Analysis\HexGridCalibrator.cs" />
+    <Compile Include="UI\Analysis\AtomFinder.cs" />
+    <Compile Include="UI\Analysis\MoleculeAnalyzer.cs" />
+    <Compile Include="UI\Analysis\PaletteInfo.cs" />
+    <Compile Include="UI\Analysis\PaletteFinder.cs" />
+    <Compile Include="UI\Analysis\SidebarAnalyzer.cs" />
+    <Compile Include="UI\Analysis\OverlappingPaletteFinder.cs" />
+    <Compile Include="UI\Analysis\ElementAnalyzer.cs" />
+    <Compile Include="UI\Analysis\ProgramGridAnalyzer.cs" />
+    <Compile Include="Utils\DictionaryExtensions.cs" />
+    <Compile Include="Utils\BitmapComparer.cs" />
+    <Compile Include="Utils\RectangleExtensions.cs" />
+    <Compile Include="Utils\WindowUtils.cs" />
+    <Compile Include="Utils\ReferenceImage.cs" />
+    <Compile Include="UI\Analysis\ContinuousScrollingPaletteFinder.cs" />
+    <Compile Include="UI\Analysis\ScreenLayout.cs" />
+    <Compile Include="UI\Analysis\HexGridAnalyzer.cs" />
+    <Compile Include="Game\Atom.cs" />
+    <Compile Include="Game\Element.cs" />
+    <Compile Include="UI\Analysis\BondAnalyzer.cs" />
+    <Compile Include="Game\BondType.cs" />
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Analysis\GlyphAnalyzer.cs" />
+    <Compile Include="Game\MoleculeType.cs" />
+    <Compile Include="Game\Puzzle.cs" />
+    <Compile Include="Game\Instruction.cs" />
+    <Compile Include="UI\Analysis\SidebarUtil.cs" />
+    <Compile Include="Solution\Program.cs" />
+    <Compile Include="Solution\Solver\ProgramBuilder.cs" />
+    <Compile Include="Solution\Solver\ProgramWriter.cs" />
+    <Compile Include="Solution\PuzzleSolution.cs" />
+    <Compile Include="Solution\Track.cs" />
+    <Compile Include="Solution\GameObject.cs" />
+    <Compile Include="Solution\Arm.cs" />
+    <Compile Include="Solution\Mechanism.cs" />
+    <Compile Include="Solution\Glyph.cs" />
+    <Compile Include="Solution\Reagent.cs" />
+    <Compile Include="Solution\Product.cs" />
+    <Compile Include="Solution\Solver\SolverException.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Output\BondProgrammer.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Input\AtomConveyor.cs" />
+    <Compile Include="Solution\Solver\SolverComponent.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Output\OutputArea.cs" />
+    <Compile Include="Solution\Solver\AtomGenerators\Output\AssemblyArea.cs" />
+    <Compile Include="Solution\Solver\PuzzleSolver.cs" />
+    <Compile Include="UI\Rendering\RenderException.cs" />
+    <Compile Include="UI\Rendering\InstructionRenderer.cs" />
+    <Compile Include="Utils\AbortException.cs" />
+    <Compile Include="Utils\ColorExtensions.cs" />
+    <Compile Include="Utils\LineLocator.cs" />
+    <Compile Include="Utils\ColorComparer.cs" />
+    <Compile Include="Utils\LockedBitmapData.cs" />
+    <Compile Include="Utils\LoopingCoroutine.cs" />
+    <Compile Include="Utils\DisposableList.cs" />
+    <Compile Include="UI\GameScreen.cs" />
+    <Compile Include="Game\MechanismType.cs" />
+    <Compile Include="Game\GlyphType.cs" />
+    <Compile Include="UI\HexGrid.cs" />
+    <Compile Include="UI\ScrollableArea.cs" />
+    <Compile Include="UI\ProgramGrid.cs" />
+    <Compile Include="UI\Rendering\ProgramRenderer.cs" />
+    <Compile Include="UI\Rendering\SolutionRenderer.cs" />
+    <Compile Include="UI\Tool.cs" />
+    <Compile Include="UI\Palette.cs" />
+    <Compile Include="UI\Sidebar.cs" />
+    <Compile Include="Utils\HexTiling.cs" />
+    <Compile Include="Utils\HotKeyHandler.cs" />
+    <Compile Include="Utils\BitmapUtils.cs" />
+    <Compile Include="UI\Analysis\AtomAnalyzer.cs" />
+    <Compile Include="Game\Molecule.cs" />
+    <Compile Include="UI\Analysis\MoleculePaletteAnalyzer.cs" />
+    <Compile Include="UI\Analysis\MechanismPaletteAnalyzer.cs" />
+    <Compile Include="Utils\ThreadUtils.cs" />
+    <Compile Include="Utils\NativeMethods.cs" />
+    <Compile Include="Utils\LinqExtensions.cs" />
+    <Compile Include="Utils\KeyboardUtils.cs" />
+    <Compile Include="Utils\Bounds.cs" />
+    <Compile Include="Utils\Vector2.cs" />
+    <Compile Include="Utils\PointExtensions.cs" />
+    <Compile Include="ProgramMain.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils\MouseUtils.cs" />
+    <Compile Include="UI\Analysis\ScreenAnalyzer.cs" />
+    <Compile Include="Utils\ScreenCapture.cs" />
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\**\*.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>
