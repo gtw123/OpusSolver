@@ -3,6 +3,7 @@
 An automated solver (bot) for [Opus Magnum](http://www.zachtronics.com/opus-magnum/) puzzles.
 
 See it in action: https://www.youtube.com/watch?v=egrs04Ko864
+
 Example solutions: https://imgur.com/a/DBzN0wi
 
 ## What can it solve?
