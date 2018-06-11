@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
+using static System.FormattableString;
 
 namespace Opus
 {
@@ -131,6 +133,11 @@ namespace Opus
             public int Top;
             public int Right;
             public int Bottom;
+
+            public override string ToString()
+            {
+                return Invariant($"{{Left = {Left}, Top = {Top}, Right = {Right}, Bottom = {Bottom}}}");
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -167,6 +174,12 @@ namespace Opus
 
         [DllImport("user32.dll")]
         internal static extern IntPtr GetWindow(IntPtr hWnd, GetWindowCommand command);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern int GetWindowTextLength(IntPtr hWnd);
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        internal static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]

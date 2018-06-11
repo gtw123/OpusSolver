@@ -17,8 +17,9 @@ namespace Opus.UI.Analysis
 
         private Rectangle GetGameWindowBounds()
         {
-            sm_log.Info("Checking if window is completely on the screen");
             var window = GetGameWindow();
+
+            sm_log.Info("Checking if window is completely on the screen");
             if (!WindowUtils.IsWindowCompletelyVisible(window))
             {
                 throw new AnalysisException("Please ensure the Opus Magnum window is completely visible and on screen.");

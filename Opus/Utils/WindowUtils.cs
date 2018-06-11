@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 using static System.FormattableString;
 
 namespace Opus
@@ -60,6 +61,7 @@ namespace Opus
             var visited = new HashSet<IntPtr> { window };
 
             NativeMethods.GetWindowRect(window, out var windowRect);
+            sm_log.Info(Invariant($"GetWindowRect: {windowRect}"));
 
             while ((window = NativeMethods.GetWindow(window, NativeMethods.GetWindowCommand.GW_HWNDPREV)) != IntPtr.Zero && !visited.Contains(window))
             {
@@ -67,6 +69,7 @@ namespace Opus
                 NativeMethods.RECT testRect, intersection;
                 if (NativeMethods.IsWindowVisible(window) && NativeMethods.GetWindowRect(window, out testRect) && NativeMethods.IntersectRect(out intersection, ref windowRect, ref testRect))
                 {
+                    sm_log.Info(Invariant($"Found overlapping window \"{GetWindowName(window)}\": {testRect}"));
                     return true;
                 }
             }
@@ -85,6 +88,25 @@ namespace Opus
 
             bool IsPointOnScreen(int x, int y) => NativeMethods.MonitorFromPoint(new NativeMethods.POINT { x = x, y = y },
                 NativeMethods.MonitorOptions.MONITOR_DEFAULTTONULL) != IntPtr.Zero;
+        }
+
+        private static string GetWindowName(IntPtr window)
+        {
+            int length = NativeMethods.GetWindowTextLength(window);
+            if (length == 0)
+            {
+                sm_log.Warn(Invariant($"GetWindowTextLength: error {Marshal.GetLastWin32Error()}"));
+                return String.Empty;
+            }
+
+            var builder = new StringBuilder(length + 1);
+            if (NativeMethods.GetWindowText(window, builder, builder.Capacity) == 0)
+            {
+                sm_log.Warn(Invariant($"GetWindowText: error {Marshal.GetLastWin32Error()}"));
+                return String.Empty;
+            }
+
+            return builder.ToString();
         }
     }
 }
