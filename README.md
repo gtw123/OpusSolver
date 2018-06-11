@@ -41,6 +41,7 @@ Currently supports Windows only.
 
 * Doesn't work if you're running Opus Magnum full screen in a different resolution to your display. Make sure one game pixel equals one display pixel.
 * Doesn't work if you start with a non-empty solution. Even if you ctrl-A and delete, it may still not work because the instruction grid may not have scrolled back to the origin. It's best to just start with a new solution each time.
+* Doesn't work if you have the Steam in-game FPS counter enabled.
 * May get confused if the Steam overlay comes up while it's generating a solution.
 * Has trouble rendering program instructions for very large puzzles. This is because the game slows down as you add more and more instructions, especially when you have a few thousand. The solver does try to slow down the rendering to compensate for this but eventually it will get out of sync with what's on the screen and will fail.
 * For repeating molecules it "cheats" by only generating the first 6 copies of the molecule, which is enough to solve a puzzle.
