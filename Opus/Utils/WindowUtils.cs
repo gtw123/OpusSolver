@@ -18,17 +18,23 @@ namespace Opus
                 throw new InvalidOperationException(Invariant($"GetClientRect: error {Marshal.GetLastWin32Error()}"));
             }
 
+            sm_log.Info(Invariant($"GetClientRect: {rect}"));
+
             var topLeft = new NativeMethods.POINT { x = rect.Left, y = rect.Top };
             if (!NativeMethods.ClientToScreen(window, ref topLeft))
             {
                 throw new InvalidOperationException(Invariant($"ClientToScreen: error {Marshal.GetLastWin32Error()}"));
             }
 
+            sm_log.Info(Invariant($"ClientToScreen(topLeft): {topLeft.x}, {topLeft.y}"));
+
             var bottomRight = new NativeMethods.POINT { x = rect.Right, y = rect.Bottom };
             if (!NativeMethods.ClientToScreen(window, ref bottomRight))
             {
                 throw new InvalidOperationException(Invariant($"ClientToScreen: error {Marshal.GetLastWin32Error()}"));
             }
+
+            sm_log.Info(Invariant($"ClientToScreen(bottomRight): {bottomRight.x}, {bottomRight.y}"));
 
             return new Rectangle(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
         }
