@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using static System.FormattableString;
@@ -22,6 +23,16 @@ namespace Opus
     public static class MouseUtils
     {
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(MouseUtils));
+
+        public static int GlobalDragDelay { get; set; } = 0;
+
+        static MouseUtils()
+        {
+            if (Int32.TryParse(ConfigurationManager.AppSettings["MouseUtils.GlobalDragDelay"], out int delay))
+            {
+                GlobalDragDelay = delay;
+            }
+        }
 
         public static void SetCursorPosition(Point point)
         {
@@ -67,8 +78,8 @@ namespace Opus
         {
             sm_log.Info(Invariant($"Dragging from {start} to {end}; startFlags: {startFlags}; endFlags: {endFlags}"));
 
-            int delayAfterMove = delay;
-            int delayAfterMouse = delay + 50;
+            int delayAfterMove = GlobalDragDelay + delay;
+            int delayAfterMouse = GlobalDragDelay + delay + 50;
 
             SetCursorPosition(start);
             ThreadUtils.SleepOrAbort(delayAfterMove);
