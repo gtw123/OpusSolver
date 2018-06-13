@@ -1,4 +1,4 @@
-# OpusSolver
+﻿# OpusSolver
 
 An automated solver (bot) for [Opus Magnum](http://www.zachtronics.com/opus-magnum/) puzzles.
 
@@ -44,6 +44,7 @@ Currently supports Windows only.
 * Doesn't work if you have the Steam in-game FPS counter enabled.
 * May get confused if the Steam overlay comes up while it's generating a solution.
 * Has trouble rendering program instructions for very large puzzles. This is because the game slows down as you add more and more instructions, especially when you have a few thousand. The solver does try to slow down the rendering to compensate for this but eventually it will get out of sync with what's on the screen and will fail.
+* On some computers it may drag the mouse cursor too quickly, leading to spurious errors. If you suspect this is the case, edit App.config, increase MouseUtils.GlobalDragDelay to 50 or 100 and build/run again.
 * For repeating molecules it "cheats" by only generating the first 6 copies of the molecule, which is enough to solve a puzzle.
 
 **How does it work?**
