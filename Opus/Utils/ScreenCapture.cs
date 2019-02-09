@@ -46,6 +46,7 @@ namespace Opus
 
         public ScreenCapture(Rectangle rect)
         {
+            sm_log.Info(Invariant($"Creating bitmap with rect {rect}"));
             Bitmap = new Bitmap(rect.Width, rect.Height);
             Rect = rect;
 
@@ -76,6 +77,7 @@ namespace Opus
 
         public ScreenCapture Clone(Rectangle rect, bool save = true)
         {
+            sm_log.Info(Invariant($"Cloning rect {rect} from bitmap of size {Bitmap.Size}"));
             var bitmap = Bitmap.Clone(rect, PixelFormat.Format32bppArgb);
             return new ScreenCapture(bitmap, new Rectangle(Rect.Location.Add(rect.Location), rect.Size), save: save);
         }
