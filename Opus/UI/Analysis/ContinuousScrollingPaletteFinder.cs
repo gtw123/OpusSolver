@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using static System.FormattableString;
@@ -49,18 +50,12 @@ namespace Opus.UI.Analysis
 
             var captures = new DisposableList<ScreenCapture> { prevCapture.Clone() };
 
+            int scrollDistance = CalculateScrollDistance();
+
             const int maxIterations = 100;
             int i = 0;
             for (; i < maxIterations; i++)
             {
-                // Don't scroll too much or it'll be difficult to tell how much of the last image
-                // overlaps with the previous one when we get to the bottom of the scollable area.
-                // The value below was chosen so that at least some part of the mechanism and glyph
-                // palettes will overlap with the second last image.
-                // This number also has to be odd because some parts of the sidebar scroll every other pixel
-                // while some scroll every pixel.
-                const int scrollDistance = 551;
-
                 MouseUtils.RightDrag(SidebarRect.Location.Add(new Point(0, scrollDistance)), SidebarRect.Location);
 
                 // Check if we've reached the bottom
@@ -91,6 +86,26 @@ namespace Opus.UI.Analysis
 
             prevCapture.Dispose();
             return captures;
+        }
+
+        private int CalculateScrollDistance()
+        {
+            // Don't scroll too much or it'll be difficult to tell how much of the last image
+            // overlaps with the previous one when we get to the bottom of the scollable area.
+            // The value below was chosen so that at least some part of the mechanism and glyph
+            // palettes will overlap with the second last image.
+            int scrollDistance = 551;
+
+            // On small screens we need to use a smaller number
+            scrollDistance = Math.Min(scrollDistance, SidebarRect.Height - 150);
+
+            // Make sure the scroll distance is odd because some parts of the sidebar scroll every
+            // other pixel while some scroll every pixel.
+            scrollDistance |= 1;
+
+            sm_log.Info($"Scroll distance: {scrollDistance}");
+
+            return scrollDistance;
         }
 
         private IEnumerable<PaletteInfo> FindPalettes(ScreenCapture capture)
