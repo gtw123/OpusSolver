@@ -75,8 +75,15 @@ namespace Opus
                 NativeMethods.RECT testRect, intersection;
                 if (NativeMethods.IsWindowVisible(window) && NativeMethods.GetWindowRect(window, out testRect) && NativeMethods.IntersectRect(out intersection, ref windowRect, ref testRect))
                 {
-                    sm_log.Info(Invariant($"Found overlapping window \"{GetWindowName(window)}\": {testRect}"));
-                    return true;
+                    if (testRect.Bottom - testRect.Top <= 1 && testRect.Right - testRect.Left <= 1)
+                    {
+                        sm_log.Info(Invariant($"Ignoring overlapping window \"{GetWindowName(window)}\" because its rect is trivially small: {testRect}"));
+                    }
+                    else
+                    {
+                        sm_log.Info(Invariant($"Found overlapping window \"{GetWindowName(window)}\": {testRect}"));
+                        return true;
+                    }
                 }
             }
 
