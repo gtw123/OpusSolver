@@ -97,7 +97,7 @@ namespace Opus.UI.Analysis
             int scrollDistance = 551;
 
             // On small screens we need to use a smaller number
-            scrollDistance = Math.Min(scrollDistance, SidebarRect.Height - 150);
+            scrollDistance = Math.Min(scrollDistance, SidebarRect.Height - 200);
 
             // Make sure the scroll distance is odd because some parts of the sidebar scroll every
             // other pixel while some scroll every pixel.
