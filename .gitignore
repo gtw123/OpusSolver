@@ -3,4 +3,4 @@ Debug/
 Release/
 Bin/
 Obj/
-
+*.csproj.user
