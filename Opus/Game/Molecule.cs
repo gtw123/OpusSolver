@@ -16,7 +16,7 @@ namespace Opus
             get { return m_atoms; }
         }
 
-        public int ID { get; set; }
+        public int ID { get; private set; }
 
         public Vector2 Origin { get; private set; }
         public int Height { get; private set; }
@@ -26,10 +26,12 @@ namespace Opus
         public bool HasRepeats { get; private set; }
         public bool HasTriplex { get; private set; }
 
-        public Molecule(MoleculeType type, IEnumerable<Atom> atoms)
+        public Molecule(MoleculeType type, IEnumerable<Atom> atoms, int id)
         {
             Type = type;
             m_atoms = atoms.ToList();
+            ID = id;
+
             HasRepeats = atoms.Any(atom => atom.Element == Element.Repeat);
             HasTriplex = atoms.Any(a => a.Bonds.Any(b => b == BondType.Triplex));
 

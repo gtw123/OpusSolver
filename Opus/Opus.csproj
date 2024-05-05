@@ -57,6 +57,8 @@
   <ItemGroup>
     <Compile Include="Game\Direction.cs" />
     <Compile Include="Game\PeriodicTable.cs" />
+    <Compile Include="IO\PuzzleReader.cs" />
+    <Compile Include="IO\ParseException.cs" />
     <Compile Include="Solution\Solver\AtomGenerator.cs" />
     <Compile Include="Solution\Solver\AtomGenerators\Input\SimpleInputArea.cs" />
     <Compile Include="Solution\Solver\AtomGenerators\Input\TrivialInputArea.cs" />
@@ -135,6 +137,7 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
