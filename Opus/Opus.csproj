@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="Game\Direction.cs" />
     <Compile Include="Game\PeriodicTable.cs" />
+    <Compile Include="IO\SolutionWriter.cs" />
     <Compile Include="IO\PuzzleReader.cs" />
     <Compile Include="IO\ParseException.cs" />
     <Compile Include="Solution\Solver\AtomGenerator.cs" />

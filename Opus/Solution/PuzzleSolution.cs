@@ -8,11 +8,15 @@ namespace Opus.Solution
     /// </summary>
     public class PuzzleSolution
     {
+        public Puzzle Puzzle { get; private set; }
+        public string Name { get; set; }
         public List<GameObject> Objects { get; private set; }
         public Program Program { get; private set; }
 
-        public PuzzleSolution(IEnumerable<GameObject> objects, Program program)
+        public PuzzleSolution(Puzzle puzzle, IEnumerable<GameObject> objects, Program program)
         {
+            Puzzle = puzzle;
+            Name = "Generated solution";
             Objects = objects.ToList();
             Program = program;
         }

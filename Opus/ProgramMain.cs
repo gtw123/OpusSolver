@@ -1,4 +1,5 @@
 ﻿using Opus.IO;
+using Opus.Solution;
 using Opus.Solution.Solver;
 using System;
 
@@ -14,34 +15,36 @@ namespace Opus
         {
             sm_log.Info("Starting up");
 
-            if (args.Length < 1)
+            if (args.Length < 2)
             {
-                sm_log.Error("Usage: Opus.exe <puzzle file>");
+                sm_log.Error("Usage: Opus.exe <puzzle file> <solution file>");
                 return 1;
             }
 
             string puzzleFile = args[0];
+            string solutionFile = args[1];
 
             try
             {
                 sm_log.Info($"Loading puzzle file \"{puzzleFile}\"");
                 var puzzle = PuzzleReader.ReadPuzzle(puzzleFile);
 
-                Console.WriteLine("Reagents:");
-                foreach (var m in puzzle.Reagents)
-                {
-                    Console.WriteLine(m);
-                }
+                sm_log.Info($"Puzzle name: {puzzle.Name}");
 
-                Console.WriteLine("Products:");
-                foreach (var m in puzzle.Products)
-                {
-                    Console.WriteLine(m);
-                }
+                    var solver = new PuzzleSolver(puzzle);
+                    var solution = solver.Solve();
 
-                var solver = new PuzzleSolver(puzzle);
-                var solution = solver.Solve();
-                //new SolutionRenderer(solution, screen).Render();
+            /*    var glyph1 = new Glyph(null, new Vector2(1, 2), 0, GlyphType.Equilibrium);
+                var arm1 = new Arm(null, new Vector2(3, 5), 2, MechanismType.Arm1);
+                var objects = new GameObject[] { glyph1, arm1 };
+
+                var program = new Program();
+                program.GetArmInstructions(arm1).AddRange(new[] { Instruction.Grab, Instruction.RotateClockwise, Instruction.Repeat });
+
+                var solution = new PuzzleSolution(puzzle, objects, program);
+                */
+                sm_log.Info($"Writing solution to \"{solutionFile}\"");
+                SolutionWriter.WriteSolution(solution, solutionFile);
             }
             catch (ParseException e)
             {

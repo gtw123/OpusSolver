@@ -89,7 +89,7 @@ namespace Opus.Solution.Solver
 
             var objects = m_pipeline.ElementGenerators.First().AtomGenerator.GetAllObjects();
             var program = new ProgramBuilder(m_writer.Fragments).Build();
-            return new PuzzleSolution(objects, program);
+            return new PuzzleSolution(m_puzzle, objects, program);
         }
 
         private PuzzleSolution OptimizeSolution(PuzzleSolution solution)
