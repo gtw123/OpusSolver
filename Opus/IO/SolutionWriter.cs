@@ -58,7 +58,7 @@ namespace Opus.IO
             m_writer.Write(GetObjectName(obj));
             m_writer.Write((byte)1);
             WriteVector2(obj.GetWorldPosition());
-            m_writer.Write((obj is Arm arm) ? arm.Extension : 0);
+            m_writer.Write((obj is Arm arm) ? arm.Extension : 1);
             m_writer.Write(obj.Rotation);
 
             int id = (obj is Product product) ? product.ID : (obj is Reagent reagent) ? reagent.ID : 0;
