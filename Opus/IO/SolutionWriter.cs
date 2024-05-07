@@ -11,6 +11,7 @@ namespace Opus.IO
     {
         private PuzzleSolution m_solution;
         private BinaryWriter m_writer;
+        private Dictionary<Arm, int> m_armIDs;
 
         public static void WriteSolution(PuzzleSolution solution, string filePath)
         {
@@ -22,6 +23,9 @@ namespace Opus.IO
         {
             m_solution = solution;
             m_writer = new BinaryWriter(File.Create(filePath));
+
+            // Generate consecutive IDs for all the arms in the solution
+            m_armIDs = m_solution.GetObjects<Arm>().Select((arm, index) => (arm, index)).ToDictionary(pair => pair.arm, pair => pair.index);
         }
 
         public void Dispose()
@@ -71,7 +75,7 @@ namespace Opus.IO
                 WriteTrack(track);
             }
 
-            m_writer.Write((obj is Arm arm2) ? arm2.ID - 1 : 0);
+            m_writer.Write((obj is Arm arm2) ? m_armIDs[arm2] : 0);
         }
 
         private string GetObjectName(GameObject obj) => obj switch

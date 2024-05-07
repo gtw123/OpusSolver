@@ -6,7 +6,12 @@
     public class Arm : Mechanism
     {
         public int Extension { get; set; }
-        public int ID { get; private set; }
+
+        /// <summary>
+        /// Internal ID of this arm. This is just to provide a simple way to uniquely identify and
+        /// sort arms within a solution. It's not meant to be used in generated solution files.
+        /// </summary>
+        public int UniqueID { get; private set; }
 
         private static int sm_nextID = 1;
 
@@ -14,7 +19,7 @@
             : base(parent, position, rotation, type)
         {
             Extension = extension;
-            ID = sm_nextID++;
+            UniqueID = sm_nextID++;
         }
     }
 }

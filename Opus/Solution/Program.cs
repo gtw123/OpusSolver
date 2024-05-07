@@ -29,9 +29,9 @@ namespace Opus.Solution
         {
             var str = new StringBuilder();
 
-            foreach (var arm in Instructions.Keys.OrderBy(arm => arm.ID))
+            foreach (var arm in Instructions.Keys.OrderBy(arm => arm.UniqueID))
             {
-                str.Append(Invariant($"Arm {arm.ID, 2}: "));
+                str.Append(Invariant($"Arm {arm.UniqueID, 2}: "));
                 foreach (var instruction in Instructions[arm])
                 {
                     str.Append(instruction.ToDebugString());

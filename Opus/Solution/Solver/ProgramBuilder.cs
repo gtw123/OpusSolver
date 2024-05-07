@@ -60,7 +60,7 @@ namespace Opus.Solution.Solver
             {
                 if (arm.Parent == null)
                 {
-                    sm_log.Debug("Ignoring instructions for removed arm " + arm.ID);
+                    sm_log.Debug("Ignoring instructions for removed arm " + arm.UniqueID);
                     continue;
                 }
 
