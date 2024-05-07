@@ -18,7 +18,7 @@ namespace Opus.Solution.Solver
 
         public PuzzleSolution Solve()
         {
-            sm_log.Info("Solving puzzle");
+            sm_log.Debug("Solving puzzle");
 
             CheckPreconditions();
             RotateMolecules();

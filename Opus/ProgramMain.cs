@@ -13,8 +13,6 @@ namespace Opus
 
         public static int Main(string[] args)
         {
-            sm_log.Info("Starting up");
-
             if (args.Length < 2)
             {
                 sm_log.Error("Usage: Opus.exe <puzzle file> <solution file>");

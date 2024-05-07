@@ -38,7 +38,7 @@ namespace Opus.Solution.Solver
         /// </summary>
         private void GenerateCommandSequence()
         {
-            sm_log.Info("Generating command sequence");
+            sm_log.Debug("Generating command sequence");
 
             m_pipeline.OutputGenerator.GenerateCommandSequence();
             foreach (var generator in m_pipeline.ElementGenerators)
@@ -46,7 +46,7 @@ namespace Opus.Solution.Solver
                 generator.EndSolution();
             }
 
-            sm_log.Info("Command sequence: " + Environment.NewLine + m_commandSequence.ToString());
+            sm_log.Debug("Command sequence: " + Environment.NewLine + m_commandSequence.ToString());
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Opus.Solution.Solver
         /// </summary>
         private void GenerateProgramFragments()
         {
-            sm_log.Info("Generating program fragments");
+            sm_log.Debug("Generating program fragments");
 
             var generators = m_pipeline.ElementGenerators;
             foreach (var generator in generators)
@@ -79,13 +79,13 @@ namespace Opus.Solution.Solver
 
             foreach (var fragment in m_writer.Fragments)
             {
-                sm_log.Info("Program fragment:" + Environment.NewLine + fragment.ToString());
+                sm_log.Debug("Program fragment:" + Environment.NewLine + fragment.ToString());
             }
         }
 
         private PuzzleSolution CreateSolution()
         {
-            sm_log.Info("Creating solution");
+            sm_log.Debug("Creating solution");
 
             var objects = m_pipeline.ElementGenerators.First().AtomGenerator.GetAllObjects();
             var program = new ProgramBuilder(m_writer.Fragments).Build();
@@ -94,7 +94,7 @@ namespace Opus.Solution.Solver
 
         private PuzzleSolution OptimizeSolution(PuzzleSolution solution)
         {
-            sm_log.Info("Optimizing solution");
+            sm_log.Debug("Optimizing solution");
             new CostOptimizer(solution).Optimize();
 
             return solution;
