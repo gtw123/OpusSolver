@@ -114,6 +114,76 @@ namespace Opus
             AdjustBounds();
         }
 
+        /// <summary>
+        /// Expands out the "repeat" atom (if any) of the molecule by copying the other atoms so there are a
+        /// total of 6 copies. This brute force approach is is necessary because the solver isn't currently smart
+        /// enough to bond together the repeating parts in the output area.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public void ExpandRepeats()
+        {
+            var repeatAtoms = m_atoms.Where(atom => atom.Element == Element.Repeat);
+            if (repeatAtoms.Count() == 0)
+            {
+                return;
+            }
+            else if (repeatAtoms.Count() > 1)
+            {
+                throw new InvalidOperationException($"Molecule has more than one repeating atom.");
+            }
+
+            var repeatAtom = repeatAtoms.First();
+            var leftmostAtom = GetRow(repeatAtom.Position.Y).First();
+            int width = repeatAtom.Position.X - leftmostAtom.Position.X;
+            if (width == 0)
+            {
+                throw new InvalidOperationException($"Molecule has no atom to the left of the repeating atom.");
+            }
+
+            /*
+                Example:
+
+                D   C           D   C   D   C   D   C   D   C   D   C   D   C
+                 \ / \           \ / \   \ / \   \ / \   \ / \   \ / \   \ / \
+                  A - B - R  ->   A - B - A - B - A - B - A - B - A - B - A - B - A
+                   \ /             \ /     \ /     \ /     \ /     \ /     \ /
+                    E               E       E       E       E       E       E
+             */
+
+            var atomsToCopy = m_atoms.Where(atom => atom != repeatAtom).ToList();
+            const int RepeatCount = 6;
+            for (int repeat = 1; repeat < RepeatCount; repeat++)
+            {
+                Vector2 offset = new Vector2(repeat * width, 0);
+                foreach (var atom in atomsToCopy)
+                {
+                    var newAtom = new Atom(atom.Element, atom.Bonds, atom.Position + offset);
+                    m_atoms.Add(newAtom);
+
+                    if (atom == leftmostAtom)
+                    {
+                        // Bond the atom to the rest of the molecule by copying the bonds from the repeat atom
+                        for (int dir = 0; dir < Direction.Count; dir++)
+                        {
+                            var bondType = repeatAtom.Bonds[dir];
+                            if (bondType != BondType.None)
+                            {
+                                newAtom.Bonds[dir] = bondType;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Move the original repeat atom to the end of the molecule and set its element to the same as the
+            // left-most atom on the same row. Otherwise, if there are otherwise-unconnected atoms bonded to the
+            // top/bottom of the repeat atom, the solver won't be able to construct the product properly.
+            repeatAtom.Position = repeatAtom.Position + new Vector2(RepeatCount * width, 0);
+            repeatAtom.Element = leftmostAtom.Element;
+
+            AdjustBounds();
+        }
+
         public override string ToString()
         {
             var str = new StringBuilder();

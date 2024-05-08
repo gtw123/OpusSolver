@@ -61,15 +61,9 @@ namespace Opus.Solution.Solver
 
         private void FixRepeatingMolecules()
         {
-            foreach (var molecule in Puzzle.Products)
+            foreach (var molecule in Puzzle.Products.Where(product => product.HasRepeats))
             {
-                foreach (var atom in molecule.Atoms.Where(atom => atom.Element == Element.Repeat))
-                {
-                    // Set the element of the repeating atom to the element of the left-most atom on the same row.
-                    // Otherwise, if there are otherwise-unconnected atoms bonded to the top/bottom of the repeating
-                    // atom, we won't be able to construct the product properly.
-                    atom.Element = molecule.GetRow(atom.Position.Y).First().Element;
-                }
+                molecule.ExpandRepeats();
             }
         }
 
