@@ -60,7 +60,8 @@ namespace Opus.IO
                 products.Add(ParseMolecule(MoleculeType.Product, i));
             }
 
-            int outputTargetScale = m_reader.ReadInt32(); // TODO: What to do with this?
+            m_reader.ReadInt32(); // output scale (currently unused as it doesn't affect how the solver generates a solution)
+
             bool isProduction = m_reader.ReadBoolean();
             if (isProduction)
             {
