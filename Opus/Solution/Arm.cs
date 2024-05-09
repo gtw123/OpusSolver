@@ -13,7 +13,12 @@
         /// </summary>
         public int UniqueID { get; private set; }
 
-        private static int sm_nextID = 1;
+        private static int sm_nextID = 0;
+
+        public static void ResetArmIDs()
+        {
+            sm_nextID = 0;
+        }
 
         public Arm(GameObject parent, Vector2 position, int rotation, MechanismType type, int extension = 1)
             : base(parent, position, rotation, type)

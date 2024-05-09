@@ -20,6 +20,8 @@ namespace Opus.Solution.Solver
         {
             sm_log.Debug("Solving puzzle");
 
+            Arm.ResetArmIDs();
+
             CheckPreconditions();
             RotateMolecules();
             FixRepeatingMolecules();
