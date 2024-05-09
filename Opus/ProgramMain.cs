@@ -1,7 +1,8 @@
 ﻿using Opus.IO;
-using Opus.Solution;
 using Opus.Solution.Solver;
 using System;
+using System.Collections.Generic;
+using System.IO;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = false)]
 
@@ -10,49 +11,40 @@ namespace Opus
     public static class ProgramMain
     {
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(ProgramMain));
+        
+        private class CommandLineArguments
+        {
+            public List<string> PuzzleFiles = new();
+            public string OutputDir;
+        }
 
         public static int Main(string[] args)
         {
-            if (args.Length < 2)
-            {
-                sm_log.Error("Usage: Opus.exe <puzzle file> <solution file>");
-                return 1;
-            }
-
-            string puzzleFile = args[0];
-            string solutionFile = args[1];
-
+            CommandLineArguments commandArgs;
             try
             {
-                sm_log.Info($"Loading puzzle file \"{puzzleFile}\"");
-                var puzzle = PuzzleReader.ReadPuzzle(puzzleFile);
-
-                sm_log.Info($"Puzzle name: {puzzle.Name}");
-
-                    var solver = new PuzzleSolver(puzzle);
-                    var solution = solver.Solve();
-
-            /*    var glyph1 = new Glyph(null, new Vector2(1, 2), 0, GlyphType.Equilibrium);
-                var arm1 = new Arm(null, new Vector2(3, 5), 2, MechanismType.Arm1);
-                var objects = new GameObject[] { glyph1, arm1 };
-
-                var program = new Program();
-                program.GetArmInstructions(arm1).AddRange(new[] { Instruction.Grab, Instruction.RotateClockwise, Instruction.Repeat });
-
-                var solution = new PuzzleSolution(puzzle, objects, program);
-                */
-                sm_log.Info($"Writing solution to \"{solutionFile}\"");
-                SolutionWriter.WriteSolution(solution, solutionFile);
+                commandArgs = ParseArguments(args);
             }
-            catch (ParseException e)
+            catch (Exception e)
             {
-                sm_log.Error("Error loading puzzle file", e);
+                sm_log.Error($"Error parsing command line args: {e.Message}");
+                ShowUsage();
                 return 1;
             }
-            catch (SolverException e)
+
+            int totalPuzzlesSolved = 0;
+            try
             {
-                sm_log.Error("Unable to solve this puzzle", e);
-                return 1;
+                foreach (var puzzleFile in commandArgs.PuzzleFiles)
+                {
+                    string solutionFile = Path.Combine(commandArgs.OutputDir, Path.GetFileNameWithoutExtension(puzzleFile) + ".solution");
+                    if (SolvePuzzle(puzzleFile, solutionFile))
+                    {
+                        totalPuzzlesSolved++;
+                    }                   
+                }
+
+                Console.WriteLine($"Generated solutions for {totalPuzzlesSolved}/{commandArgs.PuzzleFiles.Count} puzzles.");
             }
             catch (Exception e)
             {
@@ -61,6 +53,116 @@ namespace Opus
             }
 
             return 0;
+        }
+
+        private static CommandLineArguments ParseArguments(string[] args)
+        {
+            var commandArgs = new CommandLineArguments
+            {
+                OutputDir = Directory.GetCurrentDirectory()
+            };
+            var excludedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var puzzlePaths = new List<string>();
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                switch (args[i])
+                {
+                    case "--output":
+                    {
+                        if (i + 1 >= args.Length)
+                        {
+                            throw new ArgumentException("Missing directory for '--output' argument.");
+                        }
+                        commandArgs.OutputDir = Path.GetFullPath(args[++i]);
+                        break;
+                    }
+                    case "--exclude":
+                    {
+                        if (i + 1 >= args.Length)
+                        {
+                            throw new ArgumentException("Missing directory for '--exclude' argument.");
+                        }
+                        excludedFiles.Add(args[++i]);
+                        break;
+                    }
+                    default:
+                        puzzlePaths.Add(args[i]);
+                        break;
+                }
+            }
+
+            if (puzzlePaths.Count == 0)
+            {
+                throw new ArgumentException("No puzzle files or directories specified.");
+            }
+
+            foreach (string puzzlePath in puzzlePaths)
+            {
+                if (Directory.Exists(puzzlePath))
+                {
+                    foreach (string file in Directory.GetFiles(puzzlePath, "*.puzzle", SearchOption.AllDirectories))
+                    {
+                        if (!excludedFiles.Contains(Path.GetFileName(file)))
+                        {
+                            commandArgs.PuzzleFiles.Add(Path.GetFullPath(file));
+                        }
+                    }
+                }
+                else if (File.Exists(puzzlePath))
+                {
+                    commandArgs.PuzzleFiles.Add(Path.GetFullPath(puzzlePath));
+                }
+                else
+                {
+                    throw new ArgumentException($"File or directory \"{puzzlePath}\" does not exist.");
+                }
+            }
+
+            return commandArgs;
+        }
+
+        private static void ShowUsage()
+        {
+            sm_log.Error("Usage: Opus.exe [<options>] <puzzle file/dir>...");
+            sm_log.Error("");
+            sm_log.Error("Options:");
+            sm_log.Error("    --output  Directory to write solutions to (default is current dir)");
+            sm_log.Error("    --exclude Name of a puzzle file to skip");
+        }
+
+        private static bool SolvePuzzle(string puzzleFile, string solutionFile)
+        {
+            try
+            {
+                sm_log.Info($"Loading puzzle file \"{puzzleFile}\"");
+                var puzzle = PuzzleReader.ReadPuzzle(puzzleFile);
+
+                sm_log.Info($"Puzzle name: {puzzle.Name}");
+
+                var solver = new PuzzleSolver(puzzle);
+                var solution = solver.Solve();
+
+                sm_log.Info($"Writing solution to \"{solutionFile}\"");
+                SolutionWriter.WriteSolution(solution, solutionFile);
+
+                return true;
+            }
+            catch (ParseException e)
+            {
+                sm_log.Error($"Error loading puzzle file \"{puzzleFile}\": {e.Message}");
+                return false;
+            }
+            catch (SolverException e)
+            {
+                sm_log.Error($"Unable to solve puzzle \"{puzzleFile}\": {e.Message}");
+                return false;
+            }
+            catch (Exception e)
+            {
+                sm_log.Error($"Internal error while solving puzzle \"{puzzleFile}\"" , e);
+                return false;
+            }
         }
     }
 }

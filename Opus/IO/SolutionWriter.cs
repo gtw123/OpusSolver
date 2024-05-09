@@ -15,6 +15,7 @@ namespace Opus.IO
 
         public static void WriteSolution(PuzzleSolution solution, string filePath)
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             using var writer = new SolutionWriter(solution, filePath);
             writer.WriteSolution();
         }
