@@ -100,15 +100,16 @@ namespace Opus.Solution.Solver
             {
                 if (m_puzzle.AllowedMechanisms.Contains(MechanismType.VanBerlo) && m_puzzle.AllowedGlyphs.Contains(GlyphType.Duplication))
                 {
-                    AddGenerator(new VanBerloGenerator(m_commandSequence));
-                    AddGeneratedElements(PeriodicTable.Cardinals);
-                    AddNeededElement(Element.Salt);
+                    if (m_reagentElements.Contains(Element.Salt) || m_reagentElements.Intersect(PeriodicTable.Cardinals).Any())
+                    {
+                        AddGenerator(new VanBerloGenerator(m_commandSequence));
+                        AddGeneratedElements(PeriodicTable.Cardinals);
+                        AddNeededElement(Element.Salt);
+                    }
                 }
-                else
-                {
-                    // Don't generate an error here as we may still be able to use the glyph of dispersion, but we need to check
-                    // that after analyzing salt.
-                }
+
+                // Don't generate an error if we can't use Van Berlo's wheel as we may still be able to use the glyph
+                // of dispersion, but we need to check that after analyzing salt.
             }
         }
 
