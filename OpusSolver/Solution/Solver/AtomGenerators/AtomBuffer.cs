@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Opus.Solution.Solver.AtomGenerators
+namespace OpusSolver.Solution.Solver.AtomGenerators
 {
     /// <summary>
     /// Temporarily stores atoms that aren't currently needed.

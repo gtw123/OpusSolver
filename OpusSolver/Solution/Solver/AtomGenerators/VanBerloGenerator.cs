@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Opus.Solution.Solver.AtomGenerators
+namespace OpusSolver.Solution.Solver.AtomGenerators
 {
     /// <summary>
     /// Generates an atom of a cardinal element from salt using Van Berlo's wheel.

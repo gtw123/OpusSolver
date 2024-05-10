@@ -1,4 +1,4 @@
-﻿namespace Opus
+﻿namespace OpusSolver
 {
     public enum GlyphType
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Opus.Solution.Solver.ElementGenerators
+namespace OpusSolver.Solution.Solver.ElementGenerators
 {
     /// <summary>
     /// Generates a cardinal element from salt using Van Berlo's wheel.

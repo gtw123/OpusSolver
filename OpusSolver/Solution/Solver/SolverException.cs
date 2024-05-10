@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Opus.Solution.Solver
+namespace OpusSolver.Solution.Solver
 {
     [Serializable]
     public class SolverException : Exception

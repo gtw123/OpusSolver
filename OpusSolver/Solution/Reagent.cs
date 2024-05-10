@@ -1,4 +1,4 @@
-﻿namespace Opus.Solution
+﻿namespace OpusSolver.Solution
 {
     /// <summary>
     /// Represents a reagent molecule on the hex grid.

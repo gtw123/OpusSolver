@@ -1,12 +1,12 @@
-﻿using Opus.IO;
-using Opus.Solution.Solver;
+﻿using OpusSolver.IO;
+using OpusSolver.Solution.Solver;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = false)]
 
-namespace Opus
+namespace OpusSolver
 {
     public static class ProgramMain
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Opus.Solution.Solver
+namespace OpusSolver.Solution.Solver
 {
     /// <summary>
     /// Provides a convenient way to generate a program. The "program" consists of a number of

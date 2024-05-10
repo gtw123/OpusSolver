@@ -1,4 +1,4 @@
-﻿namespace Opus.Solution.Solver.AtomGenerators
+﻿namespace OpusSolver.Solution.Solver.AtomGenerators
 {
     /// <summary>
     /// Generates an atom of salt from an atom of a cardinal element.

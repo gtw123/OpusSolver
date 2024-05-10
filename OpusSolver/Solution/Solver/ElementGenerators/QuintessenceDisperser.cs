@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Opus.Solution.Solver.ElementGenerators
+namespace OpusSolver.Solution.Solver.ElementGenerators
 {
     /// <summary>
     /// Generates four cardinal elements from Quintessence.

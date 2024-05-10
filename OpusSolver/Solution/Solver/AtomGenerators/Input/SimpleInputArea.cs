@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
 
-namespace Opus.Solution.Solver.AtomGenerators.Input
+namespace OpusSolver.Solution.Solver.AtomGenerators.Input
 {
     /// <summary>
     /// A simple input area used when all reagents have a single atom.

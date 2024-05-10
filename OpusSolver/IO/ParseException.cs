@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace Opus.IO
+namespace OpusSolver.IO
 {
     [Serializable]
     public class ParseException : Exception

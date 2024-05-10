@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Opus
+namespace OpusSolver
 {
     public static class DictionaryExtensions
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Opus
+namespace OpusSolver
 {
     public enum Element
     {

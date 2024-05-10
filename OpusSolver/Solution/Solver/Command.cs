@@ -1,7 +1,7 @@
 ﻿using System;
 using static System.FormattableString;
 
-namespace Opus.Solution.Solver
+namespace OpusSolver.Solution.Solver
 {
     public enum CommandType
     {

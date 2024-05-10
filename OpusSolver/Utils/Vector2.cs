@@ -1,7 +1,7 @@
 ﻿using System;
 using static System.FormattableString;
 
-namespace Opus
+namespace OpusSolver
 {
     public struct Vector2
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
 
-namespace Opus.Solution.Solver.AtomGenerators.Output
+namespace OpusSolver.Solution.Solver.AtomGenerators.Output
 {
     /// <summary>
     /// The part of the solution that assembles a product by bonding atoms together.

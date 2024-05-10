@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
 
-namespace Opus.Solution.Solver.ElementGenerators
+namespace OpusSolver.Solution.Solver.ElementGenerators
 {
     /// <summary>
     /// Temporarily stores elements that aren't needed by the rest of the pipeline yet.

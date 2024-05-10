@@ -1,4 +1,4 @@
-﻿namespace Opus
+﻿namespace OpusSolver
 {
     /// <summary>
     /// These constants represent a direction on the hex grid. We don't use enums here because that

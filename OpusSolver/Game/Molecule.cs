@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
 
-namespace Opus
+namespace OpusSolver
 {
     public class Molecule
     {

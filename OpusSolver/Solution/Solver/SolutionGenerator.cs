@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace Opus.Solution.Solver
+namespace OpusSolver.Solution.Solver
 {
     /// <summary>
     /// Generates a solution to a puzzle.

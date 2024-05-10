@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Opus.Solution;
+using OpusSolver.Solution;
 
-namespace Opus.IO
+namespace OpusSolver.IO
 {
     public sealed class SolutionWriter : IDisposable
     {

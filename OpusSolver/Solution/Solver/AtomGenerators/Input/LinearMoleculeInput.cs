@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using static System.FormattableString;
 
-namespace Opus.Solution.Solver.AtomGenerators.Input
+namespace OpusSolver.Solution.Solver.AtomGenerators.Input
 {
     /// <summary>
     /// Decomposes a multi-atom but linear molecule into single atoms.
