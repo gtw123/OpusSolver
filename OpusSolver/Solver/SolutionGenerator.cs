@@ -21,7 +21,7 @@ namespace OpusSolver.Solver
             m_pipeline = new ElementPipeline(m_puzzle, m_commandSequence);
         }
 
-        public PuzzleSolution Generate()
+        public Solution Generate()
         {
             GenerateCommandSequence();
             GenerateProgramFragments();
@@ -83,16 +83,16 @@ namespace OpusSolver.Solver
             }
         }
 
-        private PuzzleSolution CreateSolution()
+        private Solution CreateSolution()
         {
             sm_log.Debug("Creating solution");
 
             var objects = m_pipeline.ElementGenerators.First().AtomGenerator.GetAllObjects();
             var program = new ProgramBuilder(m_writer.Fragments).Build();
-            return new PuzzleSolution(m_puzzle, objects, program);
+            return new Solution(m_puzzle, objects, program);
         }
 
-        private PuzzleSolution OptimizeSolution(PuzzleSolution solution)
+        private Solution OptimizeSolution(Solution solution)
         {
             sm_log.Debug("Optimizing solution");
             new CostOptimizer(solution).Optimize();

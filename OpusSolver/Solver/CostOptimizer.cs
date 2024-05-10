@@ -12,9 +12,9 @@ namespace OpusSolver.Solver
     {
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(ProgramBuilder));
 
-        private PuzzleSolution m_solution;
+        private Solution m_solution;
 
-        public CostOptimizer(PuzzleSolution solution)
+        public CostOptimizer(Solution solution)
         {
             m_solution = solution;
         }

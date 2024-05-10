@@ -9,18 +9,18 @@ namespace OpusSolver.IO
 {
     public sealed class SolutionWriter : IDisposable
     {
-        private PuzzleSolution m_solution;
+        private Solution m_solution;
         private BinaryWriter m_writer;
         private Dictionary<Arm, int> m_armIDs;
 
-        public static void WriteSolution(PuzzleSolution solution, string filePath)
+        public static void WriteSolution(Solution solution, string filePath)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             using var writer = new SolutionWriter(solution, filePath);
             writer.WriteSolution();
         }
 
-        public SolutionWriter(PuzzleSolution solution, string filePath)
+        public SolutionWriter(Solution solution, string filePath)
         {
             m_solution = solution;
             m_writer = new BinaryWriter(File.Create(filePath));

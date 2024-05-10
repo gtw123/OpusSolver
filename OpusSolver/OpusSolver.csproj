@@ -108,7 +108,7 @@
     <Compile Include="Solution\Program.cs" />
     <Compile Include="Solver\ProgramBuilder.cs" />
     <Compile Include="Solver\ProgramWriter.cs" />
-    <Compile Include="Solution\PuzzleSolution.cs" />
+    <Compile Include="Solution\Solution.cs" />
     <Compile Include="Solution\Track.cs" />
     <Compile Include="Solution\GameObject.cs" />
     <Compile Include="Solution\Arm.cs" />

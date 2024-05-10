@@ -16,7 +16,7 @@ namespace OpusSolver.Solver
             Puzzle = puzzle;
         }
 
-        public PuzzleSolution Solve()
+        public Solution Solve()
         {
             sm_log.Debug("Solving puzzle");
 
@@ -69,7 +69,7 @@ namespace OpusSolver.Solver
             }
         }
 
-        private void CheckAllowedGlyphs(PuzzleSolution solution)
+        private void CheckAllowedGlyphs(Solution solution)
         {
             var usedGlyphs = solution.GetObjects<Glyph>().Select(glyph => glyph.Type).Distinct();
             var missingGlyphs = usedGlyphs.Except(Puzzle.AllowedGlyphs);
