@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using OpusSolver.Solver.AtomGenerators.Input;
+using System.Collections.Generic;
 using System.Linq;
-using OpusSolver.Solver.AtomGenerators.Input;
 
 namespace OpusSolver.Solver.AtomGenerators
 {

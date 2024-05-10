@@ -1,7 +1,7 @@
-﻿using System;
+﻿using OpusSolver.Solver.AtomGenerators.Input;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpusSolver.Solver.AtomGenerators.Input;
 using static System.FormattableString;
 
 namespace OpusSolver.Solver.ElementGenerators
