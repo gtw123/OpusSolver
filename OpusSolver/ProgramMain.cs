@@ -124,7 +124,7 @@ namespace Opus
 
         private static void ShowUsage()
         {
-            sm_log.Error("Usage: Opus.exe [<options>] <puzzle file/dir>...");
+            sm_log.Error("Usage: OpusSolver.exe [<options>] <puzzle file/dir>...");
             sm_log.Error("");
             sm_log.Error("Options:");
             sm_log.Error("    --output  Directory to write solutions to (default is current dir)");
