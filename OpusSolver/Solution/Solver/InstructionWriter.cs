@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solution.Solver
+namespace OpusSolver.Solver
 {
     /// <summary>
     /// Writes instructions to a program (or program fragment).

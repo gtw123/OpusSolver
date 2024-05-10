@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solution.Solver.AtomGenerators
+namespace OpusSolver.Solver.AtomGenerators
 {
     /// <summary>
     /// Generates an atom of Mors and an atom of Vitae from two salt atoms.

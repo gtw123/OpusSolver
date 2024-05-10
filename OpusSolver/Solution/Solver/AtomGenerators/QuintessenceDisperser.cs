@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OpusSolver.Solution.Solver.AtomGenerators
+namespace OpusSolver.Solver.AtomGenerators
 {
     /// <summary>
     /// Generates atoms of the four cardinal elements from an atom of Quintessence.

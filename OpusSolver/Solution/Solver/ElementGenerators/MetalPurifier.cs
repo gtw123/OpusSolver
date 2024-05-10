@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OpusSolver.Solution.Solver.ElementGenerators
+namespace OpusSolver.Solver.ElementGenerators
 {
     /// <summary>
     /// Generates a metal from lower metals.

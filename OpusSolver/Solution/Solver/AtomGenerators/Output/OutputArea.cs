@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solution.Solver.AtomGenerators.Output
+namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
     /// The part of the solution that moves completed products to the corresponding output areas.

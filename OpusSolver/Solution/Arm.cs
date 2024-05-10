@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solution
+﻿namespace OpusSolver
 {
     /// <summary>
     /// Represents an arm on the hex grid.

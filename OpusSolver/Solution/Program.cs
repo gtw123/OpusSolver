@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using static System.FormattableString;
 
-namespace OpusSolver.Solution
+namespace OpusSolver
 {
     public class Program
     {

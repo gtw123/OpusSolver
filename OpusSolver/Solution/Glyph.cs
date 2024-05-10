@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solution
+﻿namespace OpusSolver
 {
     /// <summary>
     /// Represents a glyph on the hex grid.

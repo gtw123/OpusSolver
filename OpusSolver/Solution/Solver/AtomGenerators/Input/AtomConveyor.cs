@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solution.Solver.AtomGenerators.Input
+namespace OpusSolver.Solver.AtomGenerators.Input
 {
     /// <summary>
     /// Transports atoms along a "conveyor" to a destination.

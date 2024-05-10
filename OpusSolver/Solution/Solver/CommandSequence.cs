@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace OpusSolver.Solution.Solver
+namespace OpusSolver.Solver
 {
     /// <summary>
     /// A sequence of commands that are used to instruct atom generators to generate a program.

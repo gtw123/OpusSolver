@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solution
+namespace OpusSolver
 {
     /// <summary>
     /// Represents a track on the hex grid.

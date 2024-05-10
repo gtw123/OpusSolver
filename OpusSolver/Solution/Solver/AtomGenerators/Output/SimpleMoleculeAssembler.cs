@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
 
-namespace OpusSolver.Solution.Solver.AtomGenerators.Output
+namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
     /// A simple assembler used when all the products are single atoms.

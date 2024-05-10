@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace OpusSolver.Solution.Solver
+namespace OpusSolver.Solver
 {
     /// <summary>
     /// Solves a puzzle!

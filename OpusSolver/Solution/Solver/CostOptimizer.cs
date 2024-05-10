@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
 
-namespace OpusSolver.Solution.Solver
+namespace OpusSolver.Solver
 {
     /// <summary>
     /// Optimizes the cost of a solution by removing unused arms and tracks.

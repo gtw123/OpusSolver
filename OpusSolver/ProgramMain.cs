@@ -1,5 +1,5 @@
 ﻿using OpusSolver.IO;
-using OpusSolver.Solution.Solver;
+using OpusSolver.Solver;
 using System;
 using System.Collections.Generic;
 using System.IO;

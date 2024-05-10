@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solution.Solver.AtomGenerators
+﻿namespace OpusSolver.Solver.AtomGenerators
 {
     /// <summary>
     /// Generates an atom of a metal from an atom of a lower metal and quicksilver atoms.

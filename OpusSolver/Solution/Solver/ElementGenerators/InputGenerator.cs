@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpusSolver.Solution.Solver.AtomGenerators.Input;
+using OpusSolver.Solver.AtomGenerators.Input;
 using static System.FormattableString;
 
-namespace OpusSolver.Solution.Solver.ElementGenerators
+namespace OpusSolver.Solver.ElementGenerators
 {
     /// <summary>
     /// Generates a elements from inputs (reagents).

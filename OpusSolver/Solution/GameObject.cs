@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solution
+namespace OpusSolver
 {
     /// <summary>
     /// Represents an object or group of objects on the hex grid.

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using OpusSolver.Solution.Solver.AtomGenerators.Output;
+using OpusSolver.Solver.AtomGenerators.Output;
 
-namespace OpusSolver.Solution.Solver.ElementGenerators
+namespace OpusSolver.Solver.ElementGenerators
 {
     /// <summary>
     /// Generates outputs (products) from other element generators.

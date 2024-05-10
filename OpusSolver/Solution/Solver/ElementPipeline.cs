@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using OpusSolver.Solution.Solver.ElementGenerators;
+using OpusSolver.Solver.ElementGenerators;
 
-namespace OpusSolver.Solution.Solver
+namespace OpusSolver.Solver
 {
     /// <summary>
     /// Represents a sequence of element generators that can be used to generate all the elements

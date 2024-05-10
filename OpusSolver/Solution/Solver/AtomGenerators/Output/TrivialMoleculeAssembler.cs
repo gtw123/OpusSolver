@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solution.Solver.AtomGenerators.Output
+namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
     /// A trivial assembler used when there is only one product and it has a single atom.

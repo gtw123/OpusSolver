@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solution.Solver.AtomGenerators.Input
+﻿namespace OpusSolver.Solver.AtomGenerators.Input
 {
     /// <summary>
     /// Generates atoms a from a reagent input.

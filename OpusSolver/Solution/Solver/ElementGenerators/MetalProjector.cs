@@ -1,6 +1,6 @@
 ﻿using static System.FormattableString;
 
-namespace OpusSolver.Solution.Solver.ElementGenerators
+namespace OpusSolver.Solver.ElementGenerators
 {
     /// <summary>
     /// Generates a metal from a lower metal and quicksilver.

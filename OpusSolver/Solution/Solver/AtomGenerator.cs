@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solution.Solver
+﻿namespace OpusSolver.Solver
 {
     /// <summary>
     /// A solution component which generates atoms from other atoms.

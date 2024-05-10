@@ -2,7 +2,7 @@
 using System.Linq;
 using static System.FormattableString;
 
-namespace OpusSolver.Solution.Solver.AtomGenerators.Input
+namespace OpusSolver.Solver.AtomGenerators.Input
 {
     /// <summary>
     /// Generates atoms a from a single-atom reagent input.

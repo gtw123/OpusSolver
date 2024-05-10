@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace OpusSolver.Solution.Solver.AtomGenerators
+namespace OpusSolver.Solver.AtomGenerators
 {
     /// <summary>
     /// Generates an atom of a metal from atoms of lower metals.

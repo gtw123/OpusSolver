@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
 
-namespace OpusSolver.Solution.Solver
+namespace OpusSolver.Solver
 {
     /// <summary>
     /// Generates elements from other elements, building up a command sequence that can

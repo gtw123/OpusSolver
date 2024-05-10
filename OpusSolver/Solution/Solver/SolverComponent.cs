@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solution.Solver
+﻿namespace OpusSolver.Solver
 {
     /// <summary>
     /// Represents an object (or group of objects) on the hex grid that can write instructions to a program.

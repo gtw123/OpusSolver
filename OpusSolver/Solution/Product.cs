@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solution
+﻿namespace OpusSolver
 {
     /// <summary>
     /// Represents a product molecule on the hex grid.

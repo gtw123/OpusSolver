@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using OpusSolver.Solution.Solver.AtomGenerators.Input;
+using OpusSolver.Solver.AtomGenerators.Input;
 
-namespace OpusSolver.Solution.Solver.AtomGenerators
+namespace OpusSolver.Solver.AtomGenerators
 {
     /// <summary>
     /// An input area that decomposes reagent molecules into single atoms.
