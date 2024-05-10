@@ -1,56 +1,49 @@
 ﻿# OpusSolver
 
-An automated solver (bot) for [Opus Magnum](http://www.zachtronics.com/opus-magnum/) puzzles.
+An autosolver for [Opus Magnum](http://www.zachtronics.com/opus-magnum/) puzzles. It generates correct but very inefficient solutions.
 
-See it in action: https://www.youtube.com/watch?v=egrs04Ko864
-
-Example solutions: https://imgur.com/a/DBzN0wi
+This version is a command-line program which generates `.solution` files from `.puzzle` files. If you're looking for the original version which works on the actual game screen, see https://github.com/gtw123/OpusSolver/tree/v1.0
 
 ## What can it solve?
 
 * All puzzles in the main campaign
 * All journal puzzles (except production puzzles)
-* Most workshop puzzles
+* Most puzzles created in the standard editor
 
 ## What can't it solve?
 
 * Production puzzles
 * Puzzles which have molecules that can't be reduced to single atoms (e.g. if the Glyph of Unbonding isn’t allowed).
 * Puzzles using features not in the standard editor, like triplex bonds between non-fire atoms, partial triplex bonds, or disconnected atoms.
-* Very large puzzles. (In *theory* it can solve arbitrarily large puzzles, but it has problems as the game starts to slow down a lot when there are many instructions.)
 
 ## Building
 
-* Install [Visual Studio 2017](https://www.visualstudio.com/downloads/).
-* Ensure you have [NET Framework 4.7 Development Tools](https://stackoverflow.com/questions/43316307/cant-choose-net-4-7]) installed.
-* Open Opus.sln in Visual Studio.
+* Install [Visual Studio 2022](https://www.visualstudio.com/downloads/).
+* Ensure you have NET Framework 4.8 Development Tools intalled.
+* Open OpusSolver.sln in Visual Studio.
 * Build!
 
-Currently supports Windows only.
+Currently tested on Windows only.
 
-## Using
+## Usage
 
-* Run OpusSolver.
-* Run Opus Magnum.
-* Select a puzzle and make a new, empty solution.
-* Press win-shift-A to start solving the puzzle.
-* Don't touch the mouse or keyboard while it's working or it might get confused.
-* Press escape if you want to abort.
+* To generate a solution for a puzzle, simply run `OpusSolver.exe <path to the .puzzle file>`. This will create a corresponding `.solution` file in the current directory.
+* You can also give it multiple files or directories to run on.
+* For other options, run `OpusSolver.exe` with no arguments.
 
-## Known Issues
+## FAQ
 
-* Doesn't work if you're running Opus Magnum full screen in a different resolution to your display. Make sure one game pixel equals one display pixel.
-* Doesn't work if you start with a non-empty solution. Even if you ctrl-A and delete, it may still not work because the instruction grid may not have scrolled back to the origin. It's best to just start with a new solution each time.
-* Doesn't work if you have the Steam in-game FPS counter enabled.
-* May get confused if the Steam overlay comes up while it's generating a solution.
-* Has trouble rendering program instructions for very large puzzles. This is because the game slows down as you add more and more instructions, especially when you have a few thousand. The solver does try to slow down the rendering to compensate for this but eventually it will get out of sync with what's on the screen and will fail.
-* On some computers it may drag the mouse cursor too quickly, leading to spurious errors. If you suspect this is the case, edit App.config, increase MouseUtils.GlobalDragDelay to 50 or 100 and build/run again.
-* For repeating molecules it "cheats" by only generating the first 6 copies of the molecule, which is enough to solve a puzzle.
+### Where do I get `.puzzle` files from?
 
-**How does it work?**
+Puzzles created in the game are located at `C:\Users\<username>\Documents\My Games\Opus Magnum\<steam ID>\custom`
 
-It starts off by analyzing the game window to see what glyphs/mechanisms are available, and what the reagents/products are. To analyze atoms it drags each molecule onto the hex grid so that it’s the correct size, then matches the center of each atom against a set of reference images. Because of the specular lighting, it can’t do an exact pixel match. Instead it applies a brightness threshold to the image so that it can detect the symbol at the center of each atom.
+Puzzles downloaded from the Steam workshop are at `C:\Users\<username>\Documents\My Games\Opus Magnum\<steam ID>\workshop`
 
-Once it’s analyzed everything it then constructs a solution. It uses a fairly “brute-force” algorithm that involves unbonding all reagents to single atoms, then transporting them through a linear “pipeline” to convert them to other elements. Each component of the pipeline can do one type of conversion (e.g. cardinal to salt, or two salt to mors/vitae), or can pass an atom through unchanged. Finally, each atom is supplied to an assembly area which builds a product one row at a time. Some optimization is also applied to avoid creating redundant arms, tracks or glyphs.
+For other examples, including `.puzzle` files for the built-in puzzles, see [omsim](https://github.com/ianh/omsim/tree/master/test).
 
-Finally, it renders the solution by dragging the reagents/products/glyphs/mechanisms onto the grid and then writing all the program instructions. The game slows down a lot when you have many instructions, which means the renderer starts missing instructions. To compensate it checks each row after it’s rendered and if it finds an error it will slow down slightly and try again. For a really large program it will still eventually get out of sync and fail though.
+### How do I run a generated `.solution` file in the game?
+
+* Copy the `.solution` file directly into `C:\Users\<username>\Documents\My Games\Opus Magnum\<steam ID>` then restart Opus Magnum.
+* Go to the corresponding puzzle within the game.
+* The generated solution will be called `Generated solution`.
+  
