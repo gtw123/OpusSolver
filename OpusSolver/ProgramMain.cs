@@ -1,5 +1,6 @@
 ﻿using OpusSolver.IO;
 using OpusSolver.Solver;
+using OpusSolver.Verifier;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,10 +17,13 @@ namespace OpusSolver
         {
             public List<string> PuzzleFiles = new();
             public string OutputDir;
+            public bool SkipVerification = false;
         }
 
         public static int Main(string[] args)
         {
+            sm_log.Debug($"Starting up");
+
             CommandLineArguments commandArgs;
             try
             {
@@ -38,13 +42,14 @@ namespace OpusSolver
                 foreach (var puzzleFile in commandArgs.PuzzleFiles)
                 {
                     string solutionFile = Path.Combine(commandArgs.OutputDir, Path.GetFileNameWithoutExtension(puzzleFile) + ".solution");
-                    if (SolvePuzzle(puzzleFile, solutionFile))
+                    if (SolvePuzzle(puzzleFile, solutionFile, commandArgs.SkipVerification))
                     {
                         totalPuzzlesSolved++;
                     }                   
                 }
 
-                Console.WriteLine($"Generated solutions for {totalPuzzlesSolved}/{commandArgs.PuzzleFiles.Count} puzzles.");
+                string verifyMessage = commandArgs.SkipVerification ? "" : "and verified ";
+                sm_log.Info($"Successfully generated {verifyMessage}solutions for {totalPuzzlesSolved}/{commandArgs.PuzzleFiles.Count} puzzles.");
             }
             catch (Exception e)
             {
@@ -86,6 +91,9 @@ namespace OpusSolver
                         excludedFiles.Add(args[++i]);
                         break;
                     }
+                    case "--noverify":
+                        commandArgs.SkipVerification = true;
+                        break;
                     default:
                         puzzlePaths.Add(args[i]);
                         break;
@@ -127,11 +135,12 @@ namespace OpusSolver
             sm_log.Error("Usage: OpusSolver.exe [<options>] <puzzle file/dir>...");
             sm_log.Error("");
             sm_log.Error("Options:");
-            sm_log.Error("    --output  Directory to write solutions to (default is current dir)");
-            sm_log.Error("    --exclude Name of a puzzle file to skip");
+            sm_log.Error("    --output   Directory to write solutions to (default is current dir)");
+            sm_log.Error("    --exclude  Name of a puzzle file to skip");
+            sm_log.Error("    --noverify Skip solution verification (useful if you don't have a copy of libverify)");
         }
 
-        private static bool SolvePuzzle(string puzzleFile, string solutionFile)
+        private static bool SolvePuzzle(string puzzleFile, string solutionFile, bool skipVerification)
         {
             try
             {
@@ -144,7 +153,22 @@ namespace OpusSolver
                 var solution = solver.Solve();
 
                 sm_log.Info($"Writing solution to \"{solutionFile}\"");
+                // It might be more efficient to write the solution to a byte array first and pass that to the verifier,
+                // rather than writing it to disk twice. But it's also convenient having a copy on disk even if the
+                // verification fails so that we can debug it in the game.
                 SolutionWriter.WriteSolution(solution, solutionFile);
+
+                if (!skipVerification)
+                {
+                    sm_log.Debug("Verifying solution");
+                    using var verifier = new SolutionVerifier(puzzleFile, solutionFile);
+                    var metrics = verifier.CalculateMetrics();
+                    sm_log.Info($"Cost/cycles/area/instructions: {metrics.Cost}/{metrics.Cycles}/{metrics.Area}/{metrics.Instructions}");
+
+                    sm_log.Debug($"Writing metrics to solution file");
+                    solution.Metrics = metrics;
+                    SolutionWriter.WriteSolution(solution, solutionFile);
+                }
 
                 return true;
             }
@@ -155,7 +179,12 @@ namespace OpusSolver
             }
             catch (SolverException e)
             {
-                sm_log.Error($"Unable to solve puzzle \"{puzzleFile}\": {e.Message}");
+                sm_log.Error($"Error solving puzzle \"{puzzleFile}\": {e.Message}");
+                return false;
+            }
+            catch (VerifierException e)
+            {
+                sm_log.Error($"Error verifying solution to puzzle \"{puzzleFile}\": {e.Message}");
                 return false;
             }
             catch (Exception e)

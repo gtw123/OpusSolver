@@ -60,6 +60,7 @@
     <Compile Include="IO\SolutionWriter.cs" />
     <Compile Include="IO\PuzzleReader.cs" />
     <Compile Include="IO\ParseException.cs" />
+    <Compile Include="Solution\Metrics.cs" />
     <Compile Include="Solver\AtomGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\Input\SimpleInputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\TrivialInputArea.cs" />
@@ -132,6 +133,9 @@
     <Compile Include="Utils\Vector2.cs" />
     <Compile Include="ProgramMain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Verifier\NativeMethods.cs" />
+    <Compile Include="Verifier\VerifierException.cs" />
+    <Compile Include="Verifier\SolutionVerifier.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

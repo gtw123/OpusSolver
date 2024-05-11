@@ -41,7 +41,7 @@ namespace OpusSolver.IO
             m_writer.Write(7); // Solution format
             m_writer.Write(m_solution.Puzzle.FileName);
             m_writer.Write(m_solution.Name);
-            m_writer.Write(0); // TODO: Write metrics
+            WriteMetrics(m_solution.Metrics);
 
             IEnumerable<GameObject> realObjects = m_solution.GetObjects<Glyph>();
             realObjects = realObjects.Concat(m_solution.GetObjects<Mechanism>())
@@ -54,6 +54,27 @@ namespace OpusSolver.IO
             {
                 WriteObject(obj);
             }
+        }
+
+        private void WriteMetrics(Metrics metrics)
+        {
+            if (metrics == null)
+            {
+                m_writer.Write(0);
+                return;
+            }
+
+            // Number of metrics
+            m_writer.Write(4);
+
+            m_writer.Write(0);
+            m_writer.Write(metrics.Cycles);
+            m_writer.Write(1);
+            m_writer.Write(metrics.Cost);
+            m_writer.Write(2);
+            m_writer.Write(metrics.Area);
+            m_writer.Write(3);
+            m_writer.Write(metrics.Instructions);
         }
 
         private void WriteObject(GameObject obj)

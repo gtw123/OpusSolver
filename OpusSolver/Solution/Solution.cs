@@ -13,6 +13,8 @@ namespace OpusSolver
         public List<GameObject> Objects { get; private set; }
         public Program Program { get; private set; }
 
+        public Metrics Metrics { get; set; }
+
         public Solution(Puzzle puzzle, IEnumerable<GameObject> objects, Program program)
         {
             Puzzle = puzzle;
