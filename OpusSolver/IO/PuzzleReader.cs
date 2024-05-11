@@ -60,7 +60,7 @@ namespace OpusSolver.IO
                 products.Add(ParseMolecule(MoleculeType.Product, i));
             }
 
-            m_reader.ReadInt32(); // output scale (currently unused as it doesn't affect how the solver generates a solution)
+            int outputScale = m_reader.ReadInt32();
 
             bool isProduction = m_reader.ReadBoolean();
             if (isProduction)
@@ -69,7 +69,7 @@ namespace OpusSolver.IO
             }
 
             return new Puzzle(Path.GetFileNameWithoutExtension(m_filePath), puzzleName,
-                products, reagents, allowedMechanisms, allowedGlyphs);
+                products, reagents, allowedMechanisms, allowedGlyphs, outputScale);
         }
 
         private static readonly Dictionary<ulong, GlyphType[]> sm_availablePartMapping = new()

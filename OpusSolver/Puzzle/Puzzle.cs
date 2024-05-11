@@ -12,7 +12,12 @@ namespace OpusSolver
         public HashSet<MechanismType> AllowedMechanisms { get; private set; }
         public HashSet<GlyphType> AllowedGlyphs { get; private set; }
 
-        public Puzzle(string filename, string name, IEnumerable<Molecule> products, IEnumerable<Molecule> reagents, IEnumerable<MechanismType> allowedMechanisms, IEnumerable<GlyphType> allowedGlyphs)
+        /// <summary>
+        /// How many outputs are required for completion (a scale of 1 means 6 outputs).
+        /// </summary>
+        public int OutputScale { get; private set; }
+
+        public Puzzle(string filename, string name, IEnumerable<Molecule> products, IEnumerable<Molecule> reagents, IEnumerable<MechanismType> allowedMechanisms, IEnumerable<GlyphType> allowedGlyphs, int outputScale)
         {
             FileName = filename;
             Name = name;
@@ -20,6 +25,7 @@ namespace OpusSolver
             Reagents = reagents.ToList();
             AllowedMechanisms = new HashSet<MechanismType>(allowedMechanisms);
             AllowedGlyphs = new HashSet<GlyphType>(allowedGlyphs);
+            OutputScale = outputScale;
         }
     }
 }

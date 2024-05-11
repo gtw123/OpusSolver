@@ -13,11 +13,13 @@ namespace OpusSolver.Solver.ElementGenerators
         public override IEnumerable<Element> OutputElements => new Element[0];
 
         private IEnumerable<Molecule> m_products;
+        private int m_outputScale;
 
-        public OutputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> products)
+        public OutputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> products, int outputScale)
             : base(commandSequence)
         {
             m_products = products;
+            m_outputScale = outputScale;
         }
 
         public void GenerateCommandSequence()
@@ -27,9 +29,8 @@ namespace OpusSolver.Solver.ElementGenerators
             {
                 // If there's a mix of repeating and non-repeating molecules, build extra copies of the
                 // non-repeating ones. This is to compensate for the fact that we build all copies of
-                // the repeating molecules at the same time. Normally 6 copies would be enough but
-                // on some journal puzzles we need 18.
-                int numCopies = (anyRepeats && !product.HasRepeats) ? 18 : 1;
+                // the repeating molecules at the same time.
+                int numCopies = (anyRepeats && !product.HasRepeats) ? 6 * m_outputScale : 1;
                 for (int i = 0; i < numCopies; i++)
                 {
                     foreach (var element in product.GetAtomsInInputOrder().Select(a => a.Element))

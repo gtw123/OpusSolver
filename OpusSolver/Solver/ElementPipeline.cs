@@ -51,7 +51,7 @@ namespace OpusSolver.Solver
 
         private void AnalyzeProducts()
         {
-            OutputGenerator = new OutputGenerator(m_commandSequence, m_puzzle.Products);
+            OutputGenerator = new OutputGenerator(m_commandSequence, m_puzzle.Products, m_puzzle.OutputScale);
             AddGenerator(OutputGenerator);
 
             m_reagentElements.UnionWith(m_puzzle.Reagents.SelectMany(p => p.Atoms.Select(a => a.Element)));
