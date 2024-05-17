@@ -15,21 +15,40 @@ This version is a command-line program which generates `.solution` files from `.
 * Production puzzles
 * Puzzles which have molecules that can't be reduced to single atoms (e.g. if the Glyph of Unbonding isn’t allowed).
 * Puzzles using features not in the standard editor, like triplex bonds between non-fire atoms, partial triplex bonds, or disconnected atoms.
-
+* Puzzles which disallow pistons or tracks.
+ 
 ## Building
+
+These steps have currently been tested on Windows only.
+
+### Building OpusSolver
 
 * Install [Visual Studio 2022](https://www.visualstudio.com/downloads/).
 * Ensure you have NET Framework 4.8 Development Tools intalled.
 * Open OpusSolver.sln in Visual Studio.
 * Build!
 
-Currently tested on Windows only.
+### Building libverify
+To automatically verify solutions, libverify from omsim is also required.
+
+To build libverify on Windows:
+* Clone the omsim repo from https://github.com/ianh/omsim
+* Install MSYS2 by following the steps on https://www.msys2.org/ to download and run the installer.
+* Once installed it will automatically launch the MSYS2 UCRT64 environment.
+* Install the required dev tools: `pacman -S mingw-w64-ucrt-x86_64-toolchain make`
+* `cd <path to your omsim repo>` (note that the `C:` drive is located at `/C` in the MSYS2 console).
+*	`make libverify.dll`
+  * If this fails to build, make sure you are using the UCRT64 version of the MSYS2 environment. Launch MSYS2 UCRT64 from the start menu, or run `C:\msys64\ucrt64.exe`.
+*	Copy the built `libverify.dll` into `OpusSolver\bin\Debug` and `OpusSolver\bin\Release`.
+
+To build libverify on other platforms, follow the steps in the README in the omsim repo.
 
 ## Usage
 
 * To generate a solution for a puzzle, simply run `OpusSolver.exe <path to the .puzzle file>`. This will create a corresponding `.solution` file in the current directory.
 * You can also give it multiple files or directories to run on.
 * For other options, run `OpusSolver.exe` with no arguments.
+* If you're unable to build libverify, you can still run OpenSolver without automatic verification by using `OpusSolver.exe --noverify`
 
 ## FAQ
 
