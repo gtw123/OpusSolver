@@ -3,4 +3,5 @@ Debug/
 Release/
 Bin/
 Obj/
+/test/solutions
 *.csproj.user
