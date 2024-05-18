@@ -184,7 +184,7 @@ namespace OpusSolver
             // Move the original repeat atom to the end of the molecule and set its element to the same as the
             // left-most atom on the same row. Otherwise, if there are otherwise-unconnected atoms bonded to the
             // top/bottom of the repeat atom, the solver won't be able to construct the product properly.
-            repeatAtom.Position = repeatAtom.Position + new Vector2(RepeatCount * width, 0);
+            repeatAtom.Position = repeatAtom.Position + new Vector2((RepeatCount- 1) * width, 0);
             repeatAtom.Element = leftmostAtom.Element;
 
             AdjustBounds();
