@@ -122,7 +122,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             {
                 // No need to grab as the atom will have just been bonded to the
                 // existing atom on the bonder
-                SetUsedBonders(GlyphType.Bonding, Direction.E, true);
+                SetUsedBonders(GlyphType.Bonding, Direction.E);
             }
             else
             {
@@ -159,9 +159,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
         private void FinishFirstRow(int row, IEnumerable<Arm> activeArms)
         {
-            (var bondInstructions, var returnInstructions) = new BondProgrammer(this, m_currentProduct, row).Generate();
+            var programmer = new BondProgrammer(Width, m_currentProduct, row);
+            programmer.Generate();
+            SetUsedBonders(programmer.UsedBonders);
 
-            if (row == 0 && !bondInstructions.Any())
+            if (row == 0 && !programmer.Instructions.Any())
             {
                 // Simple case: single-height molecule with no special bonds. Just drop it straight on the output location.
                 Writer.Write(activeArms, new[] { Instruction.Extend, Instruction.Reset });
@@ -172,14 +174,14 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             Writer.AdjustTime(-2);
             Writer.Write(m_upperArms, new[] { Instruction.Retract, Instruction.Grab, Instruction.Extend });
 
-            if (!bondInstructions.Any())
+            if (!programmer.Instructions.Any())
             {
                 Writer.Write(m_upperArms, Instruction.Extend);
                 return;
             }
 
-            Writer.Write(m_upperArms, bondInstructions);
-            Writer.Write(m_upperArms, returnInstructions);
+            Writer.Write(m_upperArms, programmer.Instructions);
+            Writer.Write(m_upperArms, programmer.ReturnInstructions);
 
             if (row == 0)
             {
@@ -196,8 +198,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         {
             Writer.Write(activeArms, Instruction.Extend);
 
-            (var bondInstructions, var returnInstructions) = new BondProgrammer(this, m_currentProduct, row).Generate();
-            Writer.Write(activeArms.Concat(m_upperArms), bondInstructions);
+            var programmer = new BondProgrammer(Width, m_currentProduct, row);
+            programmer.Generate();
+            SetUsedBonders(programmer.UsedBonders);
+
+            Writer.Write(activeArms.Concat(m_upperArms), programmer.Instructions);
 
             // We don't need to return the lower arms before resetting them, so save some instructions by just doing a reset
             Writer.Write(activeArms, Instruction.Reset, updateTime: false);
@@ -206,18 +211,26 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             {
                 // Drop the molecule and re-grab it from the lower atoms. This is to ensure everything is connected.
                 Writer.Write(m_upperArms, new[] { Instruction.Drop, Instruction.Retract, Instruction.Grab });
-                Writer.Write(m_upperArms, returnInstructions);
+                Writer.Write(m_upperArms, programmer.ReturnInstructions);
                 Writer.Write(m_upperArms, Instruction.Extend);
             }
             else
             {
                 // Last row - no need to re-grab
-                Writer.Write(m_upperArms, returnInstructions);
+                Writer.Write(m_upperArms, programmer.ReturnInstructions);
                 Writer.Write(m_upperArms, Instruction.Reset);
             }
         }
 
-        public void SetUsedBonders(GlyphType type, int? direction, bool used)
+        private void SetUsedBonders(IEnumerable<(GlyphType, int?)> bonders)
+        {
+            foreach (var (type, direction) in bonders)
+            {
+                SetUsedBonders(type, direction);
+            }
+        }
+
+        private void SetUsedBonders(GlyphType type, int? direction)
         {
             var bonders = m_bonders.Where(b => b.Type == type && (!direction.HasValue || b.Rotation == direction.Value));
             if (!bonders.Any())
@@ -225,10 +238,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
                 throw new ArgumentException(Invariant($"Can't find bonder of type {type} and direction {direction}."));
             }
 
-            if (used)
-            {
-                m_usedBonders.UnionWith(bonders);
-            }
+            m_usedBonders.UnionWith(bonders);
         }
 
         public void OptimizeParts()

@@ -9,47 +9,57 @@ namespace OpusSolver.Solver.AtomGenerators.Output
     /// </summary>
     public class BondProgrammer
     {
-        public UniversalMoleculeAssembler Assembler { get; private set; }
         public Molecule Molecule { get; private set; }
         public int Row { get; private set; }
 
-        private List<Instruction> m_instructions;
+        public IEnumerable<Instruction> Instructions => m_instructions;
+        public IEnumerable<Instruction> ReturnInstructions { get; private set; }
+        public IEnumerable<(GlyphType, int?)> UsedBonders => m_usedBonders;
 
-        public BondProgrammer(UniversalMoleculeAssembler assembler, Molecule molecule, int row)
+        private readonly int m_areaWidth;
+        private List<Instruction> m_instructions;
+        private readonly HashSet<(GlyphType, int?)> m_usedBonders = new();
+
+        public BondProgrammer(int areaWidth, Molecule molecule, int row)
         {
-            Assembler = assembler;
+            m_areaWidth = areaWidth;
             Molecule = molecule;
             Row = row;
         }
 
-        public (IEnumerable<Instruction> bondInstructions, IEnumerable<Instruction> returnInstructions) Generate()
+        public void Generate()
         {
+            if (m_instructions != null)
+            {
+                throw new InvalidOperationException("Can't call Generate more than once on the same BondProgrammer.");
+            }
+
             m_instructions = new List<Instruction>();
 
             AddBonds();
             Optimize();
 
-            return (m_instructions, GenerateReturnInstructions());
+            ReturnInstructions = GenerateReturnInstructions();
         }
 
         private void AddBonds()
         {
             // Do single bonds
-            MoveThroughBonder(GlyphType.Bonding, Direction.NE, Assembler.Width, a => a.Bonds[Direction.NE] == BondType.Single);
-            MoveThroughBonder(GlyphType.Bonding, Direction.NW, Assembler.Width - 1, a => a.Bonds[Direction.NW] == BondType.Single);
+            MoveThroughBonder(GlyphType.Bonding, Direction.NE, m_areaWidth, a => a.Bonds[Direction.NE] == BondType.Single);
+            MoveThroughBonder(GlyphType.Bonding, Direction.NW, m_areaWidth - 1, a => a.Bonds[Direction.NW] == BondType.Single);
 
             if (HasTriplexBonds())
             {
                 // Move the product through all the triplex bonders
                 Add(Instruction.MovePositive, Instruction.Retract);
-                Repeat(Instruction.MovePositive, Assembler.Width + 3);
+                Repeat(Instruction.MovePositive, m_areaWidth + 3);
                 Add(Instruction.Extend);
-                Assembler.SetUsedBonders(GlyphType.TriplexBonding, null, true);
+                m_usedBonders.Add((GlyphType.TriplexBonding, null));
 
                 // Now remove any extra bonds created between fire atoms
-                MoveThroughBonder(GlyphType.Unbonding, Direction.E, Assembler.Width - 1, a => IsUnbondedFirePair(a, Direction.W));
-                MoveThroughBonder(GlyphType.Unbonding, Direction.NE, Assembler.Width, a => IsUnbondedFirePair(a, Direction.NE));
-                MoveThroughBonder(GlyphType.Unbonding, Direction.NW, Assembler.Width - 1, a => IsUnbondedFirePair(a, Direction.NW));
+                MoveThroughBonder(GlyphType.Unbonding, Direction.E, m_areaWidth - 1, a => IsUnbondedFirePair(a, Direction.W));
+                MoveThroughBonder(GlyphType.Unbonding, Direction.NE, m_areaWidth, a => IsUnbondedFirePair(a, Direction.NE));
+                MoveThroughBonder(GlyphType.Unbonding, Direction.NW, m_areaWidth - 1, a => IsUnbondedFirePair(a, Direction.NW));
             }
         }
 
@@ -74,11 +84,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             for (int i = 0; i < count; i++)
             {
                 Add(Instruction.MovePositive);
-                var atom = Molecule.GetAtom(new Vector2(Assembler.Width - 1 - i, Row));
+                var atom = Molecule.GetAtom(new Vector2(m_areaWidth - 1 - i, Row));
                 if (atom != null && shouldBondAtom(atom))
                 {
                     Add(Instruction.Retract, Instruction.Extend);
-                    Assembler.SetUsedBonders(type, direction, true);
+                    m_usedBonders.Add((type, direction));
                 }
             }
         }
