@@ -14,7 +14,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         private LoopingCoroutine<object> m_assembleCoroutine;
 
         private AssemblyArea m_area;
-        private OutputArea m_outputArea;
+        private ProductConveyor m_productConveyor;
 
         private Molecule m_currentProduct;
         private int m_currentArm;
@@ -26,7 +26,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
 
             m_area = new AssemblyArea(this, writer, products);
-            m_outputArea = new OutputArea(m_area, writer, products);
+            m_productConveyor = new ProductConveyor(m_area, writer, products);
         }
 
         public override void Consume(Element element, int id)
@@ -51,7 +51,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
                         if (y == 0)
                         {
-                            m_outputArea.MoveProductToOutput(m_currentProduct);
+                            m_productConveyor.MoveProductToOutputLocation(m_currentProduct);
                         }
                     }
 

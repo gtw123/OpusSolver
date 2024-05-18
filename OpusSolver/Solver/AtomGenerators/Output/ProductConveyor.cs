@@ -4,9 +4,9 @@ using System.Linq;
 namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
-    /// The part of the solution that moves completed products to the corresponding output areas.
+    /// Transports assembled products to their output locations.
     /// </summary>
-    public class OutputArea : SolverComponent
+    public class ProductConveyor : SolverComponent
     {
         private class Output
         {
@@ -21,8 +21,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
         public override Vector2 OutputPosition => new Vector2();
 
-        public OutputArea(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
-            : base(parent, writer,parent.OutputPosition)
+        public ProductConveyor(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
+            : base(parent, writer, parent.OutputPosition)
         {
             m_products = products;
 
@@ -53,7 +53,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             }
         }
 
-        public void MoveProductToOutput(Molecule product)
+        public void MoveProductToOutputLocation(Molecule product)
         {
             var output = m_outputs[product.ID];
 
