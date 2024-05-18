@@ -11,15 +11,24 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         public override Vector2 OutputPosition => new Vector2();
 
         private IEnumerable<Molecule> m_products;
-        private UniversalMoleculeAssembler m_assembler;
+        private MoleculeAssembler m_assembler;
         private ProductConveyor m_productConveyor;
 
         public ComplexOutputArea(ProgramWriter writer, IEnumerable<Molecule> products)
             : base(writer)
         {
             m_products = products;
-            m_assembler = new UniversalMoleculeAssembler(this, writer, products);
-            m_productConveyor = new ProductConveyor(m_assembler, writer, products);
+
+            if (m_products.All(p => p.Height == 1) && m_products.All(p => !p.HasTriplex))
+            {
+                m_assembler = new LinearMoleculeAssembler(this, writer, m_products);
+            }
+            else
+            {
+                m_assembler = new UniversalMoleculeAssembler(this, writer, m_products);
+            }
+
+            m_productConveyor = new ProductConveyor(m_assembler, writer, m_products);
         }
 
         public override void Consume(Element element, int id)

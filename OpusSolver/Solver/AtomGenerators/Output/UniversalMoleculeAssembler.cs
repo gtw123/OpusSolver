@@ -8,7 +8,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
     /// <summary>
     /// Assembles arbitrary molecules from their component atoms.
     /// </summary>
-    public class UniversalMoleculeAssembler : SolverComponent
+    public class UniversalMoleculeAssembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => new Vector2(2, 1);
 
@@ -84,11 +84,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             new Track(this, new Vector2(2, -1), Direction.E, lowerTrackLength - Width - 1);
         }
 
-        /// <summary>
-        /// Adds an atom to the assembly area.
-        /// </summary>
-        /// <returns>Whether the current product is now completely assembled and ready to move to the output location</returns>
-        public bool AddAtom(Element element, int productID)
+        public override bool AddAtom(Element element, int productID)
         {
             m_currentProduct = m_products.Single(product => product.ID == productID);
             return m_assembleCoroutine.Next();
@@ -241,7 +237,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             m_usedBonders.UnionWith(bonders);
         }
 
-        public void OptimizeParts()
+        public override void OptimizeParts()
         {
             foreach (var bonder in m_bonders)
             {
