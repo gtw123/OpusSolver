@@ -1,7 +1,4 @@
-﻿using OpusSolver.IO;
-using OpusSolver.Solver;
-using OpusSolver.Verifier;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -12,13 +9,6 @@ namespace OpusSolver
     public static class ProgramMain
     {
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(ProgramMain));
-        
-        private class CommandLineArguments
-        {
-            public List<string> PuzzleFiles = new();
-            public string OutputDir;
-            public bool SkipVerification = false;
-        }
 
         public static int Main(string[] args)
         {
@@ -36,28 +26,17 @@ namespace OpusSolver
                 return 1;
             }
 
-            int totalPuzzlesSolved = 0;
             try
             {
-                foreach (var puzzleFile in commandArgs.PuzzleFiles)
-                {
-                    string solutionFile = Path.Combine(commandArgs.OutputDir, Path.GetFileNameWithoutExtension(puzzleFile) + ".solution");
-                    if (SolvePuzzle(puzzleFile, solutionFile, commandArgs.SkipVerification))
-                    {
-                        totalPuzzlesSolved++;
-                    }                   
-                }
-
-                string verifyMessage = commandArgs.SkipVerification ? "" : "and verified ";
-                sm_log.Info($"Successfully generated {verifyMessage}solutions for {totalPuzzlesSolved}/{commandArgs.PuzzleFiles.Count} puzzles.");
+                using var runner = new Runner(commandArgs);
+                runner.Run();
+                return 0;
             }
             catch (Exception e)
             {
                 sm_log.Error("Internal error", e);
                 return 1;
             }
-
-            return 0;
         }
 
         private static CommandLineArguments ParseArguments(string[] args)
@@ -94,6 +73,15 @@ namespace OpusSolver
                     case "--noverify":
                         commandArgs.SkipVerification = true;
                         break;
+                    case "--report":
+                    {
+                        if (i + 1 >= args.Length)
+                        {
+                            throw new ArgumentException("Missing file for '--report' argument.");
+                        }
+                        commandArgs.ReportFile = args[++i];
+                        break;
+                    }
                     default:
                         puzzlePaths.Add(args[i]);
                         break;
@@ -138,60 +126,7 @@ namespace OpusSolver
             sm_log.Error("    --output <dir>        Directory to write solutions to (default is current dir)");
             sm_log.Error("    --exclude <file name> Name of a puzzle file to skip");
             sm_log.Error("    --noverify            Skip solution verification (useful if you don't have a copy of libverify)");
-        }
-
-        private static bool SolvePuzzle(string puzzleFile, string solutionFile, bool skipVerification)
-        {
-            try
-            {
-                sm_log.Info($"Loading puzzle file \"{puzzleFile}\"");
-                var puzzle = PuzzleReader.ReadPuzzle(puzzleFile);
-
-                sm_log.Info($"Puzzle name: {puzzle.Name}");
-
-                var solver = new PuzzleSolver(puzzle);
-                var solution = solver.Solve();
-
-                sm_log.Info($"Writing solution to \"{solutionFile}\"");
-                // It might be more efficient to write the solution to a byte array first and pass that to the verifier,
-                // rather than writing it to disk twice. But it's also convenient having a copy on disk even if the
-                // verification fails so that we can debug it in the game.
-                SolutionWriter.WriteSolution(solution, solutionFile);
-
-                if (!skipVerification)
-                {
-                    sm_log.Debug("Verifying solution");
-                    using var verifier = new SolutionVerifier(puzzleFile, solutionFile);
-                    var metrics = verifier.CalculateMetrics();
-                    sm_log.Info($"Cost/cycles/area/instructions: {metrics.Cost}/{metrics.Cycles}/{metrics.Area}/{metrics.Instructions}");
-
-                    sm_log.Debug($"Writing metrics to solution file");
-                    solution.Metrics = metrics;
-                    SolutionWriter.WriteSolution(solution, solutionFile);
-                }
-
-                return true;
-            }
-            catch (ParseException e)
-            {
-                sm_log.Error($"Error loading puzzle file \"{puzzleFile}\": {e.Message}");
-                return false;
-            }
-            catch (SolverException e)
-            {
-                sm_log.Error($"Error solving puzzle \"{puzzleFile}\": {e.Message}");
-                return false;
-            }
-            catch (VerifierException e)
-            {
-                sm_log.Error($"Error verifying solution to puzzle \"{puzzleFile}\": {e.Message}");
-                return false;
-            }
-            catch (Exception e)
-            {
-                sm_log.Error($"Internal error while solving puzzle \"{puzzleFile}\"" , e);
-                return false;
-            }
+            sm_log.Error("    --report <file>       Generate a report file summarizing the solutions and their metrics");
         }
     }
 }

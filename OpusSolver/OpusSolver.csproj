@@ -25,7 +25,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <LangVersion>default</LangVersion>
-
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <PlatformTarget>x64</PlatformTarget>
@@ -55,6 +54,8 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandLineArguments.cs" />
+    <Compile Include="Runner.cs" />
     <Compile Include="Puzzle\Direction.cs" />
     <Compile Include="Puzzle\PeriodicTable.cs" />
     <Compile Include="IO\SolutionWriter.cs" />
