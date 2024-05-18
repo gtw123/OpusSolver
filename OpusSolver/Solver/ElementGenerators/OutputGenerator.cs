@@ -52,15 +52,15 @@ namespace OpusSolver.Solver.ElementGenerators
             {
                 if (m_products.Count() == 1)
                 {
-                    return new TrivialMoleculeAssembler(writer, m_products);
+                    return new TrivialOutputArea(writer, m_products);
                 }
-                else if (m_products.Count() <= SimpleMoleculeAssembler.MaxProducts)
+                else if (m_products.Count() <= SimpleOutputArea.MaxProducts)
                 {
-                    return new SimpleMoleculeAssembler(writer, m_products);
+                    return new SimpleOutputArea(writer, m_products);
                 }
             }
 
-            return new ComplexMoleculeAssembler(writer, m_products);
+            return new ComplexOutputArea(writer, m_products);
         }
     }
 }

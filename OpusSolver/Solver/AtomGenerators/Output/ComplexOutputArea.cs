@@ -4,9 +4,9 @@ using System.Linq;
 namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
-    /// Assembles molecules from their component atoms.
+    /// An output area which assembles arbitrary products and moves them to their output locations.
     /// </summary>
-    public class ComplexMoleculeAssembler : AtomGenerator
+    public class ComplexOutputArea : AtomGenerator
     {
         public override Vector2 OutputPosition => new Vector2();
 
@@ -19,7 +19,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         private Molecule m_currentProduct;
         private int m_currentArm;
 
-        public ComplexMoleculeAssembler(ProgramWriter writer, IEnumerable<Molecule> products)
+        public ComplexOutputArea(ProgramWriter writer, IEnumerable<Molecule> products)
             : base(writer)
         {
             m_products = products;

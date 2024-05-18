@@ -69,7 +69,7 @@
     <Compile Include="Solver\CostOptimizer.cs" />
     <Compile Include="Solver\ElementGenerators\OutputGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\AtomBuffer.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\ComplexMoleculeAssembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\ComplexOutputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\MoleculeInput.cs" />
     <Compile Include="Solver\AtomGenerators\Input\ComplexInputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\LinearMoleculeInput.cs" />
@@ -81,8 +81,8 @@
     <Compile Include="Solver\AtomGenerators\QuintessenceGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\SaltGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\Input\SingleAtomInput.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\SimpleMoleculeAssembler.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\TrivialMoleculeAssembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\SimpleOutputArea.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\TrivialOutputArea.cs" />
     <Compile Include="Solver\AtomGenerators\VanBerloGenerator.cs" />
     <Compile Include="Solver\ElementPipeline.cs" />
     <Compile Include="Solver\InstructionWriter.cs" />

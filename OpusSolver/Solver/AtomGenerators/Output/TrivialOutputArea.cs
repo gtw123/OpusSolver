@@ -4,13 +4,13 @@ using System.Linq;
 namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
-    /// A trivial assembler used when there is only one product and it has a single atom.
+    /// A trivial output area used when there is only one product and it has a single atom.
     /// </summary>
-    public class TrivialMoleculeAssembler : AtomGenerator
+    public class TrivialOutputArea : AtomGenerator
     {
         public override Vector2 OutputPosition => new Vector2();
 
-        public TrivialMoleculeAssembler(ProgramWriter writer, IEnumerable<Molecule> products)
+        public TrivialOutputArea(ProgramWriter writer, IEnumerable<Molecule> products)
             : base(writer)
         {
             var product = products.Single();

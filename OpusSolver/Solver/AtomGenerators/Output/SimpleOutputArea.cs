@@ -6,9 +6,9 @@ using static System.FormattableString;
 namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
-    /// A simple assembler used when all the products are single atoms.
+    /// A simple output area used when all the products are single atoms.
     /// </summary>
-    public class SimpleMoleculeAssembler : AtomGenerator
+    public class SimpleOutputArea : AtomGenerator
     {
         public override Vector2 OutputPosition => new Vector2();
 
@@ -16,17 +16,17 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
         private Dictionary<int, Arm> m_outputArms = new Dictionary<int, Arm>();
 
-        public SimpleMoleculeAssembler(ProgramWriter writer, IEnumerable<Molecule> products)
+        public SimpleOutputArea(ProgramWriter writer, IEnumerable<Molecule> products)
             : base(writer)
         {
             if (products.Any(r => r.Atoms.Count() > 1))
             {
-                throw new ArgumentException("SimpleMoleculeAssembler can't handle products with multiple atoms.");
+                throw new ArgumentException("SimpleOutputArea can't handle products with multiple atoms.");
             }
 
             if (products.Count() > MaxProducts)
             {
-                throw new ArgumentException(Invariant($"SimpleMoleculeAssembler can't handle more than {MaxProducts} products."));
+                throw new ArgumentException(Invariant($"SimpleOutputArea can't handle more than {MaxProducts} products."));
             }
 
             int dir = Direction.E;
