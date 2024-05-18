@@ -23,6 +23,7 @@ namespace OpusSolver
         public int Width { get; private set; }
         public int DiagonalLength { get; private set; }
         public int Rotation { get; private set; }
+
         public bool HasRepeats { get; private set; }
         public bool HasTriplex { get; private set; }
 
@@ -38,6 +39,11 @@ namespace OpusSolver
             AdjustBounds();
         }
 
+        /// <summary>
+        /// Recalculates the bounds of this molecule and moves atoms if necessary so that the minimum X/Y coordinates are 0 and 0.
+        /// Note that there may not necessarily be an atom at (0, 0), depending on the geometry of the molecule.
+        /// Note that the Origin may still be located elsewhere, but that's generally only relevant when placing glyphs.
+        /// </summary>
         private void AdjustBounds()
         {
             int minX = m_atoms.Min(a => a.Position.X);
