@@ -7,7 +7,7 @@ using static System.FormattableString;
 namespace OpusSolver.Solver.ElementGenerators
 {
     /// <summary>
-    /// Generates a elements from inputs (reagents).
+    /// Generates elements from inputs (reagents).
     /// </summary>
     public class InputGenerator : ElementGenerator
     {

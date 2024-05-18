@@ -33,7 +33,7 @@ namespace OpusSolver.Solver
         /// </summary>
         /// <param name="updateTime">If true, the current write position will be updated so that it's
         /// at the position of the reset instruction. This is convenient for chaining a number of
-        /// grab/reset instructions across an umber of arms.</param>
+        /// grab/reset instructions across a number of arms.</param>
         public void WriteGrabResetAction(Arm arm, Instruction instruction, bool updateTime = true)
         {
             WriteGrabResetAction(new[] { arm }, new[] { instruction }, updateTime);

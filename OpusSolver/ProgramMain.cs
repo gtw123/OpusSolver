@@ -86,7 +86,7 @@ namespace OpusSolver
                     {
                         if (i + 1 >= args.Length)
                         {
-                            throw new ArgumentException("Missing directory for '--exclude' argument.");
+                            throw new ArgumentException("Missing file name for '--exclude' argument.");
                         }
                         excludedFiles.Add(args[++i]);
                         break;
@@ -135,9 +135,9 @@ namespace OpusSolver
             sm_log.Error("Usage: OpusSolver.exe [<options>] <puzzle file/dir>...");
             sm_log.Error("");
             sm_log.Error("Options:");
-            sm_log.Error("    --output   Directory to write solutions to (default is current dir)");
-            sm_log.Error("    --exclude  Name of a puzzle file to skip");
-            sm_log.Error("    --noverify Skip solution verification (useful if you don't have a copy of libverify)");
+            sm_log.Error("    --output <dir>        Directory to write solutions to (default is current dir)");
+            sm_log.Error("    --exclude <file name> Name of a puzzle file to skip");
+            sm_log.Error("    --noverify            Skip solution verification (useful if you don't have a copy of libverify)");
         }
 
         private static bool SolvePuzzle(string puzzleFile, string solutionFile, bool skipVerification)

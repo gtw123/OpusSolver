@@ -16,7 +16,7 @@ namespace OpusSolver.Solver
         public IEnumerable<ElementGenerator> ElementGenerators => m_generators;
 
         /// <summary>
-        /// The output generator as the end of the pipeline.
+        /// The output generator at the end of the pipeline.
         /// </summary>
         public OutputGenerator OutputGenerator { get; private set; }
 
