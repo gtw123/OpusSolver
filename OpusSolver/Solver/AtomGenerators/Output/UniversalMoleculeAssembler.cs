@@ -6,9 +6,9 @@ using static System.FormattableString;
 namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
-    /// The part of the solution that assembles a product by bonding atoms together.
+    /// Assembles arbitrary molecules from their component atoms.
     /// </summary>
-    public class AssemblyArea : SolverComponent
+    public class UniversalMoleculeAssembler : SolverComponent
     {
         public List<Arm> LowerArms { get; private set; }
         public List<Arm> UpperArms { get; private set; }
@@ -21,7 +21,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         private List<Glyph> m_bonders = new List<Glyph>();
         private HashSet<Glyph> m_usedBonders = new HashSet<Glyph>();
 
-        public AssemblyArea(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
+        public UniversalMoleculeAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer, parent.OutputPosition)
         {
             Width = products.Max(p => p.Width);

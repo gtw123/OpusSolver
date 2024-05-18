@@ -9,15 +9,15 @@ namespace OpusSolver.Solver.AtomGenerators.Output
     /// </summary>
     public class BondProgrammer
     {
-        public AssemblyArea Area { get; private set; }
+        public UniversalMoleculeAssembler Assembler { get; private set; }
         public Molecule Molecule { get; private set; }
         public int Row { get; private set; }
 
         private List<Instruction> m_instructions;
 
-        public BondProgrammer(AssemblyArea area, Molecule molecule, int row)
+        public BondProgrammer(UniversalMoleculeAssembler assembler, Molecule molecule, int row)
         {
-            Area = area;
+            Assembler = assembler;
             Molecule = molecule;
             Row = row;
         }
@@ -35,21 +35,21 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         private void AddBonds()
         {
             // Do single bonds
-            MoveThroughBonder(GlyphType.Bonding, Direction.NE, Area.Width, a => a.Bonds[Direction.NE] == BondType.Single);
-            MoveThroughBonder(GlyphType.Bonding, Direction.NW, Area.Width - 1, a => a.Bonds[Direction.NW] == BondType.Single);
+            MoveThroughBonder(GlyphType.Bonding, Direction.NE, Assembler.Width, a => a.Bonds[Direction.NE] == BondType.Single);
+            MoveThroughBonder(GlyphType.Bonding, Direction.NW, Assembler.Width - 1, a => a.Bonds[Direction.NW] == BondType.Single);
 
             if (HasTriplexBonds())
             {
                 // Move the product through all the triplex bonders
                 Add(Instruction.MovePositive, Instruction.Retract);
-                Repeat(Instruction.MovePositive, Area.Width + 3);
+                Repeat(Instruction.MovePositive, Assembler.Width + 3);
                 Add(Instruction.Extend);
-                Area.SetUsedBonders(GlyphType.TriplexBonding, null, true);
+                Assembler.SetUsedBonders(GlyphType.TriplexBonding, null, true);
 
                 // Now remove any extra bonds created between fire atoms
-                MoveThroughBonder(GlyphType.Unbonding, Direction.E, Area.Width - 1, a => IsUnbondedFirePair(a, Direction.W));
-                MoveThroughBonder(GlyphType.Unbonding, Direction.NE, Area.Width, a => IsUnbondedFirePair(a, Direction.NE));
-                MoveThroughBonder(GlyphType.Unbonding, Direction.NW, Area.Width - 1, a => IsUnbondedFirePair(a, Direction.NW));
+                MoveThroughBonder(GlyphType.Unbonding, Direction.E, Assembler.Width - 1, a => IsUnbondedFirePair(a, Direction.W));
+                MoveThroughBonder(GlyphType.Unbonding, Direction.NE, Assembler.Width, a => IsUnbondedFirePair(a, Direction.NE));
+                MoveThroughBonder(GlyphType.Unbonding, Direction.NW, Assembler.Width - 1, a => IsUnbondedFirePair(a, Direction.NW));
             }
         }
 
@@ -74,11 +74,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             for (int i = 0; i < count; i++)
             {
                 Add(Instruction.MovePositive);
-                var atom = Molecule.GetAtom(new Vector2(Area.Width - 1 - i, Row));
+                var atom = Molecule.GetAtom(new Vector2(Assembler.Width - 1 - i, Row));
                 if (atom != null && shouldBondAtom(atom))
                 {
                     Add(Instruction.Retract, Instruction.Extend);
-                    Area.SetUsedBonders(type, direction, true);
+                    Assembler.SetUsedBonders(type, direction, true);
                 }
             }
         }

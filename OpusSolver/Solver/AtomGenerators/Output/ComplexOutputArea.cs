@@ -13,7 +13,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         private IEnumerable<Molecule> m_products;
         private LoopingCoroutine<object> m_assembleCoroutine;
 
-        private AssemblyArea m_area;
+        private UniversalMoleculeAssembler m_assembler;
         private ProductConveyor m_productConveyor;
 
         private Molecule m_currentProduct;
@@ -25,8 +25,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             m_products = products;
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
 
-            m_area = new AssemblyArea(this, writer, products);
-            m_productConveyor = new ProductConveyor(m_area, writer, products);
+            m_assembler = new UniversalMoleculeAssembler(this, writer, products);
+            m_productConveyor = new ProductConveyor(m_assembler, writer, products);
         }
 
         public override void Consume(Element element, int id)
@@ -39,7 +39,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         {
             for (int y = m_currentProduct.Height - 1; y >= 0; y--)
             {
-                m_currentArm = m_area.Width - 1;
+                m_currentArm = m_assembler.Width - 1;
                 var atoms = m_currentProduct.GetRow(y).OrderByDescending(a => a.Position.X);
                 foreach (var atom in atoms)
                 {
@@ -62,16 +62,16 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
         private void GrabAtom(Atom atom)
         {
-            var arm = m_area.LowerArms[m_currentArm];
+            var arm = m_assembler.LowerArms[m_currentArm];
             if (atom.Bonds[Direction.E] == BondType.Single)
             {
                 // No need to grab as the atom will have just been bonded to the
                 // existing atom on the bonder
-                m_area.SetUsedBonders(GlyphType.Bonding, Direction.E, true);
+                m_assembler.SetUsedBonders(GlyphType.Bonding, Direction.E, true);
             }
             else
             {
-                int distance = (m_area.Width - 1) - m_currentArm;
+                int distance = (m_assembler.Width - 1) - m_currentArm;
                 Writer.AdjustTime(-distance);
                 Writer.Write(arm, Enumerable.Repeat(Instruction.MovePositive, distance));
                 Writer.Write(arm, Instruction.Grab);
@@ -90,7 +90,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
         private void FinishRow(int row)
         {
-            var activeArms = m_area.LowerArms.GetRange(m_currentArm + 1, m_area.Width - (m_currentArm + 1));
+            var activeArms = m_assembler.LowerArms.GetRange(m_currentArm + 1, m_assembler.Width - (m_currentArm + 1));
 
             if (row == m_currentProduct.Height - 1)
             {
@@ -104,7 +104,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
         private void FinishFirstRow(int row, IEnumerable<Arm> activeArms)
         {
-            (var bondInstructions, var returnInstructions) = new BondProgrammer(m_area, m_currentProduct, row).Generate();
+            (var bondInstructions, var returnInstructions) = new BondProgrammer(m_assembler, m_currentProduct, row).Generate();
 
             if (row == 0 && !bondInstructions.Any())
             {
@@ -115,25 +115,25 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
             Writer.Write(activeArms, Instruction.Reset);
             Writer.AdjustTime(-2);
-            Writer.Write(m_area.UpperArms, new[] { Instruction.Retract, Instruction.Grab, Instruction.Extend });
+            Writer.Write(m_assembler.UpperArms, new[] { Instruction.Retract, Instruction.Grab, Instruction.Extend });
 
             if (!bondInstructions.Any())
             {
-                Writer.Write(m_area.UpperArms, Instruction.Extend);
+                Writer.Write(m_assembler.UpperArms, Instruction.Extend);
                 return;
             }
 
-            Writer.Write(m_area.UpperArms, bondInstructions);
-            Writer.Write(m_area.UpperArms, returnInstructions);
+            Writer.Write(m_assembler.UpperArms, bondInstructions);
+            Writer.Write(m_assembler.UpperArms, returnInstructions);
 
             if (row == 0)
             {
                 // For a single-height molecule we can drop it as soon as the upper arms have returned.
-                Writer.Write(m_area.UpperArms, Instruction.Drop);
+                Writer.Write(m_assembler.UpperArms, Instruction.Drop);
             }
             else
             {
-                Writer.Write(m_area.UpperArms, Instruction.Extend);
+                Writer.Write(m_assembler.UpperArms, Instruction.Extend);
             }
         }
 
@@ -141,8 +141,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         {
             Writer.Write(activeArms, Instruction.Extend);
 
-            (var bondInstructions, var returnInstructions) = new BondProgrammer(m_area, m_currentProduct, row).Generate();
-            Writer.Write(activeArms.Concat(m_area.UpperArms), bondInstructions);
+            (var bondInstructions, var returnInstructions) = new BondProgrammer(m_assembler, m_currentProduct, row).Generate();
+            Writer.Write(activeArms.Concat(m_assembler.UpperArms), bondInstructions);
 
             // We don't need to return the lower arms before resetting them, so save some instructions by just doing a reset
             Writer.Write(activeArms, Instruction.Reset, updateTime: false);
@@ -150,21 +150,21 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             if (row > 0)
             {
                 // Drop the molecule and re-grab it from the lower atoms. This is to ensure everything is connected.
-                Writer.Write(m_area.UpperArms, new[] { Instruction.Drop, Instruction.Retract, Instruction.Grab });
-                Writer.Write(m_area.UpperArms, returnInstructions);
-                Writer.Write(m_area.UpperArms, Instruction.Extend);
+                Writer.Write(m_assembler.UpperArms, new[] { Instruction.Drop, Instruction.Retract, Instruction.Grab });
+                Writer.Write(m_assembler.UpperArms, returnInstructions);
+                Writer.Write(m_assembler.UpperArms, Instruction.Extend);
             }
             else
             {
                 // Last row - no need to re-grab
-                Writer.Write(m_area.UpperArms, returnInstructions);
-                Writer.Write(m_area.UpperArms, Instruction.Reset);
+                Writer.Write(m_assembler.UpperArms, returnInstructions);
+                Writer.Write(m_assembler.UpperArms, Instruction.Reset);
             }
         }
 
         public override void OptimizeParts()
         {
-            m_area.OptimizeParts();
+            m_assembler.OptimizeParts();
         }
     }
 }

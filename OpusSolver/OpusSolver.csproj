@@ -124,7 +124,7 @@
     <Compile Include="Solver\AtomGenerators\Input\AtomConveyor.cs" />
     <Compile Include="Solver\SolverComponent.cs" />
     <Compile Include="Solver\AtomGenerators\Output\ProductConveyor.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\AssemblyArea.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\UniversalMoleculeAssembler.cs" />
     <Compile Include="Solver\PuzzleSolver.cs" />
     <Compile Include="Utils\LoopingCoroutine.cs" />
     <Compile Include="Puzzle\MechanismType.cs" />
