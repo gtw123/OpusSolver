@@ -33,7 +33,14 @@ namespace OpusSolver.Solver.ElementGenerators
 
         protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
         {
-            return new AtomGenerators.SaltGenerator(writer);
+            if (CommandSequence.Commands.Any(c => c.Type == CommandType.PassThrough && c.ElementGenerator == this))
+            {
+                return new AtomGenerators.SaltGenerator(writer);
+            }
+            else
+            {
+                return new AtomGenerators.SaltGeneratorNoPassThrough(writer);
+            }
         }
     }
 }

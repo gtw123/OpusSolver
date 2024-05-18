@@ -65,6 +65,7 @@
     <Compile Include="Solver\AtomGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\Input\SimpleInputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\TrivialInputArea.cs" />
+    <Compile Include="Solver\AtomGenerators\SaltGeneratorNoPassThrough.cs" />
     <Compile Include="Solver\CostOptimizer.cs" />
     <Compile Include="Solver\ElementGenerators\OutputGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\AtomBuffer.cs" />
