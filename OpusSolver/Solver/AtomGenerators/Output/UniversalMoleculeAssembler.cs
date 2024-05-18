@@ -10,22 +10,30 @@ namespace OpusSolver.Solver.AtomGenerators.Output
     /// </summary>
     public class UniversalMoleculeAssembler : SolverComponent
     {
-        public List<Arm> LowerArms { get; private set; }
-        public List<Arm> UpperArms { get; private set; }
-
-        public int Width { get; private set; }
-        public bool HasTriplex { get; private set; }
-
         public override Vector2 OutputPosition => new Vector2(2, 1);
 
+        public int Width { get; private set; }
+
+        private IEnumerable<Molecule> m_products;
+        private bool m_hasTriplex;
+        private LoopingCoroutine<bool> m_assembleCoroutine;
+
+        private List<Arm> m_lowerArms;
+        private List<Arm> m_upperArms;
         private List<Glyph> m_bonders = new List<Glyph>();
         private HashSet<Glyph> m_usedBonders = new HashSet<Glyph>();
+
+        private Molecule m_currentProduct;
+        private int m_currentArm;
 
         public UniversalMoleculeAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer, parent.OutputPosition)
         {
             Width = products.Max(p => p.Width);
-            HasTriplex = products.Any(p => p.HasTriplex);
+
+            m_products = products;
+            m_hasTriplex = products.Any(p => p.HasTriplex);
+            m_assembleCoroutine = new LoopingCoroutine<bool>(Assemble);
 
             CreateBonders();
             CreateArms();
@@ -39,7 +47,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             AddBonder(ref position, Width + 2, 0, Direction.NE, GlyphType.Bonding);
             AddBonder(ref position, Width, 0, Direction.NW, GlyphType.Bonding);
 
-            if (HasTriplex)
+            if (m_hasTriplex)
             {
                 AddBonder(ref position, Width - 1, 0, Direction.E, GlyphType.TriplexBonding);
                 AddBonder(ref position, 3, 0, Direction.NW, GlyphType.TriplexBonding);
@@ -60,20 +68,153 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
         private void CreateArms()
         {
-            LowerArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(-Width + x + 1, -2), Direction.NE, MechanismType.Piston, 2)).ToList();
-            UpperArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(x + 2, -1), Direction.NE, MechanismType.Piston, 2)).ToList();
+            m_lowerArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(-Width + x + 1, -2), Direction.NE, MechanismType.Piston, 2)).ToList();
+            m_upperArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(x + 2, -1), Direction.NE, MechanismType.Piston, 2)).ToList();
         }
 
         private void CreateTracks()
         {
             int lowerTrackLength = Width * 4 - 1;
-            if (HasTriplex)
+            if (m_hasTriplex)
             {
                 lowerTrackLength += Width * 4 + 2;
             }
 
             new Track(this, new Vector2(-Width + 1, -2), Direction.E, lowerTrackLength);
             new Track(this, new Vector2(2, -1), Direction.E, lowerTrackLength - Width - 1);
+        }
+
+        /// <summary>
+        /// Adds an atom to the assembly area.
+        /// </summary>
+        /// <returns>Whether the current product is now completely assembled and ready to move to the output location</returns>
+        public bool AddAtom(Element element, int productID)
+        {
+            m_currentProduct = m_products.Single(product => product.ID == productID);
+            return m_assembleCoroutine.Next();
+        }
+
+        private IEnumerable<bool> Assemble()
+        {
+            for (int y = m_currentProduct.Height - 1; y >= 0; y--)
+            {
+                m_currentArm = Width - 1;
+                var atoms = m_currentProduct.GetRow(y).OrderByDescending(a => a.Position.X).ToList();
+                for (int i = 0; i < atoms.Count - 1; i++)
+                {
+                    GrabAtom(atoms[i]);
+                    yield return false;
+                }
+
+                var lastAtom = atoms[atoms.Count - 1];
+                GrabAtom(lastAtom);
+                FinishRow(y);
+
+                bool finishedProduct = (y == 0);
+                yield return finishedProduct;
+            }
+        }
+
+        private void GrabAtom(Atom atom)
+        {
+            var arm = m_lowerArms[m_currentArm];
+            if (atom.Bonds[Direction.E] == BondType.Single)
+            {
+                // No need to grab as the atom will have just been bonded to the
+                // existing atom on the bonder
+                SetUsedBonders(GlyphType.Bonding, Direction.E, true);
+            }
+            else
+            {
+                int distance = (Width - 1) - m_currentArm;
+                Writer.AdjustTime(-distance);
+                Writer.Write(arm, Enumerable.Repeat(Instruction.MovePositive, distance));
+                Writer.Write(arm, Instruction.Grab);
+            }
+
+            // Move the atom to the rightmost side of the bonder
+            Writer.Write(arm, Instruction.MovePositive);
+
+            if (atom.Bonds[Direction.W] != BondType.Single)
+            {
+                // Move the atom to the assembly area
+                Writer.Write(arm, Enumerable.Repeat(Instruction.MovePositive, atom.Position.X + 1));
+                m_currentArm--;
+            }
+        }
+
+        private void FinishRow(int row)
+        {
+            var activeArms = m_lowerArms.GetRange(m_currentArm + 1, Width - (m_currentArm + 1));
+
+            if (row == m_currentProduct.Height - 1)
+            {
+                FinishFirstRow(row, activeArms);
+            }
+            else
+            {
+                FinishOtherRow(row, activeArms);
+            }
+        }
+
+        private void FinishFirstRow(int row, IEnumerable<Arm> activeArms)
+        {
+            (var bondInstructions, var returnInstructions) = new BondProgrammer(this, m_currentProduct, row).Generate();
+
+            if (row == 0 && !bondInstructions.Any())
+            {
+                // Simple case: single-height molecule with no special bonds. Just drop it straight on the output location.
+                Writer.Write(activeArms, new[] { Instruction.Extend, Instruction.Reset });
+                return;
+            }
+
+            Writer.Write(activeArms, Instruction.Reset);
+            Writer.AdjustTime(-2);
+            Writer.Write(m_upperArms, new[] { Instruction.Retract, Instruction.Grab, Instruction.Extend });
+
+            if (!bondInstructions.Any())
+            {
+                Writer.Write(m_upperArms, Instruction.Extend);
+                return;
+            }
+
+            Writer.Write(m_upperArms, bondInstructions);
+            Writer.Write(m_upperArms, returnInstructions);
+
+            if (row == 0)
+            {
+                // For a single-height molecule we can drop it as soon as the upper arms have returned.
+                Writer.Write(m_upperArms, Instruction.Drop);
+            }
+            else
+            {
+                Writer.Write(m_upperArms, Instruction.Extend);
+            }
+        }
+
+        private void FinishOtherRow(int row, IEnumerable<Arm> activeArms)
+        {
+            Writer.Write(activeArms, Instruction.Extend);
+
+            (var bondInstructions, var returnInstructions) = new BondProgrammer(this, m_currentProduct, row).Generate();
+            Writer.Write(activeArms.Concat(m_upperArms), bondInstructions);
+
+            // We don't need to return the lower arms before resetting them, so save some instructions by just doing a reset
+            Writer.Write(activeArms, Instruction.Reset, updateTime: false);
+
+            if (row > 0)
+            {
+                // Drop the molecule and re-grab it from the lower atoms. This is to ensure everything is connected.
+                Writer.Write(m_upperArms, new[] { Instruction.Drop, Instruction.Retract, Instruction.Grab });
+                Writer.Write(m_upperArms, returnInstructions);
+                Writer.Write(m_upperArms, Instruction.Extend);
+            }
+            else
+            {
+                // Last row - no need to re-grab
+                Writer.Write(m_upperArms, returnInstructions);
+                Writer.Write(m_upperArms, Instruction.Reset);
+            }
         }
 
         public void SetUsedBonders(GlyphType type, int? direction, bool used)
