@@ -204,7 +204,7 @@ namespace OpusSolver.Solver
             foreach (var instructions in m_program.Instructions.Values)
             {
                 // For simplicity, just find the first sequence that ends with a reset. This is good enough for most programs.
-                int start = instructions.FindIndex(i => i != Instruction.None);
+                int start = instructions.FindIndex(i => i != Instruction.None && i != Instruction.Wait);
                 if (start >= 0)
                 {
                     int end = instructions.IndexOf(Instruction.Reset, start);
