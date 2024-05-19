@@ -87,10 +87,27 @@ namespace OpusSolver.Solver.AtomGenerators.Input
 
             var movePos = Enumerable.Repeat(Instruction.MovePositive, m_unbondWidth);
             var moveNeg = Enumerable.Repeat(Instruction.MoveNegative, m_unbondWidth);
+            var lowerArmsGrab = new[] { Instruction.Grab }.Concat(movePos).Concat(moveNeg).Concat([Instruction.Retract, Instruction.Drop, Instruction.Reset]).ToList();
+            var lowerArmsWait = new[] { Instruction.Wait }.Concat(movePos).Concat(moveNeg).Concat([Instruction.Wait,    Instruction.Wait, Instruction.Reset]).ToList();
+            var upperArmsGrab = new[] { Instruction.Grab }.Concat(movePos).Concat([Instruction.Drop, Instruction.Reset]);
+            var upperArmsWait = new[] { Instruction.Wait }.Concat(movePos).Concat([Instruction.Wait, Instruction.Reset]);
+
             for (int y = Molecule.Height - 1; y >= 0; y--)
             {
-                Writer.WriteGrabResetAction(m_lowerUnbondArms, movePos.Concat(moveNeg).Concat(new[] { Instruction.Retract }), updateTime: false);
-                Writer.WriteGrabResetAction(m_upperUnbondArms, movePos);
+                for (int x = 0; x < Molecule.Width; x++)
+                {
+                    // We need to move all the arms so that they don't hit each other, but we only write Grab instructions
+                    // if there's actually an atom there. This way, the arm can potentially be optimized away later on if
+                    // it never actually grabs anything.
+                    bool isAtomPresent = Molecule.GetAtom(new Vector2(x, y - 1)) != null;
+                    Writer.Write(m_lowerUnbondArms[x], isAtomPresent ? lowerArmsGrab : lowerArmsWait, updateTime: false);
+
+                    isAtomPresent = Molecule.GetAtom(new Vector2(x, y)) != null;
+                    Writer.Write(m_upperUnbondArms[x], isAtomPresent ? upperArmsGrab : upperArmsWait, updateTime: false);
+                }
+
+                // Move to just after the upper arms finish moving (i.e. when the unbonded atoms have been dropped)
+                Writer.AdjustTime(movePos.Count() + 1);
 
                 int lastAtomX = Molecule.GetRow(y).First().Position.X;
                 for (int x = Molecule.Width - 1; x >= lastAtomX; x--)
