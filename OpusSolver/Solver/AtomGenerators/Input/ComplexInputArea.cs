@@ -9,7 +9,7 @@ namespace OpusSolver.Solver.AtomGenerators
     /// </summary>
     public class ComplexInputArea : AtomGenerator
     {
-        private List<MoleculeInput> m_inputs = new List<MoleculeInput>();
+        private List<MoleculeDisassembler> m_disassemblers = new List<MoleculeDisassembler>();
         private AtomConveyor m_conveyor;
 
         public override Vector2 OutputPosition => m_conveyor?.OutputPosition ?? new Vector2();
@@ -18,37 +18,37 @@ namespace OpusSolver.Solver.AtomGenerators
             : base(writer)
         {
             var multiAtomReagents = reagents.Where(r => r.Atoms.Count() > 1);
-            AddMultiAtomInputs(multiAtomReagents);
+            AddMultiAtomDisassemblers(multiAtomReagents);
 
             var singleAtomReagents = reagents.Where(r => r.Atoms.Count() == 1);
-            AddSingleAtomInputs(singleAtomReagents);
+            AddSingleAtomDisassemblers(singleAtomReagents);
 
-            if (m_inputs.Count > 1)
+            if (m_disassemblers.Count > 1)
             {
-                var highestInput = m_inputs.MaxBy(input => input.Position.Y);
-                m_conveyor = new AtomConveyor(this, writer, new Vector2(0, 0), highestInput.Position.Y + highestInput.OutputPosition.Y);
+                var highestDisassembler = m_disassemblers.MaxBy(d => d.Position.Y);
+                m_conveyor = new AtomConveyor(this, writer, new Vector2(0, 0), highestDisassembler.Position.Y + highestDisassembler.OutputPosition.Y);
             }
         }
 
-        private void AddMultiAtomInputs(IEnumerable<Molecule> reagents)
+        private void AddMultiAtomDisassemblers(IEnumerable<Molecule> reagents)
         {
             foreach (var reagent in reagents)
             {
-                MoleculeInput input;
+                MoleculeDisassembler dissassember;
                 if (reagent.Height == 1)
                 {
-                    input = new LinearMoleculeInput(this, Writer, new Vector2(0, 0), reagent);
+                    dissassember = new LinearMoleculeDisassembler(this, Writer, new Vector2(0, 0), reagent);
                 }
                 else
                 {
-                    input = new MultiAtomInput(this, Writer, new Vector2(0, 0), reagent);
+                    dissassember = new UniversalMoleculeDisassembler(this, Writer, new Vector2(0, 0), reagent);
                 }
 
-                if (m_inputs.Count > 0)
+                if (m_disassemblers.Count > 0)
                 {
-                    // Position this input just above the previous one
-                    var prevInput = m_inputs[m_inputs.Count - 1];
-                    int y = prevInput.Position.Y + prevInput.Height - prevInput.HeightBelowOrigin + input.HeightBelowOrigin;
+                    // Position this disassembler just above the previous one
+                    var prevDisassembler = m_disassemblers[m_disassemblers.Count - 1];
+                    int y = prevDisassembler.Position.Y + prevDisassembler.Height - prevDisassembler.HeightBelowOrigin + dissassember.HeightBelowOrigin;
 
                     // Keep the Y position a multiple of 2, so that it lines up with the arms of the conveyor
                     if (y % 2 > 0)
@@ -56,14 +56,14 @@ namespace OpusSolver.Solver.AtomGenerators
                         y++;
                     }
 
-                    input.Position = new Vector2(0, y);
+                    dissassember.Position = new Vector2(0, y);
                 }
 
-                m_inputs.Add(input);
+                m_disassemblers.Add(dissassember);
             }
         }
 
-        private void AddSingleAtomInputs(IEnumerable<Molecule> reagents)
+        private void AddSingleAtomDisassemblers(IEnumerable<Molecule> reagents)
         {
             int nextYPosition = 2;
 
@@ -72,7 +72,7 @@ namespace OpusSolver.Solver.AtomGenerators
             {
                 if (seenElements.Add(reagent.Atoms.First().Element))
                 {
-                    m_inputs.Add(new SingleAtomInput(this, Writer, new Vector2(0, nextYPosition), reagent, Direction.E, Instruction.RotateCounterclockwise));
+                    m_disassemblers.Add(new SingleAtomDisassembler(this, Writer, new Vector2(0, nextYPosition), reagent, Direction.E, Instruction.RotateCounterclockwise));
                     nextYPosition += 2;
                 }
             }
@@ -80,9 +80,9 @@ namespace OpusSolver.Solver.AtomGenerators
 
         public override void Generate(Element element, int id)
         {
-            var input = m_inputs.Single(i => i.Molecule.ID == id);
-            input.GetNextAtom();
-            m_conveyor?.MoveAtom(input.Position.Y + input.OutputPosition.Y);
+            var disassembler = m_disassemblers.Single(i => i.Molecule.ID == id);
+            disassembler.GetNextAtom();
+            m_conveyor?.MoveAtom(disassembler.Position.Y + disassembler.OutputPosition.Y);
         }
     }
 }

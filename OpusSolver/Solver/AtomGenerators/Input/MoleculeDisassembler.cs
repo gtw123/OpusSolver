@@ -1,9 +1,9 @@
 ﻿namespace OpusSolver.Solver.AtomGenerators.Input
 {
     /// <summary>
-    /// Generates atoms a from a reagent input.
+    /// Generates atoms a from a reagent molecule by disassembling it (if necessary) into individual atoms.
     /// </summary>
-    public abstract class MoleculeInput : SolverComponent
+    public abstract class MoleculeDisassembler : SolverComponent
     {
         public override Vector2 OutputPosition => new Vector2(0, 0);
 
@@ -12,7 +12,7 @@
         public abstract int Height { get; }
         public virtual int HeightBelowOrigin => 0;
 
-        protected MoleculeInput(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
+        protected MoleculeDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
             : base(parent, writer, position)
         {
             Molecule = molecule;

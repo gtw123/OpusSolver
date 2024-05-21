@@ -5,9 +5,9 @@ using System.Linq;
 namespace OpusSolver.Solver.AtomGenerators.Input
 {
     /// <summary>
-    /// Decomposes a multi-atom molecule into single atoms.
+    /// Dissassembles an arbitrary molecule into single atoms.
     /// </summary>
-    public class MultiAtomInput : MoleculeInput
+    public class UniversalMoleculeDisassembler : MoleculeDisassembler
     {
         public override int Height => Molecule.Height + 4;
         public override int HeightBelowOrigin => Molecule.Height - 1;
@@ -20,7 +20,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
 
         private LoopingCoroutine<Element> m_extractAtomsCoroutine;
 
-        public MultiAtomInput(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
+        public UniversalMoleculeDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
             : base(parent, writer, position, molecule)
         {
             m_extractAtomsCoroutine = new LoopingCoroutine<Element>(ExtractAtoms);

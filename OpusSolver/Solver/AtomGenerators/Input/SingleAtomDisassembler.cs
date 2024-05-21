@@ -5,9 +5,9 @@ using static System.FormattableString;
 namespace OpusSolver.Solver.AtomGenerators.Input
 {
     /// <summary>
-    /// Generates atoms a from a single-atom reagent input.
+    /// Generates atoms a from a single-atom reagent molecule.
     /// </summary>
-    public class SingleAtomInput : MoleculeInput
+    public class SingleAtomDisassembler : MoleculeDisassembler
     {
         public override int Height => 1;
         public Element Element { get; private set; }
@@ -15,12 +15,12 @@ namespace OpusSolver.Solver.AtomGenerators.Input
         private Arm m_outputArm;
         private Instruction m_instruction;
 
-        public SingleAtomInput(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule, int direction, Instruction instruction)
+        public SingleAtomDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule, int direction, Instruction instruction)
             : base(parent, writer, position, molecule)
         {
             if (molecule.Atoms.Count() > 1)
             {
-                throw new ArgumentException("SingleAtomInput can't handle molecules with multiple atoms.");
+                throw new ArgumentException("SingleAtomDisassembler can't handle molecules with multiple atoms.");
             }
 
             Element = molecule.Atoms.First().Element;
