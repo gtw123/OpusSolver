@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solver.AtomGenerators.Input
+namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
 {
     /// <summary>
     /// Dissassembles an arbitrary molecule into single atoms.

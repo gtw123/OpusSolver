@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
 
-namespace OpusSolver.Solver.AtomGenerators.Output
+namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
     /// <summary>
     /// Assembles arbitrary molecules from their component atoms.

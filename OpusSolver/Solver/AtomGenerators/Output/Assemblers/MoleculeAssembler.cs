@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solver.AtomGenerators.Output
+﻿namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
     /// <summary>
     /// Assembles molecules from their component atoms.

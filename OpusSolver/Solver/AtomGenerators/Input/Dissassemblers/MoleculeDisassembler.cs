@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solver.AtomGenerators.Input
+﻿namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
 {
     /// <summary>
     /// Generates atoms a from a reagent molecule by disassembling it (if necessary) into individual atoms.

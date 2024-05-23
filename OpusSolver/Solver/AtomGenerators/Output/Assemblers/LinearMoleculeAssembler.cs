@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solver.AtomGenerators.Output
+namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
     public class LinearMoleculeAssembler : MoleculeAssembler
     {
