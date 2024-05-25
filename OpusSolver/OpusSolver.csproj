@@ -62,9 +62,11 @@
     <Compile Include="IO\PuzzleReader.cs" />
     <Compile Include="IO\ParseException.cs" />
     <Compile Include="Solution\Metrics.cs" />
+    <Compile Include="Solver\AssemblyType.cs" />
     <Compile Include="Solver\AtomGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\Input\SimpleInputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\TrivialInputArea.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Star2MoleculeAssember.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\LinearMoleculeAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\MoleculeAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\SaltGeneratorNoPassThrough.cs" />

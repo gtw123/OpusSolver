@@ -15,11 +15,68 @@ namespace OpusSolver.Solver.ElementGenerators
         private IEnumerable<Molecule> m_products;
         private int m_outputScale;
 
+        private Dictionary<int, AssemblyType> m_assemblyTypes = new();
+
         public OutputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> products, int outputScale)
             : base(commandSequence)
         {
             m_products = products;
             m_outputScale = outputScale;
+
+            foreach (var product in products)
+            {
+                m_assemblyTypes[product.ID] = DetermineAssemblyType(product);
+            }
+        }
+
+        private AssemblyType DetermineAssemblyType(Molecule product)
+        {
+            if (product.Atoms.Count() == 1)
+            {
+                return AssemblyType.SingleAtom;
+            }
+            else if (product.Height == 1)
+            {
+                // TODO: Consider triplex
+                return AssemblyType.Linear;
+            }
+            else if (product.Atoms.Count() == 4)
+            {
+                // TODO: Consider triplex
+                if (product.GetAtom(new Vector2(1, 1)) != null)
+                {
+                    Vector2[] positions = [new Vector2(0, 1), new Vector2(1, 2), new Vector2(2, 0)];
+                    if (positions.All(pos => product.GetAtom(pos) != null))
+                    {
+                        return AssemblyType.Star2;
+                    }
+
+                    positions = [new Vector2(0, 2), new Vector2(1, 0), new Vector2(2, 1)];
+                    if (positions.All(pos => product.GetAtom(pos) != null))
+                    {
+                        product.Rotate180();
+                        return AssemblyType.Star2;
+                    }
+                }
+            }
+
+            return AssemblyType.Universal;
+        }
+
+        private IEnumerable<Element> GetProductElementOrder(Molecule product)
+        {
+            var type = m_assemblyTypes[product.ID];
+            return type switch
+            {
+                AssemblyType.SingleAtom or AssemblyType.Linear or AssemblyType.Universal => product.GetAtomsInInputOrder().Select(a => a.Element).ToList(),
+                AssemblyType.Star2 => [
+                    product.GetAtom(new Vector2(1, 1)).Element,
+                    product.GetAtom(new Vector2(2, 0)).Element,
+                    product.GetAtom(new Vector2(1, 2)).Element,
+                    product.GetAtom(new Vector2(0, 1)).Element
+                ],
+                _ => throw new ArgumentException($"Unsupported assembler type {type}")
+            };
         }
 
         public void GenerateCommandSequence()
@@ -31,9 +88,11 @@ namespace OpusSolver.Solver.ElementGenerators
                 // non-repeating ones. This is to compensate for the fact that we build all copies of
                 // the repeating molecules at the same time.
                 int numCopies = (anyRepeats && !product.HasRepeats) ? 6 * m_outputScale : 1;
+
+                var elementOrder = GetProductElementOrder(product);
                 for (int i = 0; i < numCopies; i++)
                 {
-                    foreach (var element in product.GetAtomsInInputOrder().Select(a => a.Element))
+                    foreach (var element in elementOrder)
                     {
                         CommandSequence.Add(CommandType.Consume, Parent.RequestElement(element), this, product.ID);
                     }
@@ -60,7 +119,7 @@ namespace OpusSolver.Solver.ElementGenerators
                 }
             }
 
-            return new ComplexOutputArea(writer, m_products);
+            return new ComplexOutputArea(writer, m_products, m_assemblyTypes);
         }
     }
 }
