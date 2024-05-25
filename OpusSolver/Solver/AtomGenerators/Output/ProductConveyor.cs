@@ -29,9 +29,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             CreateOutputs();
 
             var armPos = new Vector2(-1, 1);
-            m_outputArm = new Arm(this, armPos, Direction.SE, MechanismType.Arm1);
+            m_outputArm = new Arm(this, armPos, HexRotation.R300, MechanismType.Arm1);
 
-            new Track(this, armPos, Direction.NE, m_outputs.Values.Max(o => o.DropPosition));
+            new Track(this, armPos, HexRotation.R60, m_outputs.Values.Max(o => o.DropPosition));
         }
 
         private void CreateOutputs()

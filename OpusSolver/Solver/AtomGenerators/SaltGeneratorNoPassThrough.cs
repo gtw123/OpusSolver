@@ -11,8 +11,8 @@ namespace OpusSolver.Solver.AtomGenerators
         public SaltGeneratorNoPassThrough(ProgramWriter writer)
             : base(writer)
         {
-            new Glyph(this, new Vector2(0, 0), Direction.E, GlyphType.Calcification);
-            OutputArm = new Arm(this, new Vector2(3, 0), Direction.W, MechanismType.Arm1, extension: 3);
+            new Glyph(this, new Vector2(0, 0), HexRotation.R0, GlyphType.Calcification);
+            OutputArm = new Arm(this, new Vector2(3, 0), HexRotation.R180, MechanismType.Arm1, extension: 3);
         }
 
         public override void Generate(Element element, int id)

@@ -161,7 +161,7 @@ namespace OpusSolver.Solver
         {
             bool isGrabbing = false;
             int extension = initialExtension;
-            int deltaRotation = 0;
+            HexRotation deltaRotation = HexRotation.R0;
             int deltaPosition = 0;
 
             foreach (var instruction in instructions)
@@ -170,8 +170,8 @@ namespace OpusSolver.Solver
                 {
                     case Instruction.Grab: isGrabbing = true; break;
                     case Instruction.Drop: isGrabbing = false; break;
-                    case Instruction.RotateClockwise: deltaRotation = DirectionUtil.Rotate60Clockwise(deltaRotation); break;
-                    case Instruction.RotateCounterclockwise: deltaRotation = DirectionUtil.Rotate60Counterclockwise(deltaRotation); break;
+                    case Instruction.RotateClockwise: deltaRotation = deltaRotation.Rotate60Clockwise(); break;
+                    case Instruction.RotateCounterclockwise: deltaRotation = deltaRotation.Rotate60Counterclockwise(); break;
                     case Instruction.Extend: extension = Math.Min(extension + 1, 3); break;
                     case Instruction.Retract: extension = Math.Max(extension - 1, 0); break;
                     case Instruction.MovePositive: deltaPosition++; break;  // TODO: Handle cyclical tracks, where it may reset by moving in the same direction instead of opposite
@@ -188,7 +188,7 @@ namespace OpusSolver.Solver
 
             int resetTime = isGrabbing ? 1 : 0;
             resetTime += Math.Abs(extension - initialExtension);
-            resetTime += 3 - Math.Abs(deltaRotation - 3);
+            resetTime += 3 - Math.Abs(deltaRotation.IntValue - 3);
             resetTime += Math.Abs(deltaPosition);
 
             // Even if there is nothing to reset, the instruction will still take one cycle

@@ -29,11 +29,11 @@ namespace OpusSolver.Solver.AtomGenerators.Input
                 throw new ArgumentException(Invariant($"SimpleInputArea can't handle more than {MaxReagents} distinct reagents."));
             }
 
-            int dir = Direction.W;
+            var dir = HexRotation.R180;
             foreach (var reagent in reagents)
             {
                 m_disassemblers.Add(new SingleAtomDisassembler(this, Writer, new Vector2(0, 0), reagent, dir, Instruction.Extend));
-                dir--;
+                dir = dir.Rotate60Clockwise();
             }
         }
 

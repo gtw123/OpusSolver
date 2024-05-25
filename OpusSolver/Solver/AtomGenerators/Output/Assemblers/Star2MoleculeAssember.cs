@@ -22,13 +22,13 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             m_products = products;
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
 
-            new Glyph(this, new Vector2(1, 0), Direction.NE, GlyphType.MultiBonding);
-            m_assemblyArm = new Arm(this, new Vector2(0, -3), Direction.NE, MechanismType.Arm1, 3);
+            new Glyph(this, new Vector2(1, 0), HexRotation.R60, GlyphType.MultiBonding);
+            m_assemblyArm = new Arm(this, new Vector2(0, -3), HexRotation.R60, MechanismType.Arm1, 3);
 
-            new Track(this, m_assemblyArm.Position, Direction.E, 1);
+            new Track(this, m_assemblyArm.Position, HexRotation.R0, 1);
 
             int index = 0;
-            int rotation = Direction.SE;
+            HexRotation rotation = HexRotation.R300;
             foreach (var product in products)
             {
                 var centerAtomLocation = new Vector2(4 + index * 3, -3);
@@ -36,15 +36,15 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 var productOriginOffset = product.Origin.RotateBy(rotation);
                 var productLocation = centerAtomLocation - centerOffset + productOriginOffset;
 
-                new Product(this, productLocation, DirectionUtil.RotateBy(product.Rotation, rotation), product.ID);
+                new Product(this, productLocation, product.Rotation + rotation, product.ID);
                 m_outputLocationsById[product.ID] = index;
 
                 if (index > 0)
                 {
-                    m_outputArms.Add(new Arm(this, new Vector2(1 + index * 3, 0), Direction.SW, MechanismType.Arm1, 3));
+                    m_outputArms.Add(new Arm(this, new Vector2(1 + index * 3, 0), HexRotation.R240, MechanismType.Arm1, 3));
                 }
 
-                rotation = DirectionUtil.Rotate60Counterclockwise(rotation);
+                rotation = rotation.Rotate60Counterclockwise();
                 index++;
             }
         }

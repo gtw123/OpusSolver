@@ -82,17 +82,17 @@ namespace OpusSolver
             return new Vector2(X * scale, Y * scale);
         }
 
-        public Vector2 RotateBy(int rotation)
+        public Vector2 RotateBy(HexRotation rotation)
         {
-            return (rotation % Direction.Count) switch
+            return rotation.IntValue switch
             {
-                Direction.E => new Vector2(X, Y),
-                Direction.NE => new Vector2(-Y, X + Y),
-                Direction.NW => new Vector2(-X - Y, X),
-                Direction.W => new Vector2(-X, -Y),
-                Direction.SW => new Vector2(Y, -X - Y),
-                Direction.SE => new Vector2(X + Y, -X),
-                _ => throw new ArgumentException(Invariant($"Invalid direction"))
+                0 => new Vector2(X, Y),
+                1 => new Vector2(-Y, X + Y),
+                2 => new Vector2(-X - Y, X),
+                3 => new Vector2(-X, -Y),
+                4 => new Vector2(Y, -X - Y),
+                5 => new Vector2(X + Y, -X),
+                _ => throw new ArgumentException(Invariant($"Invalid rotation {rotation.IntValue}"))
             };
         }
 
@@ -111,19 +111,18 @@ namespace OpusSolver
             return new Vector2(-X, -Y);
         }
 
-        public Vector2 OffsetInDirection(int direction, int length)
+        public Vector2 OffsetInDirection(HexRotation direction, int length)
         {
-            switch (direction)
+            return direction.IntValue switch
             {
-                case Direction.E:  return new Vector2(X + length, Y);
-                case Direction.NE: return new Vector2(X, Y + length);
-                case Direction.NW: return new Vector2(X - length, Y + length);
-                case Direction.W:  return new Vector2(X - length, Y);
-                case Direction.SW: return new Vector2(X, Y - length);
-                case Direction.SE: return new Vector2(X + length, Y - length);
-                default:
-                    throw new ArgumentException(Invariant($"Invalid direction {direction}."));
-            }
+                0 => new Vector2(X + length, Y),
+                1 => new Vector2(X, Y + length),
+                2 => new Vector2(X - length, Y + length),
+                3 => new Vector2(X - length, Y),
+                4 => new Vector2(X, Y - length),
+                5 => new Vector2(X + length, Y - length),
+                _ => throw new ArgumentException(Invariant($"Invalid direction {direction}."))
+            };
         }
 
         public float DistanceToSquared(Vector2 other)

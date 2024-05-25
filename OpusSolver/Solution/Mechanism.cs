@@ -7,7 +7,7 @@
     {
         public MechanismType Type { get; private set; }
 
-        public Mechanism(GameObject parent, Vector2 position, int rotation, MechanismType type)
+        public Mechanism(GameObject parent, Vector2 position, HexRotation rotation, MechanismType type)
             : base(parent, position, rotation)
         {
             Type = type;

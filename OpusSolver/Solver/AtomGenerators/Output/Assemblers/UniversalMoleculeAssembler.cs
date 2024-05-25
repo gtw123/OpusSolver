@@ -46,23 +46,23 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private void CreateBonders()
         {
             var position = new Vector2(0, 0);
-            AddBonder(ref position, 0, 0, Direction.E, GlyphType.Bonding);
-            AddBonder(ref position, Width + 2, 0, Direction.NE, GlyphType.Bonding);
-            AddBonder(ref position, Width, 0, Direction.NW, GlyphType.Bonding);
+            AddBonder(ref position, 0, 0, HexRotation.R0, GlyphType.Bonding);
+            AddBonder(ref position, Width + 2, 0, HexRotation.R60, GlyphType.Bonding);
+            AddBonder(ref position, Width, 0, HexRotation.R120, GlyphType.Bonding);
 
             if (m_hasTriplex)
             {
-                AddBonder(ref position, Width - 1, 0, Direction.E, GlyphType.TriplexBonding);
-                AddBonder(ref position, 3, 0, Direction.NW, GlyphType.TriplexBonding);
-                AddBonder(ref position, 1, 1, Direction.SW, GlyphType.TriplexBonding);
+                AddBonder(ref position, Width - 1, 0, HexRotation.R0, GlyphType.TriplexBonding);
+                AddBonder(ref position, 3, 0, HexRotation.R120, GlyphType.TriplexBonding);
+                AddBonder(ref position, 1, 1, HexRotation.R240, GlyphType.TriplexBonding);
 
-                AddBonder(ref position, Width - 1, -1, Direction.E, GlyphType.Unbonding);
-                AddBonder(ref position, Width, 0, Direction.NE, GlyphType.Unbonding);
-                AddBonder(ref position, Width, 0, Direction.NW, GlyphType.Unbonding);
+                AddBonder(ref position, Width - 1, -1, HexRotation.R0, GlyphType.Unbonding);
+                AddBonder(ref position, Width, 0, HexRotation.R60, GlyphType.Unbonding);
+                AddBonder(ref position, Width, 0, HexRotation.R120, GlyphType.Unbonding);
             }
         }
 
-        private void AddBonder(ref Vector2 position, int xOffset, int yOffset, int direction, GlyphType type)
+        private void AddBonder(ref Vector2 position, int xOffset, int yOffset, HexRotation direction, GlyphType type)
         {
             position.X += xOffset;
             position.Y += yOffset;
@@ -71,8 +71,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
         private void CreateArms()
         {
-            m_lowerArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(-Width + x + 1, -2), Direction.NE, MechanismType.Piston, 2)).ToList();
-            m_upperArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(x + 2, -1), Direction.NE, MechanismType.Piston, 2)).ToList();
+            m_lowerArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(-Width + x + 1, -2), HexRotation.R60, MechanismType.Piston, 2)).ToList();
+            m_upperArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(x + 2, -1), HexRotation.R60, MechanismType.Piston, 2)).ToList();
         }
 
         private void CreateTracks()
@@ -83,8 +83,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 lowerTrackLength += Width * 4 + 2;
             }
 
-            new Track(this, new Vector2(-Width + 1, -2), Direction.E, lowerTrackLength);
-            new Track(this, new Vector2(2, -1), Direction.E, lowerTrackLength - Width - 1);
+            new Track(this, new Vector2(-Width + 1, -2), HexRotation.R0, lowerTrackLength);
+            new Track(this, new Vector2(2, -1), HexRotation.R0, lowerTrackLength - Width - 1);
         }
 
         public override void AddAtom(Element element, int productID)
@@ -120,11 +120,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private void GrabAtom(Atom atom)
         {
             var arm = m_lowerArms[m_currentArm];
-            if (atom.Bonds[Direction.E] == BondType.Single)
+            if (atom.Bonds[HexRotation.R0] == BondType.Single)
             {
                 // No need to grab as the atom will have just been bonded to the
                 // existing atom on the bonder
-                SetUsedBonders(GlyphType.Bonding, Direction.E);
+                SetUsedBonders(GlyphType.Bonding, HexRotation.R0);
             }
             else
             {
@@ -137,7 +137,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             // Move the atom to the rightmost side of the bonder
             Writer.Write(arm, Instruction.MovePositive);
 
-            if (atom.Bonds[Direction.W] != BondType.Single)
+            if (atom.Bonds[HexRotation.R180] != BondType.Single)
             {
                 // Move the atom to the assembly area
                 Writer.Write(arm, Enumerable.Repeat(Instruction.MovePositive, atom.Position.X + 1));
@@ -224,7 +224,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             }
         }
 
-        private void SetUsedBonders(IEnumerable<(GlyphType, int?)> bonders)
+        private void SetUsedBonders(IEnumerable<(GlyphType, HexRotation?)> bonders)
         {
             foreach (var (type, direction) in bonders)
             {
@@ -232,7 +232,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             }
         }
 
-        private void SetUsedBonders(GlyphType type, int? direction)
+        private void SetUsedBonders(GlyphType type, HexRotation? direction)
         {
             var bonders = m_bonders.Where(b => b.Type == type && (!direction.HasValue || b.Rotation == direction.Value));
             if (!bonders.Any())

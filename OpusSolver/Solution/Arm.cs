@@ -20,7 +20,7 @@
             sm_nextID = 0;
         }
 
-        public Arm(GameObject parent, Vector2 position, int rotation, MechanismType type, int extension = 1)
+        public Arm(GameObject parent, Vector2 position, HexRotation rotation, MechanismType type, int extension = 1)
             : base(parent, position, rotation, type)
         {
             Extension = extension;

@@ -12,9 +12,9 @@
             get
             {
                 // Assume W, SW, SE rotates CCW and NW, NE, E rotates CW.
-                int rot = OutputArm.Rotation;
-                int dir = (rot >= Direction.W) ? DirectionUtil.Rotate60Counterclockwise(rot)
-                    : DirectionUtil.Rotate60Clockwise(rot);
+                var rot = OutputArm.Rotation;
+                var dir = (rot == HexRotation.R180 || rot == HexRotation.R240 || rot == HexRotation.R300) ? rot.Rotate60Counterclockwise()
+                    : rot.Rotate60Clockwise();
                 return OutputArm.Position.OffsetInDirection(dir, OutputArm.Extension);
             }
         }

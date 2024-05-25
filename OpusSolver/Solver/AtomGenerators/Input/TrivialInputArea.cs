@@ -20,7 +20,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
                 throw new ArgumentException("TrivialInputArea can't handle reagents with multiple atoms.");
             }
 
-            new Reagent(this, new Vector2(0, 0), 0, reagent.ID);
+            new Reagent(this, new Vector2(0, 0), HexRotation.R0, reagent.ID);
         }
 
         public override void Generate(Element element, int id)

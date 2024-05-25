@@ -9,7 +9,7 @@ namespace OpusSolver
     public class GameObject
     {
         public Vector2 Position { get; set; }
-        public int Rotation { get; set; }
+        public HexRotation Rotation { get; set; }
 
         private GameObject m_parent;
 
@@ -31,7 +31,7 @@ namespace OpusSolver
             get { return m_children; }
         }
 
-        public GameObject(GameObject parent, Vector2 position, int rotation)
+        public GameObject(GameObject parent, Vector2 position, HexRotation rotation)
         {
             Parent = parent;
             Position = position;

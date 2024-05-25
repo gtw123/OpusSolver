@@ -11,7 +11,7 @@ namespace OpusSolver
     {
         public struct Segment
         {
-            public int Direction;
+            public HexRotation Direction;
             public int Length;
         }
 
@@ -22,13 +22,13 @@ namespace OpusSolver
         /// <summary>
         /// Creates a track with a straight path in the specified direction.
         /// </summary>
-        public Track(GameObject parent, Vector2 position, int pathDirection, int pathLength)
+        public Track(GameObject parent, Vector2 position, HexRotation pathDirection, int pathLength)
             : this(parent, position, new[] { new Segment { Direction = pathDirection, Length = pathLength } })
         {
         }
 
         public Track(GameObject parent, Vector2 position, IEnumerable<Segment> segments)
-            : base(parent, position, 0, MechanismType.Track)
+            : base(parent, position, HexRotation.R0, MechanismType.Track)
         {
             var pos = new Vector2(0, 0);
             m_path.Add(pos);

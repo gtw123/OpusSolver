@@ -17,17 +17,17 @@ namespace OpusSolver
         /// <summary>
         /// The bonds of this atom in each of the 6 directions around it.
         /// </summary>
-        public List<BondType> Bonds { get; private set; }
+        public Dictionary<HexRotation, BondType> Bonds { get; private set; }
 
-        public Atom(Element element, IEnumerable<BondType> bonds, Vector2 position)
+        public Atom(Element element, Dictionary<HexRotation, BondType> bonds, Vector2 position)
         {
             Element = element;
             Position = position;
-            Bonds = bonds.ToList();
+            Bonds = new(bonds);
 
-            if (Bonds.Count != Direction.Count)
+            if (Bonds.Count != HexRotation.Count)
             {
-                throw new ArgumentException(Invariant($"Expected 'bonds' to have {Direction.Count} items but it instead had {Bonds.Count}'."));
+                throw new ArgumentException(Invariant($"Expected 'bonds' to have {HexRotation.Count} items but it instead had {Bonds.Count}'."));
             }
         }
 

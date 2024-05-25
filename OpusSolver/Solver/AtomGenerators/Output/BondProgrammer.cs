@@ -14,11 +14,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
         public IEnumerable<Instruction> Instructions => m_instructions;
         public IEnumerable<Instruction> ReturnInstructions { get; private set; }
-        public IEnumerable<(GlyphType, int?)> UsedBonders => m_usedBonders;
+        public IEnumerable<(GlyphType, HexRotation?)> UsedBonders => m_usedBonders;
 
         private readonly int m_areaWidth;
         private List<Instruction> m_instructions;
-        private readonly HashSet<(GlyphType, int?)> m_usedBonders = new();
+        private readonly HashSet<(GlyphType, HexRotation?)> m_usedBonders = new();
 
         public BondProgrammer(int areaWidth, Molecule molecule, int row)
         {
@@ -45,8 +45,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         private void AddBonds()
         {
             // Do single bonds
-            MoveThroughBonder(GlyphType.Bonding, Direction.NE, m_areaWidth, a => a.Bonds[Direction.NE] == BondType.Single);
-            MoveThroughBonder(GlyphType.Bonding, Direction.NW, m_areaWidth - 1, a => a.Bonds[Direction.NW] == BondType.Single);
+            MoveThroughBonder(GlyphType.Bonding, HexRotation.R60, m_areaWidth, a => a.Bonds[HexRotation.R60] == BondType.Single);
+            MoveThroughBonder(GlyphType.Bonding, HexRotation.R120, m_areaWidth - 1, a => a.Bonds[HexRotation.R120] == BondType.Single);
 
             if (HasTriplexBonds())
             {
@@ -57,29 +57,29 @@ namespace OpusSolver.Solver.AtomGenerators.Output
                 m_usedBonders.Add((GlyphType.TriplexBonding, null));
 
                 // Now remove any extra bonds created between fire atoms
-                MoveThroughBonder(GlyphType.Unbonding, Direction.E, m_areaWidth - 1, a => IsUnbondedFirePair(a, Direction.W));
-                MoveThroughBonder(GlyphType.Unbonding, Direction.NE, m_areaWidth, a => IsUnbondedFirePair(a, Direction.NE));
-                MoveThroughBonder(GlyphType.Unbonding, Direction.NW, m_areaWidth - 1, a => IsUnbondedFirePair(a, Direction.NW));
+                MoveThroughBonder(GlyphType.Unbonding, HexRotation.R0, m_areaWidth - 1, a => IsUnbondedFirePair(a, HexRotation.R180));
+                MoveThroughBonder(GlyphType.Unbonding, HexRotation.R60, m_areaWidth, a => IsUnbondedFirePair(a, HexRotation.R60));
+                MoveThroughBonder(GlyphType.Unbonding, HexRotation.R120, m_areaWidth - 1, a => IsUnbondedFirePair(a, HexRotation.R120));
             }
         }
 
         private bool HasTriplexBonds()
         {
             var atoms = Molecule.GetRow(Row);
-            return atoms.Any(a => a.Bonds[Direction.E] == BondType.Triplex || a.Bonds[Direction.NE] == BondType.Triplex || a.Bonds[Direction.NW] == BondType.Triplex);
+            return atoms.Any(a => a.Bonds[HexRotation.R0] == BondType.Triplex || a.Bonds[HexRotation.R60] == BondType.Triplex || a.Bonds[HexRotation.R120] == BondType.Triplex);
         }
 
         /// <summary>
         /// Returns whether an atom and the atom in the specified direction are both fire atoms and have no bond between them.
         /// </summary>
-        private bool IsUnbondedFirePair(Atom atom, int direction)
+        private bool IsUnbondedFirePair(Atom atom, HexRotation direction)
         {
             return atom.Element == Element.Fire
                 && atom.Bonds[direction] == BondType.None
                 && Molecule.GetAdjacentAtom(atom.Position, direction)?.Element == Element.Fire;
         }
 
-        private void MoveThroughBonder(GlyphType type, int direction, int count, Func<Atom, bool> shouldBondAtom)
+        private void MoveThroughBonder(GlyphType type, HexRotation direction, int count, Func<Atom, bool> shouldBondAtom)
         {
             for (int i = 0; i < count; i++)
             {

@@ -7,7 +7,7 @@
     {
         public GlyphType Type { get; private set; }
 
-        public Glyph(GameObject parent, Vector2 position, int rotation, GlyphType type)
+        public Glyph(GameObject parent, Vector2 position, HexRotation rotation, GlyphType type)
             : base(parent, position, rotation)
         {
             Type = type;

@@ -56,7 +56,7 @@
   <ItemGroup>
     <Compile Include="CommandLineArguments.cs" />
     <Compile Include="Runner.cs" />
-    <Compile Include="Puzzle\Direction.cs" />
+    <Compile Include="Utils\HexRotation.cs" />
     <Compile Include="Puzzle\PeriodicTable.cs" />
     <Compile Include="IO\SolutionWriter.cs" />
     <Compile Include="IO\PuzzleReader.cs" />

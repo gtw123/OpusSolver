@@ -29,19 +29,19 @@ namespace OpusSolver.Solver.AtomGenerators.Output
                 throw new ArgumentException(Invariant($"SimpleOutputArea can't handle more than {MaxProducts} products."));
             }
 
-            int dir = Direction.E;
+            var dir = HexRotation.R0;
             foreach (var product in products)
             {
                 CreateOutput(product, dir);
-                dir = DirectionUtil.Rotate60Clockwise(dir);
+                dir = dir.Rotate60Clockwise();
             }
         }
 
-        private void CreateOutput(Molecule product, int direction)
+        private void CreateOutput(Molecule product, HexRotation direction)
         {
             var pos = new Vector2(0, 0).OffsetInDirection(direction, 1);
             new Product(this, pos, product.Rotation, product.ID);
-            m_outputArms[product.ID] = new Arm(this, pos * 2, DirectionUtil.Rotate180(direction), MechanismType.Piston, extension: 2);
+            m_outputArms[product.ID] = new Arm(this, pos * 2, direction.Rotate180(), MechanismType.Piston, extension: 2);
         }
 
         public override void Consume(Element element, int id)

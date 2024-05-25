@@ -15,7 +15,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
         private Arm m_outputArm;
         private Instruction m_instruction;
 
-        public SingleAtomDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule, int direction, Instruction instruction)
+        public SingleAtomDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule, HexRotation direction, Instruction instruction)
             : base(parent, writer, position, molecule)
         {
             if (molecule.Atoms.Count() > 1)
@@ -29,23 +29,23 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             CreateObjects(molecule, direction, instruction);
         }
 
-        private void CreateObjects(Molecule molecule, int direction, Instruction instruction)
+        private void CreateObjects(Molecule molecule, HexRotation direction, Instruction instruction)
         {
             var pos = new Vector2(0, 0).OffsetInDirection(direction, 1);
-            new Reagent(this, pos, 0, molecule.ID);
+            new Reagent(this, pos, HexRotation.R0, molecule.ID);
             if (instruction == Instruction.Extend)
             {
-                m_outputArm = new Arm(this, pos * 2, DirectionUtil.Rotate180(direction), MechanismType.Piston);
+                m_outputArm = new Arm(this, pos * 2, direction.Rotate180(), MechanismType.Piston);
             }
             else if (instruction == Instruction.RotateCounterclockwise)
             {
-                var armPos = new Vector2(0, 0).OffsetInDirection(DirectionUtil.Rotate60Clockwise(direction), 1);
-                m_outputArm = new Arm(this, armPos, DirectionUtil.Rotate60Counterclockwise(direction), MechanismType.Arm1);
+                var armPos = new Vector2(0, 0).OffsetInDirection(direction.Rotate60Clockwise(), 1);
+                m_outputArm = new Arm(this, armPos, direction.Rotate60Counterclockwise(), MechanismType.Arm1);
             }
             else if (instruction == Instruction.RotateClockwise)
             {
-                var armPos = new Vector2(0, 0).OffsetInDirection(DirectionUtil.Rotate60Counterclockwise(direction), 1);
-                m_outputArm = new Arm(this, armPos, DirectionUtil.Rotate60Clockwise(direction), MechanismType.Arm1);
+                var armPos = new Vector2(0, 0).OffsetInDirection(direction.Rotate60Counterclockwise(), 1);
+                m_outputArm = new Arm(this, armPos, direction.Rotate60Clockwise(), MechanismType.Arm1);
             }
             else
             {

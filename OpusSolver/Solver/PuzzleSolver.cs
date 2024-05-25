@@ -34,7 +34,7 @@ namespace OpusSolver.Solver
 
         private void CheckPreconditions()
         {
-            if (Puzzle.Products.Any(p => p.Atoms.Any(a => a.Bonds.Any(b => b == BondType.Triplex) && a.Element != Element.Fire)))
+            if (Puzzle.Products.Any(p => p.Atoms.Any(a => a.Bonds.Values.Any(b => b == BondType.Triplex) && a.Element != Element.Fire)))
             {
                 throw new SolverException("This puzzle has triplex bonds between non-fire atoms.");
             }

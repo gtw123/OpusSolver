@@ -22,7 +22,7 @@ namespace OpusSolver
         public int Height { get; private set; }
         public int Width { get; private set; }
         public int DiagonalLength { get; private set; }
-        public int Rotation { get; private set; }
+        public HexRotation Rotation { get; private set; }
 
         public bool HasRepeats { get; private set; }
         public bool HasTriplex { get; private set; }
@@ -34,7 +34,7 @@ namespace OpusSolver
             ID = id;
 
             HasRepeats = atoms.Any(atom => atom.Element == Element.Repeat);
-            HasTriplex = atoms.Any(a => a.Bonds.Any(b => b == BondType.Triplex));
+            HasTriplex = atoms.Any(a => a.Bonds.Values.Any(b => b == BondType.Triplex));
 
             AdjustBounds();
         }
@@ -70,7 +70,7 @@ namespace OpusSolver
             return m_atoms.SingleOrDefault(a => a.Position == position);
         }
 
-        public Atom GetAdjacentAtom(Vector2 position, int direction)
+        public Atom GetAdjacentAtom(Vector2 position, HexRotation direction)
         {
             return GetAtom(position.OffsetInDirection(direction, 1));
         }
@@ -90,50 +90,28 @@ namespace OpusSolver
             return Atoms.OrderByDescending(a => a.Position.Y).ThenByDescending(a => a.Position.X);
         }
 
-        public void Rotate60Counterclockwise()
+        public void RotateBy(HexRotation rotation)
         {
             foreach (var atom in m_atoms)
             {
-                atom.Position = atom.Position.Rotate60Counterclockwise();
-                atom.Bonds.Insert(0, atom.Bonds[Direction.Count - 1]);
-                atom.Bonds.RemoveAt(Direction.Count);
+                atom.Position = atom.Position.RotateBy(rotation);
+
+                var oldBonds = new Dictionary<HexRotation, BondType>(atom.Bonds);
+                foreach (var (dir, type) in oldBonds)
+                {
+                    atom.Bonds[dir + rotation] = type;
+                }
             }
 
-            Origin = Origin.Rotate60Counterclockwise();
-            Rotation = DirectionUtil.Rotate60Counterclockwise(Rotation);
+            Origin = Origin.RotateBy(rotation);
+            Rotation += rotation;
 
             AdjustBounds();
         }
 
-        public void Rotate60Clockwise()
-        {
-            foreach (var atom in m_atoms)
-            {
-                atom.Position = atom.Position.Rotate60Clockwise();
-                atom.Bonds.Add(atom.Bonds[0]);
-                atom.Bonds.RemoveAt(0);
-            }
-
-            Origin = Origin.Rotate60Clockwise();
-            Rotation = DirectionUtil.Rotate60Clockwise(Rotation);
-
-            AdjustBounds();
-        }
-
-        public void Rotate180()
-        {
-            foreach (var atom in m_atoms)
-            {
-                atom.Position = atom.Position.Rotate180();
-                atom.Bonds.Add(atom.Bonds[0]);
-                atom.Bonds.RemoveAt(0);
-            }
-
-            Origin = Origin.Rotate180();
-            Rotation = DirectionUtil.Rotate180(Rotation);
-
-            AdjustBounds();
-        }
+        public void Rotate60Counterclockwise() => RotateBy(HexRotation.R60);
+        public void Rotate60Clockwise() => RotateBy(HexRotation.R300);
+        public void Rotate180() => RotateBy(HexRotation.R180);
 
         /// <summary>
         /// Expands out the "repeat" atom (if any) of the molecule by copying the other atoms so there are a
@@ -184,7 +162,7 @@ namespace OpusSolver
                     if (atom == leftmostAtom)
                     {
                         // Bond the atom to the rest of the molecule by copying the bonds from the repeat atom
-                        for (int dir = 0; dir < Direction.Count; dir++)
+                        foreach (var dir in HexRotation.All)
                         {
                             var bondType = repeatAtom.Bonds[dir];
                             if (bondType != BondType.None)
@@ -225,15 +203,15 @@ namespace OpusSolver
                     }
                     else
                     {
-                        row1.Append(GetBondString(atom, Direction.NW));
-                        row1.Append(GetBondString(atom, Direction.NE));
+                        row1.Append(GetBondString(atom, HexRotation.R120));
+                        row1.Append(GetBondString(atom, HexRotation.R60));
 
-                        row2.Append(GetBondString(atom, Direction.W));
+                        row2.Append(GetBondString(atom, HexRotation.R180));
                         row2.Append(atom?.ToString() ?? " ");
-                        row2.Append(GetBondString(atom, Direction.E).Substring(0, 1));
+                        row2.Append(GetBondString(atom, HexRotation.R0).Substring(0, 1));
 
-                        row3.Append(GetBondString(atom, Direction.SW));
-                        row3.Append(GetBondString(atom, Direction.SE));
+                        row3.Append(GetBondString(atom, HexRotation.R240));
+                        row3.Append(GetBondString(atom, HexRotation.R300));
                     }
                 }
 
@@ -248,7 +226,7 @@ namespace OpusSolver
             return str.ToString();
         }
 
-        private static string GetBondString(Atom atom, int direction)
+        private static string GetBondString(Atom atom, HexRotation direction)
         {
             var bondType = atom.Bonds[direction];
             if (bondType == BondType.None)
@@ -256,22 +234,15 @@ namespace OpusSolver
                 return "  ";
             }
 
-            switch (direction)
+            return direction.IntValue switch
             {
-                case Direction.W:
-                case Direction.E:
-                    return bondType == BondType.Single ? "--" : "==";
-                case Direction.NW:
-                    return bondType == BondType.Single ? @" \" : @"\\";
-                case Direction.NE:
-                    return bondType == BondType.Single ? " /" : "//";
-                case Direction.SW:
-                    return bondType == BondType.Single ? "/ " : "//";
-                case Direction.SE:
-                    return bondType == BondType.Single ? @"\ " : @"\\";
-                default:
-                    throw new ArgumentOutOfRangeException("direction", direction, Invariant($"Invalid direction."));
-            }
+                0 or 3 => bondType == BondType.Single ? "--" : "==",
+                1 => bondType == BondType.Single ? " /" : "//",
+                2 => bondType == BondType.Single ? @" \" : @"\\",
+                4 => bondType == BondType.Single ? "/ " : "//",
+                5 => bondType == BondType.Single ? @"\ " : @"\\",
+                _ => throw new ArgumentOutOfRangeException("direction", direction, Invariant($"Invalid direction."))
+            };
         }
     }
 }

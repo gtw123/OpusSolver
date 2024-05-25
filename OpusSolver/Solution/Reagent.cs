@@ -7,7 +7,7 @@
     {
         public int ID { get; private set; }
 
-        public Reagent(GameObject parent, Vector2 position, int rotation, int id)
+        public Reagent(GameObject parent, Vector2 position, HexRotation rotation, int id)
             : base(parent, position, rotation)
         {
             ID = id;

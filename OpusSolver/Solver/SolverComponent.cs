@@ -15,7 +15,7 @@
         }
 
         protected SolverComponent(SolverComponent parent, ProgramWriter writer, Vector2 position)
-            : base(parent, position, 0)
+            : base(parent, position, HexRotation.R0)
         {
             Writer = writer;
         }

@@ -41,27 +41,27 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             int grabX = Molecule.GetRow(Molecule.Height - 1).Last().Position.X;
             var armPos = reagentPos.Add(grabX, Molecule.Height + 2);
 
-            m_grabArm = new Arm(this, armPos, Direction.SW, MechanismType.Arm1, extension: 3);
-            new Track(this, armPos, Direction.E, Molecule.Width);
+            m_grabArm = new Arm(this, armPos, HexRotation.R240, MechanismType.Arm1, extension: 3);
+            new Track(this, armPos, HexRotation.R0, Molecule.Width);
 
             armPos = reagentPos.Add(Molecule.Width, Molecule.Height);
-            m_lowerUnbondArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(x, 0), Direction.SW, MechanismType.Piston, extension: 2)).ToList();
-            m_upperUnbondArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(x, 1), Direction.SW, MechanismType.Arm1, extension: 2)).ToList();
-            m_moveArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(m_unbondWidth + x, 2), Direction.SW, MechanismType.Arm1, extension: 3)).ToList();
+            m_lowerUnbondArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(x, 0), HexRotation.R240, MechanismType.Piston, extension: 2)).ToList();
+            m_upperUnbondArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(x, 1), HexRotation.R240, MechanismType.Arm1, extension: 2)).ToList();
+            m_moveArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(m_unbondWidth + x, 2), HexRotation.R240, MechanismType.Arm1, extension: 3)).ToList();
 
             return armPos;
         }
 
         private void AddTracks(Vector2 armPos)
         {
-            new Track(this, armPos, Direction.E, Molecule.Width + m_unbondWidth - 1);
-            new Track(this, armPos.Add(0, 1), Direction.E, Molecule.Width + m_unbondWidth - 1);
+            new Track(this, armPos, HexRotation.R0, Molecule.Width + m_unbondWidth - 1);
+            new Track(this, armPos.Add(0, 1), HexRotation.R0, Molecule.Width + m_unbondWidth - 1);
 
             // For the "move arms", make the path wrap around to the left, to avoid it encroaching onto the output area
             var path = new[] {
-                 new Track.Segment { Direction = Direction.E, Length = Molecule.Width - 1 },
-                 new Track.Segment { Direction = Direction.NE, Length = 1 },
-                 new Track.Segment { Direction = Direction.W, Length = Molecule.Width - 2 }
+                 new Track.Segment { Direction = HexRotation.R0, Length = Molecule.Width - 1 },
+                 new Track.Segment { Direction = HexRotation.R60, Length = 1 },
+                 new Track.Segment { Direction = HexRotation.R180, Length = Molecule.Width - 2 }
             };
             new Track(this, armPos.Add(m_unbondWidth, 2), path);
         }
@@ -69,9 +69,9 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
         private void AddGlyphs()
         {
             var glyphPos = new Vector2(-m_unbondWidth - 3, 0);
-            new Glyph(this, glyphPos, Direction.SW, GlyphType.Unbonding);
-            new Glyph(this, glyphPos.Add(1, 0), Direction.SE, GlyphType.Unbonding);
-            new Glyph(this, glyphPos.Add(2, 0), Direction.E, GlyphType.Unbonding);
+            new Glyph(this, glyphPos, HexRotation.R240, GlyphType.Unbonding);
+            new Glyph(this, glyphPos.Add(1, 0), HexRotation.R300, GlyphType.Unbonding);
+            new Glyph(this, glyphPos.Add(2, 0), HexRotation.R0, GlyphType.Unbonding);
         }
 
         public override Element GetNextAtom()

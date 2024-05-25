@@ -49,7 +49,7 @@ namespace OpusSolver.Solver.AtomGenerators
                 AddStack(i++, info);
             }
 
-            OutputArm = new Arm(this, new Vector2(m_stacks.Count * 2 + 3, 0), Direction.W, MechanismType.Arm1, extension: 3);
+            OutputArm = new Arm(this, new Vector2(m_stacks.Count * 2 + 3, 0), HexRotation.R180, MechanismType.Arm1, extension: 3);
         }
 
         private void AddStack(int index, StackInfo info)
@@ -57,19 +57,19 @@ namespace OpusSolver.Solver.AtomGenerators
             var stack = new AtomStack { Info = info, Index = index };
             var pos = new Vector2(index * 2, 0);
 
-            stack.PushArm = new Arm(this, pos.Add(-1, 2), Direction.SE, MechanismType.Arm1);
-            stack.PopArm = new Arm(this, pos.Add(-1, 4), Direction.SE, MechanismType.Arm1);
-            stack.OutputArm = new Arm(this, pos.Add(2, -2), Direction.NW, MechanismType.Arm1, extension: 2);
+            stack.PushArm = new Arm(this, pos.Add(-1, 2), HexRotation.R300, MechanismType.Arm1);
+            stack.PopArm = new Arm(this, pos.Add(-1, 4), HexRotation.R300, MechanismType.Arm1);
+            stack.OutputArm = new Arm(this, pos.Add(2, -2), HexRotation.R120, MechanismType.Arm1, extension: 2);
 
-            new Track(this, pos.Add(-1, 0), Direction.NE, 4);
+            new Track(this, pos.Add(-1, 0), HexRotation.R60, 4);
             if (info.UsesRestore && (info.MultiAtom || info.WastesAtoms))
             {
-                new Glyph(this, pos.Add(0, -1), Direction.NE, GlyphType.Unbonding);
+                new Glyph(this, pos.Add(0, -1), HexRotation.R60, GlyphType.Unbonding);
             }
 
             if (info.MultiAtom || info.WastesAtoms)
             {
-                new Glyph(this, pos.Add(0, 1), Direction.NE, GlyphType.Bonding);
+                new Glyph(this, pos.Add(0, 1), HexRotation.R60, GlyphType.Bonding);
             }
 
             m_stacks.Add(stack);

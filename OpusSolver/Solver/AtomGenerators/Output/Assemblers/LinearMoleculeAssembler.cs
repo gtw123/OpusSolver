@@ -32,18 +32,18 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             m_products = products;
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
 
-            new Glyph(this, new Vector2(0, 0), Direction.E, GlyphType.Bonding);
-            m_arm = new Arm(this, new Vector2(0, -1), Direction.NE, MechanismType.Piston, 1);
+            new Glyph(this, new Vector2(0, 0), HexRotation.R0, GlyphType.Bonding);
+            m_arm = new Arm(this, new Vector2(0, -1), HexRotation.R60, MechanismType.Piston, 1);
 
             if (products.Count() == 1)
             {
-                new Track(this, m_arm.Position, Direction.E, 1);
+                new Track(this, m_arm.Position, HexRotation.R0, 1);
                 m_outputPosition = new Vector2(0, 1);
             }
             else
             {
                 // We need to shuffle the products along a bit to avoid hitting the output arm of the parent component
-                new Track(this, m_arm.Position, Direction.E, 3);
+                new Track(this, m_arm.Position, HexRotation.R0, 3);
                 m_outputPosition = new Vector2(2, 0);
             }
 

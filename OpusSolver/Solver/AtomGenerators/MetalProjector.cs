@@ -11,10 +11,10 @@
         public MetalProjector(ProgramWriter writer)
             : base(writer)
         {
-            new Glyph(this, new Vector2(0, 0), Direction.E, GlyphType.Projection);
+            new Glyph(this, new Vector2(0, 0), HexRotation.R0, GlyphType.Projection);
 
-            m_projectionArm = new Arm(this, new Vector2(0, 1), Direction.SW, MechanismType.Arm1);
-            OutputArm = new Arm(this, new Vector2(4, 0), Direction.W, MechanismType.Arm1, extension: 3);
+            m_projectionArm = new Arm(this, new Vector2(0, 1), HexRotation.R240, MechanismType.Arm1);
+            OutputArm = new Arm(this, new Vector2(4, 0), HexRotation.R180, MechanismType.Arm1, extension: 3);
         }
 
         public override void Consume(Element element, int id)

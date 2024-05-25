@@ -11,12 +11,12 @@
         public SaltGenerator(ProgramWriter writer)
             : base(writer)
         {
-            new Glyph(this, new Vector2(1, 0), Direction.E, GlyphType.Calcification);
-            new Track(this, new Vector2(0, 2), Direction.E, 1);
+            new Glyph(this, new Vector2(1, 0), HexRotation.R0, GlyphType.Calcification);
+            new Track(this, new Vector2(0, 2), HexRotation.R0, 1);
 
-            m_bigArm = new Arm(this, new Vector2(0, 2), Direction.SW, MechanismType.Arm1, extension: 2);
-            m_smallArm = new Arm(this, new Vector2(1, 1), Direction.SW, MechanismType.Arm1);
-            OutputArm = new Arm(this, new Vector2(5, 0), Direction.W, MechanismType.Arm1, extension: 3);
+            m_bigArm = new Arm(this, new Vector2(0, 2), HexRotation.R240, MechanismType.Arm1, extension: 2);
+            m_smallArm = new Arm(this, new Vector2(1, 1), HexRotation.R240, MechanismType.Arm1);
+            OutputArm = new Arm(this, new Vector2(5, 0), HexRotation.R180, MechanismType.Arm1, extension: 3);
         }
 
         public override void Generate(Element element, int id)

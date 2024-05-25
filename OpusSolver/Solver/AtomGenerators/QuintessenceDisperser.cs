@@ -19,13 +19,13 @@ namespace OpusSolver.Solver.AtomGenerators
         {
             m_generateCoroutine = new LoopingCoroutine<Element>(GenerateCardinals);
 
-            m_inputArm = new Arm(this, new Vector2(2, -2), Direction.NW, MechanismType.Arm1, extension: 2);
-            new Glyph(this, new Vector2(3, 0), Direction.E, GlyphType.Dispersion);
+            m_inputArm = new Arm(this, new Vector2(2, -2), HexRotation.R120, MechanismType.Arm1, extension: 2);
+            new Glyph(this, new Vector2(3, 0), HexRotation.R0, GlyphType.Dispersion);
 
-            m_disperseArm = new Arm(this, new Vector2(2, 1), Direction.SW, MechanismType.Arm1);
-            m_airFireArm = new Arm(this, new Vector2(4, -2), Direction.NW, MechanismType.Piston, extension: 2);
-            m_waterArm = new Arm(this, new Vector2(4, 1), Direction.SW, MechanismType.Piston, extension: 2);
-            OutputArm = new Arm(this, new Vector2(6, -2), Direction.NW, MechanismType.Arm1, extension: 2);
+            m_disperseArm = new Arm(this, new Vector2(2, 1), HexRotation.R240, MechanismType.Arm1);
+            m_airFireArm = new Arm(this, new Vector2(4, -2), HexRotation.R120, MechanismType.Piston, extension: 2);
+            m_waterArm = new Arm(this, new Vector2(4, 1), HexRotation.R240, MechanismType.Piston, extension: 2);
+            OutputArm = new Arm(this, new Vector2(6, -2), HexRotation.R120, MechanismType.Arm1, extension: 2);
         }
 
         public override void Consume(Element element, int id)

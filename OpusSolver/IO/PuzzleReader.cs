@@ -169,23 +169,23 @@ namespace OpusSolver.IO
             { 14, BondType.Triplex }, // Triplex Red + Black + Yellow
         };
 
-        private static readonly Dictionary<Vector2, int> sm_bondDirectionMapping = new()
+        private static readonly Dictionary<Vector2, HexRotation> sm_bondDirectionMapping = new()
         {
-            { new Vector2(1, 0), Direction.E },
-            { new Vector2(0, 1), Direction.NE },
-            { new Vector2(-1, 1), Direction.NW },
-            { new Vector2(-1, 0), Direction.W },
-            { new Vector2(0, -1), Direction.SW },
-            { new Vector2(1, -1), Direction.SE },
+            { new Vector2(1, 0), HexRotation.R0 },
+            { new Vector2(0, 1), HexRotation.R60 },
+            { new Vector2(-1, 1), HexRotation.R120 },
+            { new Vector2(-1, 0), HexRotation.R180 },
+            { new Vector2(0, -1), HexRotation.R240 },
+            { new Vector2(1, -1), HexRotation.R300 },
         };
 
         private class AtomInfo
         {
             public Element Element;
             public Vector2 Position;
-            public Dictionary<int, BondType> Bonds = new();
+            public Dictionary<HexRotation, BondType> Bonds = new();
 
-            public void AddBond(int direction, BondType bondType)
+            public void AddBond(HexRotation direction, BondType bondType)
             {
                 if (Bonds.ContainsKey(direction))
                 {
@@ -197,12 +197,12 @@ namespace OpusSolver.IO
 
             public Atom BuildAtom()
             {
-                var bonds = new List<BondType>();
-                for (int direction = 0; direction < Direction.Count; direction++)
+                var bonds = new Dictionary<HexRotation, BondType>();
+                foreach (var direction in HexRotation.All)
                 {
                     var bondType = BondType.None;
                     Bonds.TryGetValue(direction, out bondType);
-                    bonds.Add(bondType);
+                    bonds[direction] = bondType;
                 }
 
                 return new Atom(Element, bonds, Position);
@@ -250,7 +250,7 @@ namespace OpusSolver.IO
                     }
 
                     fromAtom.AddBond(bondDirection, bondType);
-                    toAtom.AddBond(DirectionUtil.Rotate180(bondDirection), bondType);
+                    toAtom.AddBond(bondDirection.Rotate180(), bondType);
                 }
 
                 return new Molecule(moleculeType, atoms.Select(atom => atom.BuildAtom()), id);
