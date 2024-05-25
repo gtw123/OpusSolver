@@ -92,6 +92,11 @@ namespace OpusSolver
             return new Vector2(X + Y, -X);
         }
 
+        public Vector2 Rotate180()
+        {
+            return new Vector2(-X, -Y);
+        }
+
         public Vector2 OffsetInDirection(int direction, int length)
         {
             switch (direction)

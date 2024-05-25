@@ -120,6 +120,21 @@ namespace OpusSolver
             AdjustBounds();
         }
 
+        public void Rotate180()
+        {
+            foreach (var atom in m_atoms)
+            {
+                atom.Position = atom.Position.Rotate180();
+                atom.Bonds.Add(atom.Bonds[0]);
+                atom.Bonds.RemoveAt(0);
+            }
+
+            Origin = Origin.Rotate180();
+            Rotation = DirectionUtil.Rotate180(Rotation);
+
+            AdjustBounds();
+        }
+
         /// <summary>
         /// Expands out the "repeat" atom (if any) of the molecule by copying the other atoms so there are a
         /// total of 6 copies. This brute force approach is is necessary because the solver isn't currently smart
