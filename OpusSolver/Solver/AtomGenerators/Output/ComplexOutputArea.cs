@@ -13,7 +13,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 
         private IEnumerable<Molecule> m_products;
         private MoleculeAssembler m_assembler;
-        private ProductConveyor m_productConveyor;
 
         public ComplexOutputArea(ProgramWriter writer, IEnumerable<Molecule> products)
             : base(writer)
@@ -28,17 +27,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             {
                 m_assembler = new UniversalMoleculeAssembler(this, writer, m_products);
             }
-
-            m_productConveyor = new ProductConveyor(m_assembler, writer, m_products);
         }
 
         public override void Consume(Element element, int id)
         {
-            bool isProductComplete = m_assembler.AddAtom(element, id);
-            if (isProductComplete)
-            {
-                m_productConveyor.MoveProductToOutputLocation(m_products.Single(product => product.ID == id));
-            }
+            m_assembler.AddAtom(element, id);
         }
 
         public override void OptimizeParts()

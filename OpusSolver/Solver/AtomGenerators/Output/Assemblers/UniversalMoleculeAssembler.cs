@@ -22,6 +22,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private List<Arm> m_upperArms;
         private List<Glyph> m_bonders = new List<Glyph>();
         private HashSet<Glyph> m_usedBonders = new HashSet<Glyph>();
+        private ProductConveyor m_productConveyor;
 
         private Molecule m_currentProduct;
         private int m_currentArm;
@@ -38,6 +39,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             CreateBonders();
             CreateArms();
             CreateTracks();
+
+            m_productConveyor = new ProductConveyor(this, writer, m_products);
         }
 
         private void CreateBonders()
@@ -107,6 +110,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 FinishRow(y);
 
                 bool finishedProduct = (y == 0);
+                if (finishedProduct)
+                {
+                    m_productConveyor.MoveProductToOutputLocation(m_currentProduct);
+                }
                 yield return finishedProduct;
             }
         }

@@ -11,6 +11,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private readonly IEnumerable<Molecule> m_products;
         private readonly LoopingCoroutine<bool> m_assembleCoroutine;
         private readonly Arm m_arm;
+        private ProductConveyor m_productConveyor;
 
         private Vector2 m_outputPosition;
         private Molecule m_currentProduct;
@@ -45,6 +46,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 new Track(this, m_arm.Position, Direction.E, 3);
                 m_outputPosition = new Vector2(2, 0);
             }
+
+            m_productConveyor = new ProductConveyor(this, writer, m_products);
         }
 
         public override bool AddAtom(Element element, int productID)
@@ -72,6 +75,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                     {
                         Writer.WriteGrabResetAction(m_arm, [Instruction.MovePositive, Instruction.MovePositive]);
                     }
+
+                    m_productConveyor.MoveProductToOutputLocation(m_currentProduct);
+
                     yield return true;
                 }
             }
