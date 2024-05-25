@@ -13,8 +13,7 @@
         /// <summary>
         /// Adds an atom to the assembly area.
         /// </summary>
-        /// <returns>Whether the current product is now completely assembled and ready to move to the output location</returns>
-        public abstract bool AddAtom(Element element, int productID);
+        public abstract void AddAtom(Element element, int productID);
 
         public virtual void OptimizeParts()
         {

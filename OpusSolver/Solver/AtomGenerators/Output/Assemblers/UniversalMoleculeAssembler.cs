@@ -16,7 +16,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
         private IEnumerable<Molecule> m_products;
         private bool m_hasTriplex;
-        private LoopingCoroutine<bool> m_assembleCoroutine;
+        private LoopingCoroutine<object> m_assembleCoroutine;
 
         private List<Arm> m_lowerArms;
         private List<Arm> m_upperArms;
@@ -34,7 +34,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             m_products = products;
             m_hasTriplex = products.Any(p => p.HasTriplex);
-            m_assembleCoroutine = new LoopingCoroutine<bool>(Assemble);
+            m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
 
             CreateBonders();
             CreateArms();
@@ -87,13 +87,13 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             new Track(this, new Vector2(2, -1), Direction.E, lowerTrackLength - Width - 1);
         }
 
-        public override bool AddAtom(Element element, int productID)
+        public override void AddAtom(Element element, int productID)
         {
             m_currentProduct = m_products.Single(product => product.ID == productID);
-            return m_assembleCoroutine.Next();
+            m_assembleCoroutine.Next();
         }
 
-        private IEnumerable<bool> Assemble()
+        private IEnumerable<object> Assemble()
         {
             for (int y = m_currentProduct.Height - 1; y >= 0; y--)
             {
@@ -102,19 +102,18 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 for (int i = 0; i < atoms.Count - 1; i++)
                 {
                     GrabAtom(atoms[i]);
-                    yield return false;
+                    yield return null;
                 }
 
                 var lastAtom = atoms[atoms.Count - 1];
                 GrabAtom(lastAtom);
                 FinishRow(y);
 
-                bool finishedProduct = (y == 0);
-                if (finishedProduct)
+                if (y == 0)
                 {
                     m_productConveyor.MoveProductToOutputLocation(m_currentProduct);
                 }
-                yield return finishedProduct;
+                yield return null;
             }
         }
 
