@@ -52,7 +52,7 @@ namespace OpusSolver.Solver.AtomGenerators
             }
             else
             {
-                int deltaRotation = (destRotation - m_currentWheelRotation + Direction.Count) % Direction.Count;
+                int deltaRotation = DirectionUtil.RotateBy(destRotation, -m_currentWheelRotation);
                 if (deltaRotation > 0)
                 {
                     int numRotations = deltaRotation;

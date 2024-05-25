@@ -18,9 +18,14 @@
 
     public static class DirectionUtil
     {
+        public static int RotateBy(int direction, int rotation)
+        {
+            return (direction + rotation + Direction.Count) % Direction.Count;
+        }
+
         public static int Rotate60Counterclockwise(int direction)
         {
-            return ((int)direction + 1) % Direction.Count;
+            return (direction + 1) % Direction.Count;
         }
 
         public static int Rotate60Clockwise(int direction)

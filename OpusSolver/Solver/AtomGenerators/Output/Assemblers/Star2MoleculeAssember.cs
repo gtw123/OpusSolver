@@ -32,23 +32,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             foreach (var product in products)
             {
                 var centerAtomLocation = new Vector2(4 + index * 3, -3);
-
-                // TODO: Do this in a simpler way
-                var centerOffset = new Vector2(1, 1);
-                for (int i = 0; i < rotation % Direction.Count; i++)
-                {
-                    centerOffset = centerOffset.Rotate60Counterclockwise();
-                }
-
-                var productOriginOffset = product.Origin;
-                for (int i = 0; i < rotation % Direction.Count; i++)
-                {
-                    productOriginOffset = productOriginOffset.Rotate60Counterclockwise();
-                }
-
+                var centerOffset = new Vector2(1, 1).RotateBy(rotation);
+                var productOriginOffset = product.Origin.RotateBy(rotation);
                 var productLocation = centerAtomLocation - centerOffset + productOriginOffset;
 
-                new Product(this, productLocation, (product.Rotation + rotation) % Direction.Count, product.ID);
+                new Product(this, productLocation, DirectionUtil.RotateBy(product.Rotation, rotation), product.ID);
                 m_outputLocationsById[product.ID] = index;
 
                 if (index > 0)

@@ -82,6 +82,20 @@ namespace OpusSolver
             return new Vector2(X * scale, Y * scale);
         }
 
+        public Vector2 RotateBy(int rotation)
+        {
+            return (rotation % Direction.Count) switch
+            {
+                Direction.E => new Vector2(X, Y),
+                Direction.NE => new Vector2(-Y, X + Y),
+                Direction.NW => new Vector2(-X - Y, X),
+                Direction.W => new Vector2(-X, -Y),
+                Direction.SW => new Vector2(Y, -X - Y),
+                Direction.SE => new Vector2(X + Y, -X),
+                _ => throw new ArgumentException(Invariant($"Invalid direction"))
+            };
+        }
+
         public Vector2 Rotate60Counterclockwise()
         {
             return new Vector2(-Y, X + Y);
