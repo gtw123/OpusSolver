@@ -23,7 +23,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
 
             new Glyph(this, new Vector2(1, 0), HexRotation.R60, GlyphType.MultiBonding);
-            m_assemblyArm = new Arm(this, new Vector2(0, -3), HexRotation.R60, MechanismType.Arm1, 3);
+            m_assemblyArm = new Arm(this, new Vector2(0, -3), HexRotation.R60, ArmType.Arm1, 3);
 
             new Track(this, m_assemblyArm.Transform.Position, HexRotation.R0, 1);
 
@@ -41,7 +41,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
                 if (index > 0)
                 {
-                    m_outputArms.Add(new Arm(this, new Vector2(1 + index * 3, 0), HexRotation.R240, MechanismType.Arm1, 3));
+                    m_outputArms.Add(new Arm(this, new Vector2(1 + index * 3, 0), HexRotation.R240, ArmType.Arm1, 3));
                 }
 
                 rotation = rotation.Rotate60Counterclockwise();

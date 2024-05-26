@@ -23,13 +23,13 @@ namespace OpusSolver.Solver.AtomGenerators
             m_consumeCoroutine = new LoopingCoroutine<object>(ConsumeSalt);
             m_generateCoroutine = new LoopingCoroutine<Element>(GenerateMorsVitae);
 
-            m_inputArm = new Arm(this, new Vector2(2, -2), HexRotation.R120, MechanismType.Arm1, extension: 2);
-            m_saltArm = new Arm(this, new Vector2(1, -1), HexRotation.R120, MechanismType.Arm1);
+            m_inputArm = new Arm(this, new Vector2(2, -2), HexRotation.R120, ArmType.Arm1, extension: 2);
+            m_saltArm = new Arm(this, new Vector2(1, -1), HexRotation.R120, ArmType.Arm1);
             new Glyph(this, new Vector2(1, 0), HexRotation.R0, GlyphType.Animismus);
 
-            m_vitaeArm = new Arm(this, new Vector2(2, 1), HexRotation.R180, MechanismType.Arm1);
-            m_morsArm = new Arm(this, new Vector2(3, -1), HexRotation.R180, MechanismType.Arm1);
-            OutputArm = new Arm(this, new Vector2(4, -2), HexRotation.R120, MechanismType.Arm1, extension: 2);
+            m_vitaeArm = new Arm(this, new Vector2(2, 1), HexRotation.R180, ArmType.Arm1);
+            m_morsArm = new Arm(this, new Vector2(3, -1), HexRotation.R180, ArmType.Arm1);
+            OutputArm = new Arm(this, new Vector2(4, -2), HexRotation.R120, ArmType.Arm1, extension: 2);
         }
 
         public override void Consume(Element element, int id)

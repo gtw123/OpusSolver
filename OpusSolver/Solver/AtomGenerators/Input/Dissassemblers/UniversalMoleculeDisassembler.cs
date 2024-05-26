@@ -41,13 +41,13 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             int grabX = Molecule.GetRow(Molecule.Height - 1).Last().Position.X;
             var armPos = reagentPos.Add(grabX, Molecule.Height + 2);
 
-            m_grabArm = new Arm(this, armPos, HexRotation.R240, MechanismType.Arm1, extension: 3);
+            m_grabArm = new Arm(this, armPos, HexRotation.R240, ArmType.Arm1, extension: 3);
             new Track(this, armPos, HexRotation.R0, Molecule.Width);
 
             armPos = reagentPos.Add(Molecule.Width, Molecule.Height);
-            m_lowerUnbondArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(x, 0), HexRotation.R240, MechanismType.Piston, extension: 2)).ToList();
-            m_upperUnbondArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(x, 1), HexRotation.R240, MechanismType.Arm1, extension: 2)).ToList();
-            m_moveArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(m_unbondWidth + x, 2), HexRotation.R240, MechanismType.Arm1, extension: 3)).ToList();
+            m_lowerUnbondArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(x, 0), HexRotation.R240, ArmType.Piston, extension: 2)).ToList();
+            m_upperUnbondArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(x, 1), HexRotation.R240, ArmType.Arm1, extension: 2)).ToList();
+            m_moveArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(m_unbondWidth + x, 2), HexRotation.R240, ArmType.Arm1, extension: 3)).ToList();
 
             return armPos;
         }

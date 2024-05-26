@@ -19,9 +19,9 @@ namespace OpusSolver.Solver.AtomGenerators
 
             new Glyph(this, new Vector2(1, -1), HexRotation.R0, GlyphType.Unification);
 
-            m_leftArm = new Arm(this, new Vector2(0, -1), HexRotation.R60, MechanismType.Arm1);
-            m_rightArm = new Arm(this, new Vector2(2, 0), HexRotation.R180, MechanismType.Piston, extension: 2);
-            OutputArm = new Arm(this, new Vector2(4, -1), HexRotation.R180, MechanismType.Arm1, extension: 3);
+            m_leftArm = new Arm(this, new Vector2(0, -1), HexRotation.R60, ArmType.Arm1);
+            m_rightArm = new Arm(this, new Vector2(2, 0), HexRotation.R180, ArmType.Piston, extension: 2);
+            OutputArm = new Arm(this, new Vector2(4, -1), HexRotation.R180, ArmType.Arm1, extension: 3);
         }
 
         public override void Consume(Element element, int id)

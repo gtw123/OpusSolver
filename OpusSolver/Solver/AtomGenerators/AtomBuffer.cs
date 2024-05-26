@@ -8,7 +8,7 @@ namespace OpusSolver.Solver.AtomGenerators
     public class AtomBuffer : AtomGenerator
     {
         /// <summary>
-        /// Specified various properties of a stack, used for optimising the mechanisms needed by the stack.
+        /// Specified various properties of a stack, used for optimising the components needed by the stack.
         /// </summary>
         public class StackInfo
         {
@@ -49,7 +49,7 @@ namespace OpusSolver.Solver.AtomGenerators
                 AddStack(i++, info);
             }
 
-            OutputArm = new Arm(this, new Vector2(m_stacks.Count * 2 + 3, 0), HexRotation.R180, MechanismType.Arm1, extension: 3);
+            OutputArm = new Arm(this, new Vector2(m_stacks.Count * 2 + 3, 0), HexRotation.R180, ArmType.Arm1, extension: 3);
         }
 
         private void AddStack(int index, StackInfo info)
@@ -57,9 +57,9 @@ namespace OpusSolver.Solver.AtomGenerators
             var stack = new AtomStack { Info = info, Index = index };
             var pos = new Vector2(index * 2, 0);
 
-            stack.PushArm = new Arm(this, pos.Add(-1, 2), HexRotation.R300, MechanismType.Arm1);
-            stack.PopArm = new Arm(this, pos.Add(-1, 4), HexRotation.R300, MechanismType.Arm1);
-            stack.OutputArm = new Arm(this, pos.Add(2, -2), HexRotation.R120, MechanismType.Arm1, extension: 2);
+            stack.PushArm = new Arm(this, pos.Add(-1, 2), HexRotation.R300, ArmType.Arm1);
+            stack.PopArm = new Arm(this, pos.Add(-1, 4), HexRotation.R300, ArmType.Arm1);
+            stack.OutputArm = new Arm(this, pos.Add(2, -2), HexRotation.R120, ArmType.Arm1, extension: 2);
 
             new Track(this, pos.Add(-1, 0), HexRotation.R60, 4);
             if (info.UsesRestore && (info.MultiAtom || info.WastesAtoms))

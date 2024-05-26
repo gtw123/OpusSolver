@@ -7,7 +7,7 @@ namespace OpusSolver
     /// <summary>
     /// Represents a track on the hex grid.
     /// </summary>
-    public class Track : Mechanism
+    public class Track : GameObject
     {
         public struct Segment
         {
@@ -28,7 +28,7 @@ namespace OpusSolver
         }
 
         public Track(GameObject parent, Vector2 position, IEnumerable<Segment> segments)
-            : base(parent, position, HexRotation.R0, MechanismType.Track)
+            : base(parent, position, HexRotation.R0)
         {
             var pos = new Vector2(0, 0);
             m_path.Add(pos);

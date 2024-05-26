@@ -1,14 +1,13 @@
 ﻿
 namespace OpusSolver
 {
-    public enum MechanismType
+    public enum ArmType
     {
         Arm1,
         Arm2,
         Arm3,
         Arm6,
         Piston,
-        Track,
         VanBerlo
     }
 }

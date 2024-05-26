@@ -44,7 +44,7 @@ namespace OpusSolver.IO
 
             ulong partFlags = m_reader.ReadUInt64();
             var allowedGlyphs = ParseAvailableGlyphs(partFlags);
-            var allowedMechanisms = ParseAllowedMechanisms(partFlags);
+            var allowedArmTypes = ParseAllowedArmTypes(partFlags);
 
             var reagents = new List<Molecule>();
             int inputCount = m_reader.ReadInt32();
@@ -69,7 +69,7 @@ namespace OpusSolver.IO
             }
 
             return new Puzzle(Path.GetFileNameWithoutExtension(m_filePath), puzzleName,
-                products, reagents, allowedMechanisms, allowedGlyphs, outputScale);
+                products, reagents, allowedArmTypes, allowedGlyphs, outputScale);
         }
 
         private static readonly Dictionary<ulong, GlyphType[]> sm_availablePartMapping = new()
@@ -119,16 +119,15 @@ namespace OpusSolver.IO
             return allowedGlyphs;
         }
 
-        private HashSet<MechanismType> ParseAllowedMechanisms(ulong partFlags)
+        private HashSet<ArmType> ParseAllowedArmTypes(ulong partFlags)
         {
-            var allowedMechanisms = new HashSet<MechanismType>
+            var allowedArmsTypes = new HashSet<ArmType>
             {
-                MechanismType.Arm1,
-                MechanismType.Arm2,
-                MechanismType.Arm3,
-                MechanismType.Arm6,
-                MechanismType.Piston,
-                MechanismType.Track,
+                ArmType.Arm1,
+                ArmType.Arm2,
+                ArmType.Arm3,
+                ArmType.Arm6,
+                ArmType.Piston,
             };
 
             // Strip off the glyph flags
@@ -137,10 +136,10 @@ namespace OpusSolver.IO
             // The next byte is either 17 if Van Berlo's wheel is allowed, or 07 otherwise
             if ((partFlags & 0x10) != 0)
             {
-                allowedMechanisms.Add(MechanismType.VanBerlo);
+                allowedArmsTypes.Add(ArmType.VanBerlo);
             }
 
-            return allowedMechanisms;
+            return allowedArmsTypes;
         }
 
         private static readonly Dictionary<int, Element> sm_elementMapping = new()

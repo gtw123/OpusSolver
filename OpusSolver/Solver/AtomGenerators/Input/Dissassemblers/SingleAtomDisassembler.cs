@@ -35,17 +35,17 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             new Reagent(this, pos, HexRotation.R0, molecule.ID);
             if (instruction == Instruction.Extend)
             {
-                m_outputArm = new Arm(this, pos * 2, direction.Rotate180(), MechanismType.Piston);
+                m_outputArm = new Arm(this, pos * 2, direction.Rotate180(), ArmType.Piston);
             }
             else if (instruction == Instruction.RotateCounterclockwise)
             {
                 var armPos = new Vector2(0, 0).OffsetInDirection(direction.Rotate60Clockwise(), 1);
-                m_outputArm = new Arm(this, armPos, direction.Rotate60Counterclockwise(), MechanismType.Arm1);
+                m_outputArm = new Arm(this, armPos, direction.Rotate60Counterclockwise(), ArmType.Arm1);
             }
             else if (instruction == Instruction.RotateClockwise)
             {
                 var armPos = new Vector2(0, 0).OffsetInDirection(direction.Rotate60Counterclockwise(), 1);
-                m_outputArm = new Arm(this, armPos, direction.Rotate60Clockwise(), MechanismType.Arm1);
+                m_outputArm = new Arm(this, armPos, direction.Rotate60Clockwise(), ArmType.Arm1);
             }
             else
             {

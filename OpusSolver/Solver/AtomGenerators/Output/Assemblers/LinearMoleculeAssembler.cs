@@ -33,7 +33,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
 
             new Glyph(this, new Vector2(0, 0), HexRotation.R0, GlyphType.Bonding);
-            m_arm = new Arm(this, new Vector2(0, -1), HexRotation.R60, MechanismType.Piston, 1);
+            m_arm = new Arm(this, new Vector2(0, -1), HexRotation.R60, ArmType.Piston, 1);
 
             if (products.Count() == 1)
             {

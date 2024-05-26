@@ -41,7 +41,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         {
             var pos = new Vector2(0, 0).OffsetInDirection(direction, 1);
             new Product(this, pos, product.Rotation, product.ID);
-            m_outputArms[product.ID] = new Arm(this, pos * 2, direction.Rotate180(), MechanismType.Piston, extension: 2);
+            m_outputArms[product.ID] = new Arm(this, pos * 2, direction.Rotate180(), ArmType.Piston, extension: 2);
         }
 
         public override void Consume(Element element, int id)

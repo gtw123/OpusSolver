@@ -12,7 +12,7 @@ namespace OpusSolver.Solver.AtomGenerators
             : base(writer)
         {
             new Glyph(this, new Vector2(0, 0), HexRotation.R0, GlyphType.Calcification);
-            OutputArm = new Arm(this, new Vector2(3, 0), HexRotation.R180, MechanismType.Arm1, extension: 3);
+            OutputArm = new Arm(this, new Vector2(3, 0), HexRotation.R180, ArmType.Arm1, extension: 3);
         }
 
         public override void Generate(Element element, int id)

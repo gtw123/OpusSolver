@@ -71,8 +71,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
         private void CreateArms()
         {
-            m_lowerArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(-Width + x + 1, -2), HexRotation.R60, MechanismType.Piston, 2)).ToList();
-            m_upperArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(x + 2, -1), HexRotation.R60, MechanismType.Piston, 2)).ToList();
+            m_lowerArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(-Width + x + 1, -2), HexRotation.R60, ArmType.Piston, 2)).ToList();
+            m_upperArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(x + 2, -1), HexRotation.R60, ArmType.Piston, 2)).ToList();
         }
 
         private void CreateTracks()

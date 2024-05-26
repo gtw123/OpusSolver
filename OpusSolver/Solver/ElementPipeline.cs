@@ -98,7 +98,7 @@ namespace OpusSolver.Solver
         {
             if (IsAnyCardinalMissing())
             {
-                if (m_puzzle.AllowedMechanisms.Contains(MechanismType.VanBerlo) && m_puzzle.AllowedGlyphs.Contains(GlyphType.Duplication))
+                if (m_puzzle.AllowedArmTypes.Contains(ArmType.VanBerlo) && m_puzzle.AllowedGlyphs.Contains(GlyphType.Duplication))
                 {
                     if (m_reagentElements.Contains(Element.Salt) || m_reagentElements.Intersect(PeriodicTable.Cardinals).Any())
                     {

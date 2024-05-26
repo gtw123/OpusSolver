@@ -9,7 +9,7 @@ namespace OpusSolver
         public string Name { get; private set; }
         public List<Molecule> Products { get; private set; }
         public List<Molecule> Reagents { get; private set; }
-        public HashSet<MechanismType> AllowedMechanisms { get; private set; }
+        public HashSet<ArmType> AllowedArmTypes { get; private set; }
         public HashSet<GlyphType> AllowedGlyphs { get; private set; }
 
         /// <summary>
@@ -17,13 +17,13 @@ namespace OpusSolver
         /// </summary>
         public int OutputScale { get; private set; }
 
-        public Puzzle(string filename, string name, IEnumerable<Molecule> products, IEnumerable<Molecule> reagents, IEnumerable<MechanismType> allowedMechanisms, IEnumerable<GlyphType> allowedGlyphs, int outputScale)
+        public Puzzle(string filename, string name, IEnumerable<Molecule> products, IEnumerable<Molecule> reagents, IEnumerable<ArmType> allowedArmTypes, IEnumerable<GlyphType> allowedGlyphs, int outputScale)
         {
             FileName = filename;
             Name = name;
             Products = products.ToList();
             Reagents = reagents.ToList();
-            AllowedMechanisms = new HashSet<MechanismType>(allowedMechanisms);
+            AllowedArmTypes = new HashSet<ArmType>(allowedArmTypes);
             AllowedGlyphs = new HashSet<GlyphType>(allowedGlyphs);
             OutputScale = outputScale;
         }

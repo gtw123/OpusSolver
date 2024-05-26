@@ -34,7 +34,7 @@ namespace OpusSolver.Solver
 
             void RemoveArms(IEnumerable<Arm> arms)
             {
-                foreach (var arm in arms.ToList().Where(arm => arm.Type != MechanismType.VanBerlo))
+                foreach (var arm in arms.ToList().Where(arm => arm.Type != ArmType.VanBerlo))
                 {
                     sm_log.Debug(Invariant($"Removing unused arm {arm.UniqueID}"));
                     m_solution.Program.Instructions.Remove(arm);

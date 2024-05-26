@@ -28,15 +28,15 @@ namespace OpusSolver.Solver.AtomGenerators.Input
 
             for (int y = Height - 2; y >= 2; y -= 2)
             {
-                m_downArms.Add(new Arm(this, new Vector2(2, y), HexRotation.R120, MechanismType.Arm1, extension: 2));
+                m_downArms.Add(new Arm(this, new Vector2(2, y), HexRotation.R120, ArmType.Arm1, extension: 2));
             }
 
             // This arm has to be in a different spot and direction to avoid atoms hitting it when moving East
-            m_cornerArm = new Arm(this, new Vector2(-2, 2), HexRotation.R0, MechanismType.Arm1, extension: 2);
+            m_cornerArm = new Arm(this, new Vector2(-2, 2), HexRotation.R0, ArmType.Arm1, extension: 2);
 
             for (int i = 1; i <= 2; i++)
             {
-                m_acrossArms.Add(new Arm(this, new Vector2(i * 2, -2), HexRotation.R120, MechanismType.Arm1, extension: 2));
+                m_acrossArms.Add(new Arm(this, new Vector2(i * 2, -2), HexRotation.R120, ArmType.Arm1, extension: 2));
             }
         }
 

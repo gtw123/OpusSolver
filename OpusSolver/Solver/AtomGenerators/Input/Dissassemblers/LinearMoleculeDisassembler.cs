@@ -29,8 +29,8 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
 
             var reagentPos = new Vector2(-Molecule.Width - 2, 1);
             new Reagent(this, reagentPos.Add(molecule.Origin), molecule.Rotation, molecule.ID);
-            m_grabArm = new Arm(this, reagentPos.Add(0, 1), HexRotation.R240, MechanismType.Piston);
-            m_outputArm = new Arm(this, new Vector2(-3, 3), HexRotation.R240, MechanismType.Arm1, extension: 3);
+            m_grabArm = new Arm(this, reagentPos.Add(0, 1), HexRotation.R240, ArmType.Piston);
+            m_outputArm = new Arm(this, new Vector2(-3, 3), HexRotation.R240, ArmType.Arm1, extension: 3);
 
             new Track(this, m_grabArm.Transform.Position, HexRotation.R0, Molecule.Width - 1);
             new Glyph(this, new Vector2(-4, 0), HexRotation.R0, GlyphType.Unbonding);

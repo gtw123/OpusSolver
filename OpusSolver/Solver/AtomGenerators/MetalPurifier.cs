@@ -46,14 +46,14 @@ namespace OpusSolver.Solver.AtomGenerators
                 new Glyph(this, pos, HexRotation.R240, GlyphType.Purification);
 
                 // Use a piston for the first arm as we also use it to move atoms between the cells of the glyph
-                var armType = (i == 0) ? MechanismType.Piston : MechanismType.Arm1;
+                var armType = (i == 0) ? ArmType.Piston : ArmType.Arm1;
                 purifier.BigArm = new Arm(this, pos.Add(0, 1), HexRotation.R240, armType, extension: 2);
-                purifier.SmallArm = new Arm(this, pos.Add(1, 0), HexRotation.R240, MechanismType.Arm1);
+                purifier.SmallArm = new Arm(this, pos.Add(1, 0), HexRotation.R240, ArmType.Arm1);
 
                 m_purifiers.Add(purifier);
             }
 
-            OutputArm = new Arm(this, new Vector2(m_size * 2 + 3, 0), HexRotation.R180, MechanismType.Arm1, extension: 3);
+            OutputArm = new Arm(this, new Vector2(m_size * 2 + 3, 0), HexRotation.R180, ArmType.Arm1, extension: 3);
         }
 
         public override void PrepareToGenerate(Element element)

@@ -14,9 +14,9 @@
             new Glyph(this, new Vector2(1, 0), HexRotation.R0, GlyphType.Calcification);
             new Track(this, new Vector2(0, 2), HexRotation.R0, 1);
 
-            m_bigArm = new Arm(this, new Vector2(0, 2), HexRotation.R240, MechanismType.Arm1, extension: 2);
-            m_smallArm = new Arm(this, new Vector2(1, 1), HexRotation.R240, MechanismType.Arm1);
-            OutputArm = new Arm(this, new Vector2(5, 0), HexRotation.R180, MechanismType.Arm1, extension: 3);
+            m_bigArm = new Arm(this, new Vector2(0, 2), HexRotation.R240, ArmType.Arm1, extension: 2);
+            m_smallArm = new Arm(this, new Vector2(1, 1), HexRotation.R240, ArmType.Arm1);
+            OutputArm = new Arm(this, new Vector2(5, 0), HexRotation.R180, ArmType.Arm1, extension: 3);
         }
 
         public override void Generate(Element element, int id)

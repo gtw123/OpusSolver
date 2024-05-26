@@ -119,7 +119,6 @@
     <Compile Include="Solution\Track.cs" />
     <Compile Include="Solution\GameObject.cs" />
     <Compile Include="Solution\Arm.cs" />
-    <Compile Include="Solution\Mechanism.cs" />
     <Compile Include="Solution\Glyph.cs" />
     <Compile Include="Solution\Reagent.cs" />
     <Compile Include="Solution\Product.cs" />
@@ -131,7 +130,7 @@
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\UniversalMoleculeAssembler.cs" />
     <Compile Include="Solver\PuzzleSolver.cs" />
     <Compile Include="Utils\LoopingCoroutine.cs" />
-    <Compile Include="Puzzle\MechanismType.cs" />
+    <Compile Include="Puzzle\ArmType.cs" />
     <Compile Include="Puzzle\GlyphType.cs" />
     <Compile Include="Puzzle\Molecule.cs" />
     <Compile Include="Utils\LinqExtensions.cs" />

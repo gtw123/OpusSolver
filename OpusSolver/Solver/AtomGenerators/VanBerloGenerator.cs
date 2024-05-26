@@ -19,8 +19,8 @@ namespace OpusSolver.Solver.AtomGenerators
             : base(writer)
         {
             new Glyph(this, new Vector2(0, 1), HexRotation.R240, GlyphType.Duplication);
-            m_wheelArm = new Arm(this, new Vector2(1, 1), HexRotation.R0, MechanismType.VanBerlo);
-            OutputArm = new Arm(this, new Vector2(3, 0), HexRotation.R180, MechanismType.Arm1, extension: 3);
+            m_wheelArm = new Arm(this, new Vector2(1, 1), HexRotation.R0, ArmType.VanBerlo);
+            OutputArm = new Arm(this, new Vector2(3, 0), HexRotation.R180, ArmType.Arm1, extension: 3);
         }
 
         public override void Generate(Element element, int id)

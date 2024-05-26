@@ -44,7 +44,8 @@ namespace OpusSolver.IO
             WriteMetrics(m_solution.Metrics);
 
             IEnumerable<GameObject> realObjects = m_solution.GetObjects<Glyph>();
-            realObjects = realObjects.Concat(m_solution.GetObjects<Mechanism>())
+            realObjects = realObjects.Concat(m_solution.GetObjects<Arm>())
+                .Concat(m_solution.GetObjects<Track>())
                 .Concat(m_solution.GetObjects<Reagent>())
                 .Concat(m_solution.GetObjects<Product>())
                 .ToList();
@@ -106,17 +107,17 @@ namespace OpusSolver.IO
 
         private string GetObjectName(GameObject obj) => obj switch
         {
-            Mechanism mechanism => mechanism.Type switch
+            Arm arm => arm.Type switch
             {
-                MechanismType.Arm1 => "arm1",
-                MechanismType.Arm2 => "arm2",
-                MechanismType.Arm3 => "arm3",
-                MechanismType.Arm6 => "arm6",
-                MechanismType.Piston => "piston",
-                MechanismType.Track => "track",
-                MechanismType.VanBerlo => "baron",
-                _ => throw new ArgumentException($"Unknown mechanism type {mechanism.Type}")
+                ArmType.Arm1 => "arm1",
+                ArmType.Arm2 => "arm2",
+                ArmType.Arm3 => "arm3",
+                ArmType.Arm6 => "arm6",
+                ArmType.Piston => "piston",
+                ArmType.VanBerlo => "baron",
+                _ => throw new ArgumentException($"Unknown arm type {arm.Type}")
             },
+            Track => "track",
             Glyph glyph => glyph.Type switch
             {
                 GlyphType.Bonding => "bonder",
@@ -132,7 +133,7 @@ namespace OpusSolver.IO
                 GlyphType.Equilibrium => "glyph-marker",
                 GlyphType.Unification => "glyph-unification",
                 GlyphType.Dispersion => "glyph-dispersion",
-                _ => throw new ArgumentException($"Unknown mechanism type {glyph.Type}")
+                _ => throw new ArgumentException($"Unknown glyph type {glyph.Type}")
             },
             Reagent => "input",
             Product product => m_solution.Puzzle.Products[product.ID].HasRepeats ? "out-rep" : "out-std",
