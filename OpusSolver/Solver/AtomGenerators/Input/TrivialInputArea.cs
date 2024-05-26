@@ -17,7 +17,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
             var reagent = reagents.First();
             if (reagent.Atoms.Count() > 1)
             {
-                throw new ArgumentException("TrivialInputArea can't handle reagents with multiple atoms.");
+                throw new ArgumentException($"{nameof(TrivialInputArea)} can't handle reagents with multiple atoms.");
             }
 
             new Reagent(this, new Vector2(0, 0), HexRotation.R0, reagent);

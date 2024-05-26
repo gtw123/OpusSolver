@@ -21,12 +21,12 @@ namespace OpusSolver.Solver.AtomGenerators.Input
         {
             if (reagents.Any(r => r.Atoms.Count() > 1))
             {
-                throw new ArgumentException("SimpleInputArea can't handle reagents with multiple atoms.");
+                throw new ArgumentException($"{nameof(SimpleInputArea)} can't handle reagents with multiple atoms.");
             }
 
             if (reagents.Count() > MaxReagents)
             {
-                throw new ArgumentException(Invariant($"SimpleInputArea can't handle more than {MaxReagents} distinct reagents."));
+                throw new ArgumentException(Invariant($"{nameof(SimpleInputArea)} can't handle more than {MaxReagents} distinct reagents."));
             }
 
             var dir = HexRotation.R180;

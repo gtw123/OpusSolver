@@ -22,7 +22,7 @@ namespace OpusSolver.Solver.AtomGenerators
 
         public override void PassThrough(Element element)
         {
-            throw new InvalidOperationException("SaltGeneratorNoPassThrough doesn't allow pass through");
+            throw new InvalidOperationException($"{nameof(SaltGeneratorNoPassThrough)} doesn't allow pass through");
         }
     }
 }
