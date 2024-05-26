@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 [assembly: log4net.Config.XmlConfigurator(Watch = false)]
@@ -10,8 +11,11 @@ namespace OpusSolver
     {
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(ProgramMain));
 
+        private static Stopwatch m_timer;
+
         public static int Main(string[] args)
         {
+            m_timer = Stopwatch.StartNew();
             sm_log.Debug($"Starting up");
 
             CommandLineArguments commandArgs;
@@ -30,6 +34,7 @@ namespace OpusSolver
             {
                 using var runner = new Runner(commandArgs);
                 runner.Run();
+                sm_log.Info($"Total elapsed time: {m_timer.Elapsed.TotalSeconds:0.00} s");
                 return 0;
             }
             catch (Exception e)
