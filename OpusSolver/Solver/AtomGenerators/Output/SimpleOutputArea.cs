@@ -40,7 +40,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         private void CreateOutput(Molecule product, HexRotation direction)
         {
             var pos = new Vector2(0, 0).OffsetInDirection(direction, 1);
-            new Product(this, pos, product.Rotation, product.ID);
+            new Product(this, pos.Add(product.GlyphTransform.Position), product.GlyphTransform.Rotation, product.ID);
             m_outputArms[product.ID] = new Arm(this, pos * 2, direction.Rotate180(), ArmType.Piston, extension: 2);
         }
 

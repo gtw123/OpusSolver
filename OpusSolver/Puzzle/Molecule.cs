@@ -18,11 +18,15 @@ namespace OpusSolver
 
         public int ID { get; private set; }
 
-        public Vector2 Origin { get; private set; }
+        /// <summary>
+        /// Transform from the original positions/rotations of the atoms to their current positions/rotations.
+        /// This is not important for generating a solution, but is important when placing a product/reagent glyph.
+        /// </summary>
+        public Transform2D GlyphTransform { get; private set; } = new Transform2D();
+
         public int Height { get; private set; }
         public int Width { get; private set; }
         public int DiagonalLength { get; private set; }
-        public HexRotation Rotation { get; private set; }
 
         public bool HasRepeats { get; private set; }
         public bool HasTriplex { get; private set; }
@@ -42,7 +46,7 @@ namespace OpusSolver
         /// <summary>
         /// Recalculates the bounds of this molecule and moves atoms if necessary so that the minimum X/Y coordinates are 0 and 0.
         /// Note that there may not necessarily be an atom at (0, 0), depending on the geometry of the molecule.
-        /// Note that the Origin may still be located elsewhere, but that's generally only relevant when placing glyphs.
+        /// Note that the GlyphTransform.Position may still be located elsewhere, but that's generally only relevant when placing glyphs.
         /// </summary>
         private void AdjustBounds()
         {
@@ -62,7 +66,7 @@ namespace OpusSolver
                 atom.Position = atom.Position.Subtract(offset);
             }
 
-            Origin = Origin.Subtract(offset);
+            GlyphTransform.Position -= offset;
         }
 
         public Atom GetAtom(Vector2 position)
@@ -103,9 +107,7 @@ namespace OpusSolver
                 }
             }
 
-            Origin = Origin.RotateBy(rotation);
-            Rotation += rotation;
-
+            GlyphTransform = new Transform2D(new Vector2(), rotation).Apply(GlyphTransform);
             AdjustBounds();
         }
 

@@ -52,6 +52,11 @@ namespace OpusSolver
             return v1.Subtract(v2);
         }
 
+        public static Vector2 operator -(Vector2 v)
+        {
+            return new Vector2(-v.X, -v.Y);
+        }
+
         public static Vector2 operator *(Vector2 v, int scale)
         {
             return v.Multiply(scale);

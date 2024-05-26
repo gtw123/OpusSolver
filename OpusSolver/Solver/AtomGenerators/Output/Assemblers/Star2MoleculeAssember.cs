@@ -31,12 +31,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             HexRotation rotation = HexRotation.R300;
             foreach (var product in products)
             {
-                var centerAtomLocation = new Vector2(4 + index * 3, -3);
-                var centerOffset = new Vector2(1, 1).RotateBy(rotation);
-                var productOriginOffset = product.Origin.RotateBy(rotation);
-                var productLocation = centerAtomLocation - centerOffset + productOriginOffset;
+                var transform = new Transform2D(new Vector2(4 + index * 3, -3), rotation);
+                transform = transform.Apply(new Transform2D(-new Vector2(1, 1), HexRotation.R0));
+                transform = transform.Apply(product.GlyphTransform);
 
-                new Product(this, productLocation, product.Rotation + rotation, product.ID);
+                new Product(this, transform.Position, transform.Rotation, product.ID);
                 m_outputLocationsById[product.ID] = index;
 
                 if (index > 0)

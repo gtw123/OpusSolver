@@ -14,7 +14,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             : base(writer)
         {
             var product = products.Single();
-            new Product(this, new Vector2(), product.Rotation, product.ID);
+            new Product(this, product.GlyphTransform.Position, product.GlyphTransform.Rotation, product.ID);
         }
     }
 }

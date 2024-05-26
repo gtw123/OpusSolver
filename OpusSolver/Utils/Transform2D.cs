@@ -5,6 +5,10 @@
         public Vector2 Position { get; set; }
         public HexRotation Rotation { get; set; }
 
+        public Transform2D()
+        {
+        }
+
         public Transform2D(Vector2 translation, HexRotation rotation)
         {
             Position = translation;
