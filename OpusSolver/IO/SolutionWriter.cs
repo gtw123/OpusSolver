@@ -46,8 +46,7 @@ namespace OpusSolver.IO
             IEnumerable<GameObject> realObjects = m_solution.GetObjects<Glyph>();
             realObjects = realObjects.Concat(m_solution.GetObjects<Arm>())
                 .Concat(m_solution.GetObjects<Track>())
-                .Concat(m_solution.GetObjects<Reagent>())
-                .Concat(m_solution.GetObjects<Product>())
+                .Concat(m_solution.GetObjects<MoleculeInputOutput>())
                 .ToList();
             
             m_writer.Write(realObjects.Count());
@@ -88,11 +87,10 @@ namespace OpusSolver.IO
             m_writer.Write((obj is Arm arm) ? arm.Extension : 1);
 
             // By convention, certain objects don't have a rotation written to the solution file
-            bool ignoreRotation = obj is Track || obj is Product p && m_solution.Puzzle.Products[p.ID].Atoms.Count() == 1
-                || obj is Reagent r && m_solution.Puzzle.Reagents[r.ID].Atoms.Count() == 1;
+            bool ignoreRotation = obj is Track || obj is MoleculeInputOutput m && m.Molecule.Atoms.Count() == 1;
             m_writer.Write(ignoreRotation ? 0 : transform.Rotation.IntValue);
 
-            int id = (obj is Product product) ? product.ID : (obj is Reagent reagent) ? reagent.ID : 0;
+            int id = (obj is MoleculeInputOutput m2) ? m2.Molecule.ID : 0;
             m_writer.Write(id);
 
             WriteInstructions(obj);
@@ -136,7 +134,7 @@ namespace OpusSolver.IO
                 _ => throw new ArgumentException($"Unknown glyph type {glyph.Type}")
             },
             Reagent => "input",
-            Product product => m_solution.Puzzle.Products[product.ID].HasRepeats ? "out-rep" : "out-std",
+            Product product => product.Molecule.HasRepeats ? "out-rep" : "out-std",
             _ => throw new ArgumentException($"Unknown object type {obj.GetType()}")
         };
 

@@ -43,7 +43,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
             {
                 // Stack the products vertically above each other
                 var productLocation = new Vector2(0, totalHeight) + product.GlyphTransform.Position;
-                new Product(this, productLocation, product.GlyphTransform.Rotation, product.ID);
+                new Product(this, productLocation, product.GlyphTransform.Rotation, product);
 
                 // There will always be at least one atom in the first column, so use that as the one to grab
                 int grabY = product.GetColumn(0).First().Position.Y;

@@ -3,14 +3,11 @@
     /// <summary>
     /// Represents a product molecule on the hex grid.
     /// </summary>
-    public class Product : GameObject
+    public class Product : MoleculeInputOutput
     {
-        public int ID { get; private set; }
-
-        public Product(GameObject parent, Vector2 position, HexRotation rotation, int id)
-            : base(parent, position, rotation)
+        public Product(GameObject parent, Vector2 position, HexRotation rotation, Molecule molecule)
+            : base(parent, position, rotation, molecule)
         {
-            ID = id;
         }
     }
 }

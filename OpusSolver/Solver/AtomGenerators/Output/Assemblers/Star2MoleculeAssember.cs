@@ -35,7 +35,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 transform = transform.Apply(new Transform2D(-new Vector2(1, 1), HexRotation.R0));
                 transform = transform.Apply(product.GlyphTransform);
 
-                new Product(this, transform.Position, transform.Rotation, product.ID);
+                new Product(this, transform.Position, transform.Rotation, product);
                 m_outputLocationsById[product.ID] = index;
 
                 if (index > 0)

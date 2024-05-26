@@ -56,6 +56,7 @@
   <ItemGroup>
     <Compile Include="CommandLineArguments.cs" />
     <Compile Include="Runner.cs" />
+    <Compile Include="Solution\MoleculeInputOutput.cs" />
     <Compile Include="Utils\HexRotation.cs" />
     <Compile Include="Puzzle\PeriodicTable.cs" />
     <Compile Include="IO\SolutionWriter.cs" />

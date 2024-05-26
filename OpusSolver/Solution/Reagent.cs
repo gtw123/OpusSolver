@@ -3,14 +3,11 @@
     /// <summary>
     /// Represents a reagent molecule on the hex grid.
     /// </summary>
-    public class Reagent : GameObject
+    public class Reagent : MoleculeInputOutput
     {
-        public int ID { get; private set; }
-
-        public Reagent(GameObject parent, Vector2 position, HexRotation rotation, int id)
-            : base(parent, position, rotation)
+        public Reagent(GameObject parent, Vector2 position, HexRotation rotation, Molecule molecule)
+            : base(parent, position, rotation, molecule)
         {
-            ID = id;
         }
     }
 }

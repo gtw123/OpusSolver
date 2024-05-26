@@ -32,7 +32,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
         private void CreateObjects(Molecule molecule, HexRotation direction, Instruction instruction)
         {
             var pos = new Vector2(0, 0).OffsetInDirection(direction, 1);
-            new Reagent(this, pos, HexRotation.R0, molecule.ID);
+            new Reagent(this, pos, HexRotation.R0, molecule);
             if (instruction == Instruction.Extend)
             {
                 m_outputArm = new Arm(this, pos * 2, direction.Rotate180(), ArmType.Piston);
