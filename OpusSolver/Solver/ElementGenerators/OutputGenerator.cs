@@ -35,14 +35,12 @@ namespace OpusSolver.Solver.ElementGenerators
             {
                 return AssemblyType.SingleAtom;
             }
-            else if (product.Height == 1)
+            else if (product.Height == 1 && !product.HasTriplex)
             {
-                // TODO: Consider triplex
                 return AssemblyType.Linear;
             }
-            else if (product.Atoms.Count() == 4)
+            else if (product.Atoms.Count() == 4 && !product.HasTriplex)
             {
-                // TODO: Consider triplex
                 if (product.GetAtom(new Vector2(1, 1)) != null)
                 {
                     Vector2[] positions = [new Vector2(0, 1), new Vector2(1, 2), new Vector2(2, 0)];

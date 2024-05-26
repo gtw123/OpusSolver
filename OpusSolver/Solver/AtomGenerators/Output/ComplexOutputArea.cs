@@ -19,11 +19,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         {
             m_products = products;
 
-            if (assemblyTypes.Values.All(type => type == AssemblyType.Linear || type == AssemblyType.SingleAtom) && m_products.All(p => !p.HasTriplex))
+            if (assemblyTypes.Values.All(type => type == AssemblyType.Linear || type == AssemblyType.SingleAtom))
             {
                 m_assembler = new LinearMoleculeAssembler(this, writer, m_products);
             }
-            else if (assemblyTypes.Values.All(type => type == AssemblyType.Star2) && m_products.All(p => !p.HasTriplex))
+            else if (assemblyTypes.Values.All(type => type == AssemblyType.Star2))
             {
                 m_assembler = new Star2MoleculeAssembler(this, writer, m_products);
             }
