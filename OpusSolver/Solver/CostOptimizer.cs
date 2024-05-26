@@ -10,7 +10,7 @@ namespace OpusSolver.Solver
     /// </summary>
     public class CostOptimizer
     {
-        private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(ProgramBuilder));
+        private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(CostOptimizer));
 
         private Solution m_solution;
 
@@ -22,9 +22,13 @@ namespace OpusSolver.Solver
         public void Optimize()
         {
             RemoveUnusedArms();
+            ConvertPistonsToArms();
             RemoveUnusedTracks();
         }
 
+        /// <summary>
+        /// Removes all arms which have no grab instructions (or no instructions at all).
+        /// </summary>
         private void RemoveUnusedArms()
         {
             RemoveArms(m_solution.GetObjects<Arm>().Except(m_solution.Program.Instructions.Keys));
@@ -43,6 +47,25 @@ namespace OpusSolver.Solver
             }
         }
 
+        /// <summary>
+        /// Finds any pistons that have no extand/retract instructions and converts them to regular arms.
+        /// </summary>
+        private void ConvertPistonsToArms()
+        {
+            var pistons = m_solution.Program.Instructions
+                .Where(pair => pair.Key.Type == ArmType.Piston &&
+                !pair.Value.Any(instruction => instruction == Instruction.Extend || instruction == Instruction.Retract))
+                .Select(pair => pair.Key);
+            foreach (var piston in pistons)
+            {
+                sm_log.Debug(Invariant($"Converting piston {piston.UniqueID} to an arm"));
+                piston.Type = ArmType.Arm1;
+            }
+        }
+
+        /// <summary>
+        /// Removes all track cells that are not used by any arms (where possible).
+        /// </summary>
         private void RemoveUnusedTracks()
         {
             foreach (var track in m_solution.GetObjects<Track>().ToList())
