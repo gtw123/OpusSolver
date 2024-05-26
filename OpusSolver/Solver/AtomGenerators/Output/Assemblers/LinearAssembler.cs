@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
+    /// <summary>
+    /// Assembles molecules which are shaped in a single long chain of atoms.
+    /// </summary>
     public class LinearAssembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => m_outputPosition;

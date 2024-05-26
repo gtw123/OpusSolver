@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
+    /// <summary>
+    /// Assembles a single monoatomic molecule.
+    /// </summary>
     public class SingleMonoatomicAssembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => new Vector2();

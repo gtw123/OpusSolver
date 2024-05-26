@@ -3,6 +3,14 @@ using System.Linq;
 
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
+    /// <summary>
+    /// Assembles molecules that have the following shape:
+    ///       O
+    ///      /
+    /// O - O
+    ///      \
+    ///       O
+    /// </summary>
     public class Star2Assembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => new Vector2();

@@ -5,6 +5,9 @@ using static System.FormattableString;
 
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
+    /// <summary>
+    /// Assembles multiple monoatomic molecules.
+    /// </summary>
     public class MonoatomicAssembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => new Vector2();
