@@ -31,12 +31,15 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             HexRotation rotation = HexRotation.R300;
             foreach (var product in products)
             {
-                var transform = new Transform2D(new Vector2(4 + index * 3, -3), rotation);
-                transform = transform.Apply(new Transform2D(-new Vector2(1, 1), HexRotation.R0));
-                
-                new Product(this, transform.Position, transform.Rotation, product);
-                m_outputLocationsById[product.ID] = index;
+                // Offset so the the center of the star is at (0, 0) (need to do this before rotating it)
+                var transform = new Transform2D(-new Vector2(1, 1), HexRotation.R0);
 
+                // Rotate the glyph and move it to the correct location
+                transform = new Transform2D(new Vector2(4 + index * 3, -3), rotation).Apply(transform);
+
+                new Product(this, transform.Position, transform.Rotation, product);
+
+                m_outputLocationsById[product.ID] = index;
                 if (index > 0)
                 {
                     m_outputArms.Add(new Arm(this, new Vector2(1 + index * 3, 0), HexRotation.R240, ArmType.Arm1, 3));
