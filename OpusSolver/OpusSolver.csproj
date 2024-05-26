@@ -80,8 +80,8 @@
     <Compile Include="Solver\AtomGenerators\Output\SimpleOutputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\MoleculeDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\Input\ComplexInputArea.cs" />
-    <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\LinearMoleculeDisassembler.cs" />
-    <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\UniversalMoleculeDisassembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\LinearDisassembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\UniversalDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\MetalProjector.cs" />
     <Compile Include="Solver\AtomGenerators\MetalPurifier.cs" />
     <Compile Include="Solver\AtomGenerators\MorsVitaeGenerator.cs" />

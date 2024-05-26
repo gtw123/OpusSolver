@@ -7,7 +7,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
     /// <summary>
     /// Dissassembles a multi-atom but linear molecule into single atoms.
     /// </summary>
-    public class LinearMoleculeDisassembler : MoleculeDisassembler
+    public class LinearDisassembler : MoleculeDisassembler
     {
         public override int Height => 4;
 
@@ -16,7 +16,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
 
         private LoopingCoroutine<Element> m_extractAtomsCoroutine;
 
-        public LinearMoleculeDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
+        public LinearDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
             : base(parent, writer, position, molecule)
         {
             Molecule = molecule;

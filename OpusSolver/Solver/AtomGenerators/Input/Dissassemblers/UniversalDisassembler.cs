@@ -7,7 +7,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
     /// <summary>
     /// Dissassembles an arbitrary molecule into single atoms.
     /// </summary>
-    public class UniversalMoleculeDisassembler : MoleculeDisassembler
+    public class UniversalDisassembler : MoleculeDisassembler
     {
         public override int Height => Molecule.Height + 4;
         public override int HeightBelowOrigin => Molecule.Height - 1;
@@ -20,7 +20,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
 
         private LoopingCoroutine<Element> m_extractAtomsCoroutine;
 
-        public UniversalMoleculeDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
+        public UniversalDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
             : base(parent, writer, position, molecule)
         {
             m_extractAtomsCoroutine = new LoopingCoroutine<Element>(ExtractAtoms);

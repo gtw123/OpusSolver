@@ -20,7 +20,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
         {
             if (molecule.Atoms.Count() > 1)
             {
-                throw new ArgumentException("SingleAtomDisassembler can't handle molecules with multiple atoms.");
+                throw new ArgumentException($"{nameof(SingleAtomDisassembler)} can't handle molecules with multiple atoms.");
             }
 
             Element = molecule.Atoms.First().Element;

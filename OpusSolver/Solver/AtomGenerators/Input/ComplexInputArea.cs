@@ -38,11 +38,11 @@ namespace OpusSolver.Solver.AtomGenerators
                 MoleculeDisassembler dissassember;
                 if (reagent.Height == 1)
                 {
-                    dissassember = new LinearMoleculeDisassembler(this, Writer, new Vector2(0, 0), reagent);
+                    dissassember = new LinearDisassembler(this, Writer, new Vector2(0, 0), reagent);
                 }
                 else
                 {
-                    dissassember = new UniversalMoleculeDisassembler(this, Writer, new Vector2(0, 0), reagent);
+                    dissassember = new UniversalDisassembler(this, Writer, new Vector2(0, 0), reagent);
                 }
 
                 if (m_disassemblers.Count > 0)
