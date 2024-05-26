@@ -33,16 +33,16 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
 
             new Glyph(this, new Vector2(0, 0), HexRotation.R0, GlyphType.Bonding);
-            m_arm = new Arm(this, new Vector2(0, -1), HexRotation.R60, ArmType.Piston, 1);
-
             if (products.Count() == 1)
             {
-                new Track(this, m_arm.Transform.Position, HexRotation.R0, 1);
+                m_arm = new Arm(this, new Vector2(0, -2), HexRotation.R60, ArmType.Piston, 2);
+                new Track(this, new Vector2(0, -1), [new Track.Segment(HexRotation.R240, 1), new Track.Segment(HexRotation.R0, 1)]);
                 m_outputPosition = new Vector2(0, 1);
             }
             else
             {
                 // We need to shuffle the products along a bit to avoid hitting the output arm of the parent component
+                m_arm = new Arm(this, new Vector2(0, -1), HexRotation.R60, ArmType.Piston, 1);
                 new Track(this, m_arm.Transform.Position, HexRotation.R0, 3);
                 m_outputPosition = new Vector2(2, 0);
             }
@@ -69,7 +69,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 {
                     if (m_products.Count() == 1)
                     {
-                        Writer.WriteGrabResetAction(m_arm, Instruction.Extend);
+                        Writer.WriteGrabResetAction(m_arm, Instruction.MoveNegative);
                     }
                     else
                     {

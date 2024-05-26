@@ -13,6 +13,12 @@ namespace OpusSolver
         {
             public HexRotation Direction;
             public int Length;
+
+            public Segment(HexRotation Direction, int Length)
+            {
+                this.Direction = Direction;
+                this.Length = Length;
+            }
         }
 
         private List<Vector2> m_path = new List<Vector2>();
