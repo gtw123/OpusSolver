@@ -83,6 +83,11 @@ namespace OpusSolver.IO
             m_writer.Write((byte)1);
             
             var transform = obj.GetWorldTransform();
+            if (obj is MoleculeInputOutput mol)
+            {
+                transform = transform.Apply(mol.Molecule.GlyphTransform);
+            }
+
             WriteVector2(transform.Position);
             m_writer.Write((obj is Arm arm) ? arm.Extension : 1);
 

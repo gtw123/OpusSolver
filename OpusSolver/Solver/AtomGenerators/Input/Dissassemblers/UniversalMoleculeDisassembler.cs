@@ -29,7 +29,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             m_unbondWidth = Math.Max(3, Molecule.Width);
 
             var reagentPos = new Vector2(-Molecule.Width * 2 - m_unbondWidth - 2, -molecule.Height + 1);
-            new Reagent(this, reagentPos.Add(molecule.GlyphTransform.Position), molecule.GlyphTransform.Rotation, molecule);
+            new Reagent(this, reagentPos, HexRotation.R0, molecule);
 
             var armPos = AddArms(reagentPos);
             AddTracks(armPos);

@@ -28,7 +28,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             m_extractAtomsCoroutine = new LoopingCoroutine<Element>(ExtractAtoms);
 
             var reagentPos = new Vector2(-Molecule.Width - 2, 1);
-            new Reagent(this, reagentPos.Add(molecule.GlyphTransform.Position), molecule.GlyphTransform.Rotation, molecule);
+            new Reagent(this, reagentPos, HexRotation.R0, molecule);
             m_grabArm = new Arm(this, reagentPos.Add(0, 1), HexRotation.R240, ArmType.Piston);
             m_outputArm = new Arm(this, new Vector2(-3, 3), HexRotation.R240, ArmType.Arm1, extension: 3);
 

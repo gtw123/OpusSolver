@@ -33,8 +33,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             {
                 var transform = new Transform2D(new Vector2(4 + index * 3, -3), rotation);
                 transform = transform.Apply(new Transform2D(-new Vector2(1, 1), HexRotation.R0));
-                transform = transform.Apply(product.GlyphTransform);
-
+                
                 new Product(this, transform.Position, transform.Rotation, product);
                 m_outputLocationsById[product.ID] = index;
 
