@@ -14,7 +14,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
         public const int MaxReagents = 4;
 
         public override Vector2 OutputPosition => new Vector2();
-        private List<SingleAtomDisassembler> m_disassemblers = new List<SingleAtomDisassembler>();
+        private List<MonoatomicDisassembler> m_disassemblers = new List<MonoatomicDisassembler>();
 
         public SimpleInputArea(ProgramWriter writer, IEnumerable<Molecule> reagents)
             : base(writer)
@@ -32,7 +32,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
             var dir = HexRotation.R180;
             foreach (var reagent in reagents)
             {
-                m_disassemblers.Add(new SingleAtomDisassembler(this, Writer, new Vector2(0, 0), reagent, dir, Instruction.Extend));
+                m_disassemblers.Add(new MonoatomicDisassembler(this, Writer, new Vector2(0, 0), reagent, dir, Instruction.Extend));
                 dir = dir.Rotate60Clockwise();
             }
         }

@@ -88,7 +88,7 @@
     <Compile Include="Solver\AtomGenerators\QuintessenceDisperser.cs" />
     <Compile Include="Solver\AtomGenerators\QuintessenceGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\SaltGenerator.cs" />
-    <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\SingleAtomDisassembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\MonoatomicDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\VanBerloGenerator.cs" />
     <Compile Include="Solver\ElementPipeline.cs" />
     <Compile Include="Solver\InstructionWriter.cs" />

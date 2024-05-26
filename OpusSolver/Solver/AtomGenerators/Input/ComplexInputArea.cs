@@ -73,7 +73,7 @@ namespace OpusSolver.Solver.AtomGenerators
             {
                 if (seenElements.Add(reagent.Atoms.First().Element))
                 {
-                    m_disassemblers.Add(new SingleAtomDisassembler(this, Writer, new Vector2(0, nextYPosition), reagent, HexRotation.R0, Instruction.RotateCounterclockwise));
+                    m_disassemblers.Add(new MonoatomicDisassembler(this, Writer, new Vector2(0, nextYPosition), reagent, HexRotation.R0, Instruction.RotateCounterclockwise));
                     nextYPosition += 2;
                 }
             }
