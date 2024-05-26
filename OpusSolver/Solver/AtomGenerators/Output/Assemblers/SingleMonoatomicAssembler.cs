@@ -3,11 +3,11 @@ using System.Linq;
 
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
-    public class SingleMonoatomicMoleculeAssembler : MoleculeAssembler
+    public class SingleMonoatomicAssembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => new Vector2();
 
-        public SingleMonoatomicMoleculeAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
+        public SingleMonoatomicAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer, parent.OutputPosition)
         {
             var product = products.Single();

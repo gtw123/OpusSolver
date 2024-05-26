@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
-    public class Star2MoleculeAssembler : MoleculeAssembler
+    public class Star2Assembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => new Vector2();
 
@@ -16,7 +16,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
         private Dictionary<int, int> m_outputLocationsById = new();
 
-        public Star2MoleculeAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
+        public Star2Assembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer, parent.OutputPosition)
         {
             m_products = products;

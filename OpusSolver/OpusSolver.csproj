@@ -58,8 +58,8 @@
     <Compile Include="Runner.cs" />
     <Compile Include="Solution\MoleculeInputOutput.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\AssemblerFactory.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\Assemblers\SingleMonoatomicMoleculeAssembler.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\Assemblers\MonoatomicMoleculeAssembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\SingleMonoatomicAssembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\MonoatomicAssembler.cs" />
     <Compile Include="Utils\HexRotation.cs" />
     <Compile Include="Puzzle\PeriodicTable.cs" />
     <Compile Include="IO\SolutionWriter.cs" />
@@ -70,8 +70,8 @@
     <Compile Include="Solver\AtomGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\Input\SimpleInputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\TrivialInputArea.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Star2MoleculeAssember.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\Assemblers\LinearMoleculeAssembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Star2Assember.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\LinearAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\MoleculeAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\SaltGeneratorNoPassThrough.cs" />
     <Compile Include="Solver\CostOptimizer.cs" />
@@ -129,7 +129,7 @@
     <Compile Include="Solver\AtomGenerators\Input\AtomConveyor.cs" />
     <Compile Include="Solver\SolverComponent.cs" />
     <Compile Include="Solver\AtomGenerators\Output\ProductConveyor.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\Assemblers\UniversalMoleculeAssembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\UniversalAssembler.cs" />
     <Compile Include="Solver\PuzzleSolver.cs" />
     <Compile Include="Utils\LoopingCoroutine.cs" />
     <Compile Include="Puzzle\ArmType.cs" />

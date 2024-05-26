@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
-    public class LinearMoleculeAssembler : MoleculeAssembler
+    public class LinearAssembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => m_outputPosition;
 
@@ -16,17 +16,17 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private Vector2 m_outputPosition;
         private Molecule m_currentProduct;
 
-        public LinearMoleculeAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
+        public LinearAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer, parent.OutputPosition)
         {
             if (products.Any(p => p.Height != 1))
             {
-                throw new ArgumentException("LinearMoleculeAssembler only works with linear molecules that are orientated horizontally.");
+                throw new ArgumentException($"{nameof(LinearAssembler)} only works with linear molecules that are orientated horizontally.");
             }
 
             if (products.Any(r => r.HasTriplex))
             {
-                throw new ArgumentException("LinearMoleculeAssembler doesn't work with triplex bonds.");
+                throw new ArgumentException($"{nameof(LinearAssembler)} doesn't work with triplex bonds.");
             }
 
             m_products = products;

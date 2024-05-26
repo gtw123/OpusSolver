@@ -5,7 +5,7 @@ using static System.FormattableString;
 
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
-    public class MonoatomicMoleculeAssembler : MoleculeAssembler
+    public class MonoatomicAssembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => new Vector2();
 
@@ -13,17 +13,17 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
         private Dictionary<int, Arm> m_outputArms = new Dictionary<int, Arm>();
 
-        public MonoatomicMoleculeAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
+        public MonoatomicAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer, parent.OutputPosition)
         {
             if (products.Any(r => r.Atoms.Count() > 1))
             {
-                throw new ArgumentException("MonoatomicMoleculeAssembler can't handle products with multiple atoms.");
+                throw new ArgumentException($"{nameof(MonoatomicAssembler)} can't handle products with multiple atoms.");
             }
 
             if (products.Count() > MaxProducts)
             {
-                throw new ArgumentException(Invariant($"MonoatomicMoleculeAssembler can't handle more than {MaxProducts} products."));
+                throw new ArgumentException(Invariant($"{nameof(MonoatomicAssembler)} can't handle more than {MaxProducts} products."));
             }
 
             var dir = HexRotation.R0;

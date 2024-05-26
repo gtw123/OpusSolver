@@ -8,7 +8,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
     /// <summary>
     /// Assembles arbitrary molecules from their component atoms.
     /// </summary>
-    public class UniversalMoleculeAssembler : MoleculeAssembler
+    public class UniversalAssembler : MoleculeAssembler
     {
         public override Vector2 OutputPosition => new Vector2(2, 1);
 
@@ -27,7 +27,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private Molecule m_currentProduct;
         private int m_currentArm;
 
-        public UniversalMoleculeAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
+        public UniversalAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer, parent.OutputPosition)
         {
             Width = products.Max(p => p.Width);
