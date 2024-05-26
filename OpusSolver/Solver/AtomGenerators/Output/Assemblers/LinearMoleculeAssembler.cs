@@ -43,7 +43,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             {
                 // We need to shuffle the products along a bit to avoid hitting the output arm of the parent component
                 m_arm = new Arm(this, new Vector2(0, -1), HexRotation.R60, ArmType.Piston, 1);
-                new Track(this, m_arm.Transform.Position, HexRotation.R0, 3);
+                new Track(this, m_arm.Transform.Position, HexRotation.R0, 2);
                 m_outputPosition = new Vector2(2, 0);
             }
 
