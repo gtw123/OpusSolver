@@ -57,6 +57,9 @@
     <Compile Include="CommandLineArguments.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="Solution\MoleculeInputOutput.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\AssemblerFactory.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\SingleMonoatomicMoleculeAssembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\MonoatomicMoleculeAssembler.cs" />
     <Compile Include="Utils\HexRotation.cs" />
     <Compile Include="Puzzle\PeriodicTable.cs" />
     <Compile Include="IO\SolutionWriter.cs" />
@@ -74,7 +77,7 @@
     <Compile Include="Solver\CostOptimizer.cs" />
     <Compile Include="Solver\ElementGenerators\OutputGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\AtomBuffer.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\ComplexOutputArea.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\SimpleOutputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\MoleculeDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\Input\ComplexInputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\LinearMoleculeDisassembler.cs" />
@@ -86,8 +89,6 @@
     <Compile Include="Solver\AtomGenerators\QuintessenceGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\SaltGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\SingleAtomDisassembler.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\SimpleOutputArea.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\TrivialOutputArea.cs" />
     <Compile Include="Solver\AtomGenerators\VanBerloGenerator.cs" />
     <Compile Include="Solver\ElementPipeline.cs" />
     <Compile Include="Solver\InstructionWriter.cs" />

@@ -33,7 +33,7 @@ namespace OpusSolver.Solver.ElementGenerators
         {
             if (product.Atoms.Count() == 1)
             {
-                return AssemblyType.SingleAtom;
+                return AssemblyType.Monoatomic;
             }
             else if (product.Height == 1 && !product.HasTriplex)
             {
@@ -66,7 +66,7 @@ namespace OpusSolver.Solver.ElementGenerators
             var type = m_assemblyTypes[product.ID];
             return type switch
             {
-                AssemblyType.SingleAtom or AssemblyType.Linear or AssemblyType.Universal => product.GetAtomsInInputOrder().Select(a => a.Element).ToList(),
+                AssemblyType.Monoatomic or AssemblyType.Linear or AssemblyType.Universal => product.GetAtomsInInputOrder().Select(a => a.Element).ToList(),
                 AssemblyType.Star2 => [
                     product.GetAtom(new Vector2(1, 1)).Element,
                     product.GetAtom(new Vector2(2, 0)).Element,
@@ -105,19 +105,19 @@ namespace OpusSolver.Solver.ElementGenerators
 
         protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
         {
-            if (m_products.All(p => p.Atoms.Count() == 1))
+            var groupedTypes = m_assemblyTypes.GroupBy(pair => pair.Value, pair => pair.Key);
+            if (groupedTypes.Count() == 1)
             {
-                if (m_products.Count() == 1)
-                {
-                    return new TrivialOutputArea(writer, m_products);
-                }
-                else if (m_products.Count() <= SimpleOutputArea.MaxProducts)
-                {
-                    return new SimpleOutputArea(writer, m_products);
-                }
+                return new SimpleOutputArea(writer, m_products, groupedTypes.First().Key);
             }
-
-            return new ComplexOutputArea(writer, m_products, m_assemblyTypes);
+            else if (groupedTypes.All(g => g.Key == AssemblyType.Linear || g.Key == AssemblyType.Monoatomic))
+            {
+                return new SimpleOutputArea(writer, m_products, AssemblyType.Linear);
+            }
+            else
+            {
+                return new SimpleOutputArea(writer, m_products, AssemblyType.Universal);
+            }
         }
     }
 }

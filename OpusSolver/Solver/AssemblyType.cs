@@ -3,7 +3,7 @@
     public enum AssemblyType
     {
         // O
-        SingleAtom,
+        Monoatomic,
 
         // O - O - O - O etc.
         Linear,
