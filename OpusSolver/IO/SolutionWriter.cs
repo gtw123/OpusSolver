@@ -81,9 +81,15 @@ namespace OpusSolver.IO
         {
             m_writer.Write(GetObjectName(obj));
             m_writer.Write((byte)1);
-            WriteVector2(obj.GetWorldPosition());
+            
+            var transform = obj.GetWorldTransform();
+            WriteVector2(transform.Position);
             m_writer.Write((obj is Arm arm) ? arm.Extension : 1);
-            m_writer.Write(obj.Rotation.IntValue);
+
+            // By convention, certain objects don't have a rotation written to the solution file
+            bool ignoreRotation = obj is Track || obj is Product p && m_solution.Puzzle.Products[p.ID].Atoms.Count() == 1
+                || obj is Reagent r && m_solution.Puzzle.Reagents[r.ID].Atoms.Count() == 1;
+            m_writer.Write(ignoreRotation ? 0 : transform.Rotation.IntValue);
 
             int id = (obj is Product product) ? product.ID : (obj is Reagent reagent) ? reagent.ID : 0;
             m_writer.Write(id);
@@ -182,9 +188,13 @@ namespace OpusSolver.IO
         {
             var path = track.Path;
             m_writer.Write(path.Count());
+
+            // Track objects themselves always have a 0 rotation in the solution file, so we need to explicitly
+            // rotate the path locations.
+            var transform = track.GetWorldTransform();
             foreach (var pos in path)
             {
-                WriteVector2(pos);
+                WriteVector2(pos.RotateBy(transform.Rotation));
             }
         }
 

@@ -47,7 +47,7 @@ namespace OpusSolver.Solver.AtomGenerators
             if (m_isFirstAtom)
             {
                 // Set the initial rotation of the arm to the first element, to save a few instructions
-                m_wheelArm.Rotation = destRotation;
+                m_wheelArm.Transform.Rotation = destRotation;
                 m_isFirstAtom = false;
             }
             else

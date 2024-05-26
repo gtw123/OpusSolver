@@ -26,8 +26,8 @@ namespace OpusSolver.Solver.AtomGenerators
 
             if (m_disassemblers.Count > 1)
             {
-                var highestDisassembler = m_disassemblers.MaxBy(d => d.Position.Y);
-                m_conveyor = new AtomConveyor(this, writer, new Vector2(0, 0), highestDisassembler.Position.Y + highestDisassembler.OutputPosition.Y);
+                var highestDisassembler = m_disassemblers.MaxBy(d => d.Transform.Position.Y);
+                m_conveyor = new AtomConveyor(this, writer, new Vector2(0, 0), highestDisassembler.Transform.Position.Y + highestDisassembler.OutputPosition.Y);
             }
         }
 
@@ -49,7 +49,7 @@ namespace OpusSolver.Solver.AtomGenerators
                 {
                     // Position this disassembler just above the previous one
                     var prevDisassembler = m_disassemblers[m_disassemblers.Count - 1];
-                    int y = prevDisassembler.Position.Y + prevDisassembler.Height - prevDisassembler.HeightBelowOrigin + dissassember.HeightBelowOrigin;
+                    int y = prevDisassembler.Transform.Position.Y + prevDisassembler.Height - prevDisassembler.HeightBelowOrigin + dissassember.HeightBelowOrigin;
 
                     // Keep the Y position a multiple of 2, so that it lines up with the arms of the conveyor
                     if (y % 2 > 0)
@@ -57,7 +57,7 @@ namespace OpusSolver.Solver.AtomGenerators
                         y++;
                     }
 
-                    dissassember.Position = new Vector2(0, y);
+                    dissassember.Transform.Position = new Vector2(0, y);
                 }
 
                 m_disassemblers.Add(dissassember);
@@ -83,7 +83,7 @@ namespace OpusSolver.Solver.AtomGenerators
         {
             var disassembler = m_disassemblers.Single(i => i.Molecule.ID == id);
             disassembler.GetNextAtom();
-            m_conveyor?.MoveAtom(disassembler.Position.Y + disassembler.OutputPosition.Y);
+            m_conveyor?.MoveAtom(disassembler.Transform.Position.Y + disassembler.OutputPosition.Y);
         }
     }
 }

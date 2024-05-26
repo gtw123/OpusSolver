@@ -234,7 +234,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
         private void SetUsedBonders(GlyphType type, HexRotation? direction)
         {
-            var bonders = m_bonders.Where(b => b.Type == type && (!direction.HasValue || b.Rotation == direction.Value));
+            var bonders = m_bonders.Where(b => b.Type == type && (!direction.HasValue || b.Transform.Rotation == direction.Value));
             if (!bonders.Any())
             {
                 throw new ArgumentException(Invariant($"Can't find bonder of type {type} and direction {direction}."));

@@ -124,7 +124,7 @@ namespace OpusSolver.Solver
             if (Parent != null)
             {
                 AtomGenerator.Parent = Parent.AtomGenerator;
-                AtomGenerator.Position = Parent.AtomGenerator.OutputPosition;
+                AtomGenerator.Transform.Position = Parent.AtomGenerator.OutputPosition;
             }
         }
 

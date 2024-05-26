@@ -42,7 +42,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
 
         public void MoveAtom(int startY)
         {
-            foreach (var arm in m_downArms.Where(a => a.Position.Y + 2 <= startY))
+            foreach (var arm in m_downArms.Where(a => a.Transform.Position.Y + 2 <= startY))
             {
                 Writer.WriteGrabResetAction(arm, Instruction.RotateCounterclockwise);
             }

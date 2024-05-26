@@ -67,7 +67,7 @@ namespace OpusSolver.Solver
 
         private IEnumerable<int> GetTrackCellsUsedByArm(List<Vector2> trackCells, Arm arm)
         {
-            int startIndex = trackCells.IndexOf(arm.GetWorldPosition());
+            int startIndex = trackCells.IndexOf(arm.GetWorldTransform().Position);
             if (startIndex < 0)
             {
                 return new int[0];

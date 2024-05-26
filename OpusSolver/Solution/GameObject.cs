@@ -8,8 +8,7 @@ namespace OpusSolver
     /// </summary>
     public class GameObject
     {
-        public Vector2 Position { get; set; }
-        public HexRotation Rotation { get; set; }
+        public Transform2D Transform { get; set; }
 
         private GameObject m_parent;
 
@@ -32,23 +31,27 @@ namespace OpusSolver
         }
 
         public GameObject(GameObject parent, Vector2 position, HexRotation rotation)
+            : this(parent, new Transform2D(position, rotation))
         {
-            Parent = parent;
-            Position = position;
-            Rotation = rotation;
         }
 
-        public Vector2 GetWorldPosition()
+        public GameObject(GameObject parent, Transform2D transform)
         {
-            var pos = Position;
+            Parent = parent;
+            Transform = transform;
+        }
+
+        public Transform2D GetWorldTransform()
+        {
+            var transform = Transform;
             var parent = Parent;
             while (parent != null)
             {
-                pos += parent.Position;
+                transform = parent.Transform.Apply(transform);
                 parent = parent.Parent;
             }
 
-            return pos;
+            return transform;
         }
 
         public IEnumerable<GameObject> GetAllObjects()

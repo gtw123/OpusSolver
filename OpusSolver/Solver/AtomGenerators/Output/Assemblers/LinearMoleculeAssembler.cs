@@ -37,13 +37,13 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             if (products.Count() == 1)
             {
-                new Track(this, m_arm.Position, HexRotation.R0, 1);
+                new Track(this, m_arm.Transform.Position, HexRotation.R0, 1);
                 m_outputPosition = new Vector2(0, 1);
             }
             else
             {
                 // We need to shuffle the products along a bit to avoid hitting the output arm of the parent component
-                new Track(this, m_arm.Position, HexRotation.R0, 3);
+                new Track(this, m_arm.Transform.Position, HexRotation.R0, 3);
                 m_outputPosition = new Vector2(2, 0);
             }
 

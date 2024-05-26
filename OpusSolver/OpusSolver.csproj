@@ -136,6 +136,7 @@
     <Compile Include="Puzzle\Molecule.cs" />
     <Compile Include="Utils\LinqExtensions.cs" />
     <Compile Include="Utils\Bounds.cs" />
+    <Compile Include="Utils\Transform2D.cs" />
     <Compile Include="Utils\Vector2.cs" />
     <Compile Include="ProgramMain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

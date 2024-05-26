@@ -45,10 +45,10 @@ namespace OpusSolver
 
         public IEnumerable<Vector2> GetAllPathCells()
         {
-            var pos = GetWorldPosition();
+            var transform = GetWorldTransform();
             foreach (var cell in Path)
             {
-                yield return pos.Add(cell);
+                yield return transform.Apply(cell);
             }
         }
 
@@ -86,7 +86,7 @@ namespace OpusSolver
                     m_path[i] = m_path[i].Subtract(originOffset);
                 }
 
-                Position = Position.Add(originOffset);
+                Transform.Position = Transform.Position.Add(originOffset);
             }
         }
     }

@@ -25,7 +25,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             new Glyph(this, new Vector2(1, 0), HexRotation.R60, GlyphType.MultiBonding);
             m_assemblyArm = new Arm(this, new Vector2(0, -3), HexRotation.R60, MechanismType.Arm1, 3);
 
-            new Track(this, m_assemblyArm.Position, HexRotation.R0, 1);
+            new Track(this, m_assemblyArm.Transform.Position, HexRotation.R0, 1);
 
             int index = 0;
             HexRotation rotation = HexRotation.R300;
