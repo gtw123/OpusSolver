@@ -19,13 +19,22 @@ namespace OpusSolver.Verifier
             return metric;
         }
 
-        public Metrics CalculateMetrics() => new Metrics
+        public Metrics CalculateMetrics()
         {
-            Cost = GetMetric("cost"),
-            Cycles = GetMetric("cycles"),
-            Area = GetMetric("area"),
-            Instructions = GetMetric("instructions"),
-        };
+            int overlap = GetMetric("overlap");
+            if (overlap != 0)
+            {
+                throw new VerifierException("Solution contains overlapping parts");
+            }
+
+            return new Metrics
+            {
+                Cost = GetMetric("cost"),
+                Cycles = GetMetric("cycles"),
+                Area = GetMetric("area"),
+                Instructions = GetMetric("instructions"),
+            };
+        }
 
         public void Dispose()
         {

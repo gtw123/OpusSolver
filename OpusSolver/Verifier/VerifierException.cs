@@ -8,6 +8,13 @@ namespace OpusSolver.Verifier
         public int? Cycle { get; set; }
         public Vector2? Location { get; set; }
 
+        public VerifierException(string message, int? cycle = null, Vector2? location = null)
+            : base(message)
+        {
+            Cycle = cycle;
+            Location = location;
+        }
+
         public VerifierException(IntPtr verifier, bool includeCycleAndLocation)
             : base(NativeMethods.GetVerifierError(verifier))
         {
