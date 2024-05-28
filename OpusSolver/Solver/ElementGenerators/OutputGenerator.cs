@@ -12,69 +12,20 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         public override IEnumerable<Element> OutputElements => new Element[0];
 
+        private ProgramWriter m_writer;
         private IEnumerable<Molecule> m_products;
         private int m_outputScale;
 
-        private Dictionary<int, AssemblyType> m_assemblyTypes = new();
+        private SimpleOutputArea m_outputArea;
 
-        public OutputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> products, int outputScale)
+        public OutputGenerator(CommandSequence commandSequence, ProgramWriter writer, IEnumerable<Molecule> products, int outputScale)
             : base(commandSequence)
         {
+            m_writer = writer;
             m_products = products;
             m_outputScale = outputScale;
 
-            foreach (var product in products)
-            {
-                m_assemblyTypes[product.ID] = DetermineAssemblyType(product);
-            }
-        }
-
-        private AssemblyType DetermineAssemblyType(Molecule product)
-        {
-            if (product.Atoms.Count() == 1)
-            {
-                return AssemblyType.Monoatomic;
-            }
-            else if (product.Height == 1 && !product.HasTriplex)
-            {
-                return AssemblyType.Linear;
-            }
-            else if (product.Atoms.Count() == 4 && !product.HasTriplex)
-            {
-                if (product.GetAtom(new Vector2(1, 1)) != null)
-                {
-                    Vector2[] positions = [new Vector2(0, 1), new Vector2(1, 2), new Vector2(2, 0)];
-                    if (positions.All(pos => product.GetAtom(pos) != null))
-                    {
-                        return AssemblyType.Star2;
-                    }
-
-                    positions = [new Vector2(0, 2), new Vector2(1, 0), new Vector2(2, 1)];
-                    if (positions.All(pos => product.GetAtom(pos) != null))
-                    {
-                        product.Rotate180();
-                        return AssemblyType.Star2;
-                    }
-                }
-            }
-
-            return AssemblyType.Universal;
-        }
-
-        private IEnumerable<Element> GetProductElementOrder(Molecule product)
-        {
-            var type = m_assemblyTypes[product.ID];
-            return type switch
-            {
-                AssemblyType.Monoatomic or AssemblyType.Linear or AssemblyType.Universal => product.GetAtomsInInputOrder().Select(a => a.Element).ToList(),
-                AssemblyType.Star2 => [
-                    product.GetAtom(new Vector2(1, 1)).Element,
-                    product.GetAtom(new Vector2(2, 0)).Element,
-                    product.GetAtom(new Vector2(1, 2)).Element,
-                    product.GetAtom(new Vector2(0, 1)).Element
-                ],
-                _ => throw new ArgumentException($"Unsupported assembler type {type}")
-            };
+            m_outputArea = new SimpleOutputArea(m_writer, m_products);
         }
 
         public void GenerateCommandSequence()
@@ -87,7 +38,7 @@ namespace OpusSolver.Solver.ElementGenerators
                 // the repeating molecules at the same time.
                 int numCopies = (anyRepeats && !product.HasRepeats) ? 6 * m_outputScale : 1;
 
-                var elementOrder = GetProductElementOrder(product);
+                var elementOrder = m_outputArea.GetProductElementOrder(product);
                 for (int i = 0; i < numCopies; i++)
                 {
                     foreach (var element in elementOrder)
@@ -105,19 +56,7 @@ namespace OpusSolver.Solver.ElementGenerators
 
         protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
         {
-            var groupedTypes = m_assemblyTypes.GroupBy(pair => pair.Value, pair => pair.Key);
-            if (groupedTypes.Count() == 1)
-            {
-                return new SimpleOutputArea(writer, m_products, groupedTypes.First().Key);
-            }
-            else if (groupedTypes.All(g => g.Key == AssemblyType.Linear || g.Key == AssemblyType.Monoatomic))
-            {
-                return new SimpleOutputArea(writer, m_products, AssemblyType.Linear);
-            }
-            else
-            {
-                return new SimpleOutputArea(writer, m_products, AssemblyType.Universal);
-            }
+            return m_outputArea;
         }
     }
 }

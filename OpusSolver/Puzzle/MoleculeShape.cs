@@ -1,6 +1,6 @@
-﻿namespace OpusSolver.Solver
+﻿namespace OpusSolver
 {
-    public enum AssemblyType
+    public enum MoleculeShape
     {
         // O
         Monoatomic,
@@ -15,6 +15,6 @@
         //       O
         Star2,
 
-        Universal
+        Complex
     }
 }

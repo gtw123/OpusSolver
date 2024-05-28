@@ -1,4 +1,6 @@
-﻿namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
+﻿using System.Collections.Generic;
+
+namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
     /// <summary>
     /// Assembles molecules from their component atoms.
@@ -9,6 +11,11 @@
             : base(parent, writer, parent.OutputPosition)
         {
         }
+
+        /// <summary>
+        /// Returns the required generation order of the elements of a product.
+        /// </summary>
+        public abstract IEnumerable<Element> GetProductElementOrder(Molecule product);
 
         /// <summary>
         /// Adds an atom to the assembly area.

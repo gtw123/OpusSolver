@@ -22,6 +22,7 @@ namespace OpusSolver.Solver
 
         private Puzzle m_puzzle;
         private CommandSequence m_commandSequence;
+        private ProgramWriter m_writer;
 
         private HashSet<Element> m_generatedElements = new HashSet<Element>();
         private HashSet<Element> m_neededElements = new HashSet<Element>();
@@ -29,10 +30,12 @@ namespace OpusSolver.Solver
         private bool m_needAnyCardinal = false;
         private List<ElementGenerator> m_generators = new List<ElementGenerator>();
 
-        public ElementPipeline(Puzzle puzzle, CommandSequence commandSequence)
+        public ElementPipeline(Puzzle puzzle, CommandSequence commandSequence, ProgramWriter writer)
         {
             m_puzzle = puzzle;
             m_commandSequence = commandSequence;
+            m_writer = writer;
+
             Build();
         }
 
@@ -51,7 +54,7 @@ namespace OpusSolver.Solver
 
         private void AnalyzeProducts()
         {
-            OutputGenerator = new OutputGenerator(m_commandSequence, m_puzzle.Products, m_puzzle.OutputScale);
+            OutputGenerator = new OutputGenerator(m_commandSequence, m_writer, m_puzzle.Products, m_puzzle.OutputScale);
             AddGenerator(OutputGenerator);
 
             m_reagentElements.UnionWith(m_puzzle.Reagents.SelectMany(p => p.Atoms.Select(a => a.Element)));

@@ -53,6 +53,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             m_productConveyor = new ProductConveyor(this, writer, m_products);
         }
 
+        public override IEnumerable<Element> GetProductElementOrder(Molecule product)
+        {
+            return product.GetAtomsInInputOrder().Select(a => a.Element);
+        }
+
         public override void AddAtom(Element element, int productID)
         {
             m_currentProduct = m_products.Single(product => product.ID == productID);

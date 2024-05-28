@@ -55,9 +55,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandLineArguments.cs" />
+    <Compile Include="Puzzle\MoleculeShape.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="Solution\MoleculeInputOutput.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\Assemblers\AssemblerFactory.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\SingleMonoatomicAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\MonoatomicAssembler.cs" />
     <Compile Include="Utils\HexRotation.cs" />
@@ -66,7 +66,6 @@
     <Compile Include="IO\PuzzleReader.cs" />
     <Compile Include="IO\ParseException.cs" />
     <Compile Include="Solution\Metrics.cs" />
-    <Compile Include="Solver\AssemblyType.cs" />
     <Compile Include="Solver\AtomGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\Input\SimpleInputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Input\TrivialInputArea.cs" />

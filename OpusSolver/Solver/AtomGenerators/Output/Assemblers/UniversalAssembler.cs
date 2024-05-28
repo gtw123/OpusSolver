@@ -87,6 +87,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             new Track(this, new Vector2(2, -1), HexRotation.R0, lowerTrackLength - Width - 1);
         }
 
+        public override IEnumerable<Element> GetProductElementOrder(Molecule product)
+        {
+            return product.GetAtomsInInputOrder().Select(a => a.Element);
+        }
+
         public override void AddAtom(Element element, int productID)
         {
             m_currentProduct = m_products.Single(product => product.ID == productID);

@@ -23,7 +23,6 @@ namespace OpusSolver.Solver
             Arm.ResetArmIDs();
 
             CheckPreconditions();
-            RotateMolecules();
             FixRepeatingMolecules();
 
             var solution = new SolutionGenerator(Puzzle).Generate();
@@ -37,27 +36,6 @@ namespace OpusSolver.Solver
             if (Puzzle.Products.Any(p => p.Atoms.Any(a => a.Bonds.Values.Any(b => b == BondType.Triplex) && a.Element != Element.Fire)))
             {
                 throw new SolverException("This puzzle has triplex bonds between non-fire atoms.");
-            }
-        }
-
-        private void RotateMolecules()
-        {
-            foreach (var molecule in Puzzle.Reagents.Concat(Puzzle.Products))
-            {
-                // We can't rotate repeating molecules
-                if (!molecule.HasRepeats)
-                {
-                    // Rotate the molecule so that its shortest dimension is Y (i.e. height).
-                    if (molecule.Height > molecule.Width || molecule.Height > molecule.DiagonalLength)
-                    {
-                        molecule.Rotate60Clockwise();
-
-                        if (molecule.Height > molecule.Width || molecule.Height > molecule.DiagonalLength)
-                        {
-                            molecule.Rotate60Clockwise();
-                        }
-                    }
-                }
             }
         }
 

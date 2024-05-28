@@ -53,6 +53,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             m_outputArms[product.ID] = new Arm(this, pos.Rotate60Clockwise(), direction + HexRotation.R120, ArmType.Arm1, extension: 1);
         }
 
+        public override IEnumerable<Element> GetProductElementOrder(Molecule product)
+        {
+            return [product.Atoms.Single().Element];
+        }
+
         public override void AddAtom(Element element, int productID)
         {
             // The last product is already positioned at (0, 0) so doesn't need any instructions

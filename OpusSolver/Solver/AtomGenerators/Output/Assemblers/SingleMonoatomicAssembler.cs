@@ -17,6 +17,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             new Product(this, new Vector2(), HexRotation.R0, product);
         }
 
+        public override IEnumerable<Element> GetProductElementOrder(Molecule product)
+        {
+            return [product.Atoms.Single().Element];
+        }
+
         public override void AddAtom(Element element, int productID)
         {
             // There's nothing to do here since the atom will get placed directly onto the product output

@@ -18,7 +18,7 @@ namespace OpusSolver.Solver
         public SolutionGenerator(Puzzle puzzle)
         {
             m_puzzle = puzzle;
-            m_pipeline = new ElementPipeline(m_puzzle, m_commandSequence);
+            m_pipeline = new ElementPipeline(m_puzzle, m_commandSequence, m_writer);
         }
 
         public Solution Generate()

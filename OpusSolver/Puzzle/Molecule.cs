@@ -28,6 +28,8 @@ namespace OpusSolver
         public int Width { get; private set; }
         public int DiagonalLength { get; private set; }
 
+        public MoleculeShape Shape { get; private set; }
+
         public bool HasRepeats { get; private set; }
         public bool HasTriplex { get; private set; }
 
@@ -41,6 +43,9 @@ namespace OpusSolver
             HasTriplex = atoms.Any(a => a.Bonds.Values.Any(b => b == BondType.Triplex));
 
             AdjustBounds();
+
+            NormalizeOrientation();
+            DetermineShape();
         }
 
         /// <summary>
@@ -67,6 +72,67 @@ namespace OpusSolver
             }
 
             GlyphTransform.Position -= offset;
+        }
+
+        /// <summary>
+        /// Rotates the molecule so that its shortest dimension is Y (i.e. height).
+        /// </summary>
+        private void NormalizeOrientation()
+        {
+            if (HasRepeats)
+            {
+                // Can't rotate molecules with repeats
+                return;
+            }
+
+            if (Height > Width || Height > DiagonalLength)
+            {
+                Rotate60Clockwise();
+
+                if (Height > Width || Height > DiagonalLength)
+                {
+                    Rotate60Clockwise();
+                }
+            }
+        }
+
+        private void DetermineShape()
+        {
+            if (Atoms.Count() == 1)
+            {
+                Shape = MoleculeShape.Monoatomic;
+                return;
+            }
+
+            if (Height == 1)
+            {
+                Shape = MoleculeShape.Linear;
+                return;
+            }
+
+            if (Atoms.Count() == 4)
+            {
+                if (GetAtom(new Vector2(1, 1)) != null)
+                {
+                    Vector2[] positions = [new Vector2(0, 1), new Vector2(1, 2), new Vector2(2, 0)];
+                    if (positions.All(pos => GetAtom(pos) != null))
+                    {
+                        Shape = MoleculeShape.Star2;
+                        return;
+                    }
+
+                    positions = [new Vector2(0, 2), new Vector2(1, 0), new Vector2(2, 1)];
+                    if (positions.All(pos => GetAtom(pos) != null))
+                    {
+                        Rotate180();
+                        Shape = MoleculeShape.Star2;
+                        return;
+                    }
+                }
+            }
+
+            Shape = MoleculeShape.Complex;
+            return;
         }
 
         public Atom GetAtom(Vector2 position)
