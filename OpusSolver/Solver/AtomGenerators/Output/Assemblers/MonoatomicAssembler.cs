@@ -24,16 +24,25 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 throw new ArgumentException($"{nameof(MonoatomicAssembler)} can't handle products with multiple atoms.");
             }
 
+            if (products.Count() == 1)
+            {
+                throw new ArgumentException($"{nameof(MonoatomicAssembler)} should not be used with only one reagent.");
+            }
+
             if (products.Count() > MaxProducts)
             {
                 throw new ArgumentException(Invariant($"{nameof(MonoatomicAssembler)} can't handle more than {MaxProducts} products."));
             }
 
+            // We position one product directly at (0, 0). To minimise cycles, this should be the product
+            // that's built last, so we reverse the order of the products here.
+            products = products.Reverse();
+            new Product(this, new Vector2(0, 0), HexRotation.R0, products.First());
             var dir = HexRotation.R0;
-            foreach (var product in products)
+            foreach (var product in products.Skip(1))
             {
                 CreateOutput(product, dir);
-                dir = dir.Rotate60Clockwise();
+                dir -= HexRotation.R120;
             }
         }
 
@@ -41,12 +50,16 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         {
             var pos = new Vector2(0, 0).OffsetInDirection(direction, 1);
             new Product(this, pos, HexRotation.R0, product);
-            m_outputArms[product.ID] = new Arm(this, pos * 2, direction.Rotate180(), ArmType.Piston, extension: 2);
+            m_outputArms[product.ID] = new Arm(this, pos.Rotate60Clockwise(), direction + HexRotation.R120, ArmType.Arm1, extension: 1);
         }
 
         public override void AddAtom(Element element, int productID)
         {
-            Writer.WriteGrabResetAction(m_outputArms[productID], Instruction.Retract);
+            // The last product is already positioned at (0, 0) so doesn't need any instructions
+            if (m_outputArms.TryGetValue(productID, out var arm))
+            {
+                Writer.WriteGrabResetAction(arm, Instruction.RotateClockwise);
+            }
         }
     }
 }
