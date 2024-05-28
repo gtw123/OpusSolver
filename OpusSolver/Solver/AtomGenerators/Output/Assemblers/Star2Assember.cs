@@ -25,7 +25,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private Dictionary<int, int> m_outputLocationsById = new();
 
         public Star2Assembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
-            : base(parent, writer, parent.OutputPosition)
+            : base(parent, writer)
         {
             m_products = products;
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);

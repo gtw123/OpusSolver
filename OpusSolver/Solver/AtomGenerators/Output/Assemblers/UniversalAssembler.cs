@@ -28,7 +28,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private int m_currentArm;
 
         public UniversalAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
-            : base(parent, writer, parent.OutputPosition)
+            : base(parent, writer)
         {
             Width = products.Max(p => p.Width);
 

@@ -11,7 +11,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         public override Vector2 OutputPosition => new Vector2();
 
         public SingleMonoatomicAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
-            : base(parent, writer, parent.OutputPosition)
+            : base(parent, writer)
         {
             var product = products.Single();
             new Product(this, new Vector2(), HexRotation.R0, product);

@@ -20,7 +20,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private Molecule m_currentProduct;
 
         public LinearAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
-            : base(parent, writer, parent.OutputPosition)
+            : base(parent, writer)
         {
             if (products.Any(p => p.Height != 1))
             {

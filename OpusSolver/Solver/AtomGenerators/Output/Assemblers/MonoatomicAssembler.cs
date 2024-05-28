@@ -17,7 +17,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private Dictionary<int, Arm> m_outputArms = new Dictionary<int, Arm>();
 
         public MonoatomicAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
-            : base(parent, writer, parent.OutputPosition)
+            : base(parent, writer)
         {
             if (products.Any(r => r.Atoms.Count() > 1))
             {

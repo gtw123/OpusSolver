@@ -5,8 +5,8 @@
     /// </summary>
     public abstract class MoleculeAssembler : SolverComponent
     {
-        public MoleculeAssembler(SolverComponent parent, ProgramWriter writer, Vector2 position)
-            : base(parent, writer, position)
+        public MoleculeAssembler(SolverComponent parent, ProgramWriter writer)
+            : base(parent, writer, parent.OutputPosition)
         {
         }
 
