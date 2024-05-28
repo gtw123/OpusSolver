@@ -16,6 +16,21 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
         private Instruction m_instruction;
 
         public MonoatomicDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule, HexRotation direction, Instruction instruction)
+            : this(parent, writer, position, molecule, instruction)
+        {
+            CreateObjects(molecule, direction, instruction);
+        }
+
+        public MonoatomicDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule, Arm arm, Instruction instruction)
+            : this(parent, writer, position, molecule, instruction)
+        {
+            arm.Parent = this;
+            m_outputArm = arm;
+
+            new Reagent(this, new Vector2(0, 0), HexRotation.R0, molecule);
+        }
+
+        private MonoatomicDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule, Instruction instruction)
             : base(parent, writer, position, molecule)
         {
             if (molecule.Atoms.Count() > 1)
@@ -25,8 +40,6 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
 
             Element = molecule.Atoms.First().Element;
             m_instruction = instruction;
-
-            CreateObjects(molecule, direction, instruction);
         }
 
         private void CreateObjects(Molecule molecule, HexRotation direction, Instruction instruction)
@@ -36,6 +49,11 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             if (instruction == Instruction.Extend)
             {
                 m_outputArm = new Arm(this, pos * 2, direction.Rotate180(), ArmType.Piston);
+            }
+            else if (instruction == Instruction.MovePositive)
+            {
+                m_outputArm = new Arm(this, pos * 3, direction.Rotate180(), ArmType.Arm1, extension: 2);
+                new Track(this, pos * 3, direction.Rotate180(), 2);
             }
             else if (instruction == Instruction.RotateCounterclockwise)
             {
