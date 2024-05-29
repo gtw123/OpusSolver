@@ -26,7 +26,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         {
             if (!m_products.Any(p => p.HasTriplex))
             {
-                if (m_products.All(p => p.Shape == MoleculeShape.Monoatomic))
+                if (m_products.All(p => p.Size == 1))
                 {
                     if (m_products.Count() == 1)
                     {
@@ -37,13 +37,17 @@ namespace OpusSolver.Solver.AtomGenerators.Output
                         return new MonoatomicAssembler(this, Writer, m_products);
                     }
                 }
-                else if (m_products.All(g => g.Shape == MoleculeShape.Linear || g.Shape == MoleculeShape.Monoatomic))
+                else if (m_products.All(p => p.IsLinear)) // include monoatomic products
                 {
                     return new LinearAssembler(this, Writer, m_products);
                 }
-                else if (m_products.All(g => g.Shape == MoleculeShape.Star2))
+                else if (m_products.All(p => p.Size <= 3))
                 {
-                    return new Star2Assembler(this, Writer, m_products);
+                    // TODO: Try to move/rotate smaller atoms to get them to fix within the hex
+                    if (m_products.All(p => p.GetAtom(new Vector2(1, 1)) != null && p.GetAtom(new Vector2(0, 0)) == null))
+                    {
+                        return new Hex3Assembler(this, Writer, m_products);
+                    }
                 }
             }
 

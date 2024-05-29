@@ -28,10 +28,11 @@ namespace OpusSolver
         public int Width { get; private set; }
         public int DiagonalLength { get; private set; }
 
-        public MoleculeShape Shape { get; private set; }
-
         public bool HasRepeats { get; private set; }
         public bool HasTriplex { get; private set; }
+
+        public bool IsLinear => Height == 1;
+        public int Size => Math.Max(Height, Math.Max(Width, DiagonalLength));
 
         public Molecule(MoleculeType type, IEnumerable<Atom> atoms, int id)
         {
@@ -45,7 +46,6 @@ namespace OpusSolver
             AdjustBounds();
 
             NormalizeOrientation();
-            DetermineShape();
         }
 
         /// <summary>
@@ -94,45 +94,6 @@ namespace OpusSolver
                     Rotate60Clockwise();
                 }
             }
-        }
-
-        private void DetermineShape()
-        {
-            if (Atoms.Count() == 1)
-            {
-                Shape = MoleculeShape.Monoatomic;
-                return;
-            }
-
-            if (Height == 1)
-            {
-                Shape = MoleculeShape.Linear;
-                return;
-            }
-
-            if (Atoms.Count() == 4)
-            {
-                if (GetAtom(new Vector2(1, 1)) != null)
-                {
-                    Vector2[] positions = [new Vector2(0, 1), new Vector2(1, 2), new Vector2(2, 0)];
-                    if (positions.All(pos => GetAtom(pos) != null))
-                    {
-                        Shape = MoleculeShape.Star2;
-                        return;
-                    }
-
-                    positions = [new Vector2(0, 2), new Vector2(1, 0), new Vector2(2, 1)];
-                    if (positions.All(pos => GetAtom(pos) != null))
-                    {
-                        Rotate180();
-                        Shape = MoleculeShape.Star2;
-                        return;
-                    }
-                }
-            }
-
-            Shape = MoleculeShape.Complex;
-            return;
         }
 
         public Atom GetAtom(Vector2 position)

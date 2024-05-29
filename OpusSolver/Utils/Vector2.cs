@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Security.Permissions;
 using static System.FormattableString;
 
 namespace OpusSolver
@@ -128,6 +130,26 @@ namespace OpusSolver
                 5 => new Vector2(X + length, Y - length),
                 _ => throw new ArgumentException(Invariant($"Invalid direction {direction}."))
             };
+        }
+
+        public HexRotation? ToRotation()
+        {
+            if (Y == 0)
+            {
+                return (X > 0) ? HexRotation.R0 : (X < 0) ? HexRotation.R180 : null;
+            }
+            else if (X == 0)
+            {
+                return (Y > 0) ? HexRotation.R60 : (Y < 0) ? HexRotation.R240 : null;
+            }
+            else if (X + Y == 0)
+            {
+                return (Y > 0) ? HexRotation.R120 : HexRotation.R300;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public float DistanceToSquared(Vector2 other)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace OpusSolver
 {
@@ -80,7 +81,12 @@ namespace OpusSolver
 
         public static HexRotation operator -(HexRotation rot)
         {
-            return rot.Rotate180();
+            return new HexRotation((-rot.IntValue + Count) % Count);
+        }
+
+        public override string ToString()
+        {
+            return m_angle.ToString(CultureInfo.InvariantCulture);
         }
     }
 }
