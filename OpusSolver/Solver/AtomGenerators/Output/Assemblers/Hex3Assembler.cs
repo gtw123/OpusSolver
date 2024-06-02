@@ -376,9 +376,14 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
 
-            // TODO: Include these only if needed
+            var lefthandProducts = products.Where(p => m_assemblyInfo[p.ID].CounterclockwiseOperations.Any());
+            var righthandProducts = products.Except(lefthandProducts);
+
             new Glyph(this, new Vector2(0, 0), HexRotation.R0, GlyphType.Bonding);
-            new Glyph(this, new Vector2(-2, 0), HexRotation.R0, GlyphType.Bonding);
+            if (lefthandProducts.Any())
+            {
+                new Glyph(this, new Vector2(-2, 0), HexRotation.R0, GlyphType.Bonding);
+            }
 
             m_horizontalArm = new Arm(this, new Vector2(3, 0), HexRotation.R180, ArmType.Arm1, extension: 3);
             new Track(this, new Vector2(4, 0), HexRotation.R180, 2);
@@ -388,9 +393,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 new Track.Segment { Direction = HexRotation.R240, Length = 1 },
                 new Track.Segment { Direction = HexRotation.R300, Length = 1 }
             ]);
-
-            var lefthandProducts = products.Where(p => m_assemblyInfo[p.ID].CounterclockwiseOperations.Any());
-            var righthandProducts = products.Except(lefthandProducts);
 
             if (righthandProducts.Any())
             {
