@@ -121,26 +121,33 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 }
 
                 // Order the atoms so that lastAtomDir is last
-                var currentDir = lastAtomDir.Rotate60Clockwise();
-                var atomDir = currentDir;
+                var atomDir = lastAtomDir.Rotate60Clockwise();
+                HexRotation? currentDir = null;
                 foreach (var rot in HexRotation.All)
                 {
                     var atom = atoms[atomDir];
                     if (atom != null)
                     {
-                        var (numRotations, rotationDir) = CalculateRotation(currentDir, atomDir);
-                        for (int i = 0; i < numRotations; i++)
+                        if (currentDir.HasValue)
                         {
-                            currentDir += rotationDir;
-                            yield return new Operation
+                            var (numRotations, rotationDir) = CalculateRotation(currentDir.Value, atomDir);
+                            for (int i = 0; i < numRotations; i++)
                             {
-                                Type = (rotationDir == HexRotation.R60) ? OperationType.RotateClockwise : OperationType.RotateCounterclockwise,
-                                FinalRotation = currentDir
-                            };
+                                currentDir = currentDir.Value + rotationDir;
+                                yield return new Operation
+                                {
+                                    Type = (rotationDir == HexRotation.R60) ? OperationType.RotateClockwise : OperationType.RotateCounterclockwise,
+                                    FinalRotation = currentDir.Value
+                                };
+                            }
+                        }
+                        else
+                        {
+                            currentDir = atomDir;
                         }
 
                         m_grabbedAtoms.Add(atomDir);
-                        yield return new Operation { Type = OperationType.GrabAtom, FinalRotation = currentDir, Atom = atom };
+                        yield return new Operation { Type = OperationType.GrabAtom, FinalRotation = currentDir.Value, Atom = atom };
                     }
 
                     atomDir = atomDir.Rotate60Clockwise();
