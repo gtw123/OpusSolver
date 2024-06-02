@@ -430,7 +430,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         {
             int index = 0;
             HexRotation rotationOffset = HexRotation.R0;
-            foreach (var product in products)
+
+            // Build the products in reverse order so that the final product is closer to the assembly area (saves a few cycles)
+            foreach (var product in products.Reverse())
             {
                 // Offset so the the center of the molecule is at (0, 0) (need to do this before rotating it)
                 var transform = new Transform2D(-new Vector2(1, 1), HexRotation.R0);
@@ -457,7 +459,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         {
             int index = 0;
             HexRotation rotationOffset = HexRotation.R0;
-            foreach (var product in products)
+            foreach (var product in products.Reverse())
             {
                 // Offset so the the center of the molecule is at (0, 0) (need to do this before rotating it)
                 var transform = new Transform2D(-new Vector2(1, 1), HexRotation.R0);
