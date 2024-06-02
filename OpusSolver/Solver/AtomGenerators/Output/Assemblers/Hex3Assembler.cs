@@ -364,6 +364,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private readonly Arm m_assemblyArm;
         private readonly List<Arm> m_rightOutputArms = new();
         private readonly List<Arm> m_leftOutputArms = new();
+        private bool m_useSimplerRighthandOutputs = false;
 
         private ProductAssemblyInfo m_currentProductAssemblyInfo;
 
@@ -378,6 +379,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             var lefthandProducts = products.Where(p => m_assemblyInfo[p.ID].CounterclockwiseOperations.Any());
             var righthandProducts = products.Except(lefthandProducts);
+            m_useSimplerRighthandOutputs = righthandProducts.All(p => !m_assemblyInfo[p.ID].ClockwiseOperations.Any());
 
             new Glyph(this, new Vector2(0, 0), HexRotation.R0, GlyphType.Bonding);
             if (lefthandProducts.Any())
@@ -396,7 +398,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             if (righthandProducts.Any())
             {
-                BuildRighthandOutputs(righthandProducts);
+                // If we're only using center bonds, we can offset the outputs a little to save some cost/cycles
+                BuildRighthandOutputs(righthandProducts, m_useSimplerRighthandOutputs ? new Vector2(0, 1) : new Vector2(0, 0));
             }
             if (lefthandProducts.Any())
             {
@@ -404,7 +407,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             }
         }
 
-        private void BuildRighthandOutputs(IEnumerable<Molecule> products)
+        private void BuildRighthandOutputs(IEnumerable<Molecule> products, Vector2 outputOffset)
         {
             int index = 0;
             HexRotation rotationOffset = HexRotation.R0;
@@ -416,7 +419,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 var rotation = m_assemblyInfo[product.ID].GetOutputRotation() + rotationOffset;
 
                 // Rotate the glyph and move it to the correct location
-                var productCenter = new Vector2(3 + index * 3, -3 - index * 3);
+                var productCenter = new Vector2(3 + index * 3, -3 - index * 3) + outputOffset;
                 transform = new Transform2D(productCenter, rotation).Apply(transform);
                 new Product(this, transform.Position, transform.Rotation, product);
 
@@ -521,7 +524,13 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 Writer.Write(m_horizontalArm, [Instruction.MoveNegative, Instruction.MovePositive], updateTime: false);
 
                 // Move to the output area without creating any extra bonds
-                Writer.Write(m_assemblyArm, [Instruction.RotateClockwise, Instruction.MovePositive, Instruction.Reset]);
+                var instructions = new[] { Instruction.RotateClockwise, Instruction.MovePositive, Instruction.Reset };
+                if (m_useSimplerRighthandOutputs)
+                {
+                    instructions = new[] { Instruction.RotateClockwise, Instruction.Reset };
+                }
+                Writer.Write(m_assemblyArm, instructions);
+
                 Writer.AdjustTime(-1);
                 MoveProductToOutput(m_currentProductAssemblyInfo.Product, m_rightOutputArms, Instruction.RotateCounterclockwise);
                 yield return null;
