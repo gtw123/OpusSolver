@@ -41,13 +41,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output
                 {
                     return new LinearAssembler(this, Writer, m_products);
                 }
-                else if (m_products.All(p => p.Size <= 3))
+                else if (m_products.All(p => Hex3Assembler.IsProductCompatible(p)))
                 {
-                    // TODO: Try to move/rotate smaller atoms to get them to fix within the hex
-                    if (m_products.All(p => p.GetAtom(new Vector2(1, 1)) != null && p.GetAtom(new Vector2(0, 0)) == null))
-                    {
-                        return new Hex3Assembler(this, Writer, m_products);
-                    }
+                    return new Hex3Assembler(this, Writer, m_products);
                 }
             }
 

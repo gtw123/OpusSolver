@@ -28,6 +28,9 @@ namespace OpusSolver
         public int Width { get; private set; }
         public int DiagonalLength { get; private set; }
 
+        public Vector2 Min { get; private set; }
+        public Vector2 Max { get; private set; }
+
         public bool HasRepeats { get; private set; }
         public bool HasTriplex { get; private set; }
 
@@ -43,8 +46,7 @@ namespace OpusSolver
             HasRepeats = atoms.Any(atom => atom.Element == Element.Repeat);
             HasTriplex = atoms.Any(a => a.Bonds.Values.Any(b => b == BondType.Triplex));
 
-            AdjustBounds();
-
+            NormalizeBounds();
             NormalizeOrientation();
         }
 
@@ -53,25 +55,29 @@ namespace OpusSolver
         /// Note that there may not necessarily be an atom at (0, 0), depending on the geometry of the molecule.
         /// Note that the GlyphTransform.Position may still be located elsewhere, but that's generally only relevant when placing glyphs.
         /// </summary>
-        private void AdjustBounds()
+        private void NormalizeBounds()
         {
-            int minX = m_atoms.Min(a => a.Position.X);
-            int minY = m_atoms.Min(a => a.Position.Y);
-            int maxX = m_atoms.Max(a => a.Position.X);
-            int maxY = m_atoms.Max(a => a.Position.Y);
-
-            Width = maxX - minX + 1;
-            Height = maxY - minY + 1;
-            DiagonalLength = m_atoms.Max(a => a.Position.X + a.Position.Y) - m_atoms.Min(a => a.Position.X + a.Position.Y) + 1;
-
-            // Translate all atoms so that (minX, minY) is at (0, 0)
-            var offset = new Vector2(minX, minY);
+            // Translate all atoms so that Min is at (0, 0)
+            var min = new Vector2(m_atoms.Min(a => a.Position.X), m_atoms.Min(a => a.Position.Y));
             foreach (var atom in Atoms)
             {
-                atom.Position = atom.Position.Subtract(offset);
+                atom.Position = atom.Position.Subtract(min);
             }
 
-            GlyphTransform.Position -= offset;
+            GlyphTransform.Position -= min;
+
+            RecalculateBounds();
+        }
+
+        private void RecalculateBounds()
+        {
+            Min = new Vector2(m_atoms.Min(a => a.Position.X), m_atoms.Min(a => a.Position.Y));
+            Max = new Vector2(m_atoms.Max(a => a.Position.X), m_atoms.Max(a => a.Position.Y));
+
+            var size = Max - Min;
+            Width = (Max - Min).X + 1;
+            Height = (Max - Min).Y + 1;
+            DiagonalLength = m_atoms.Max(a => a.Position.X + a.Position.Y) - m_atoms.Min(a => a.Position.X + a.Position.Y) + 1;
         }
 
         /// <summary>
@@ -108,17 +114,33 @@ namespace OpusSolver
 
         public IEnumerable<Atom> GetRow(int row)
         {
-            return Enumerable.Range(0, Width).Select(x => GetAtom(new Vector2(x, row))).Where(a => a != null);
+            return Enumerable.Range(Min.X, Width).Select(x => GetAtom(new Vector2(x, row))).Where(a => a != null);
         }
 
         public IEnumerable<Atom> GetColumn(int column)
         {
-            return Enumerable.Range(0, Height).Select(y => GetAtom(new Vector2(column, y))).Where(a => a != null);
+            return Enumerable.Range(Min.Y, Height).Select(y => GetAtom(new Vector2(column, y))).Where(a => a != null);
         }
 
         public IEnumerable<Atom> GetAtomsInInputOrder()
         {
             return Atoms.OrderByDescending(a => a.Position.Y).ThenByDescending(a => a.Position.X);
+        }
+
+        /// <summary>
+        /// Moves all atoms of the molecule by the specified offset. Note that rotating the molecule after doing
+        /// this will undo this offset.
+        /// </summary>
+        public void OffsetBy(Vector2 offset)
+        {
+            foreach (var atom in Atoms)
+            {
+                atom.Position = atom.Position.Add(offset);
+            }
+
+            GlyphTransform.Position += offset;
+
+            RecalculateBounds();
         }
 
         public void RotateBy(HexRotation rotation)
@@ -135,7 +157,7 @@ namespace OpusSolver
             }
 
             GlyphTransform = new Transform2D(new Vector2(), rotation).Apply(GlyphTransform);
-            AdjustBounds();
+            NormalizeBounds();
         }
 
         public void Rotate60Counterclockwise() => RotateBy(HexRotation.R60);
@@ -209,20 +231,20 @@ namespace OpusSolver
             repeatAtom.Position = repeatAtom.Position + new Vector2((RepeatCount- 1) * width, 0);
             repeatAtom.Element = leftmostAtom.Element;
 
-            AdjustBounds();
+            NormalizeBounds();
         }
 
         public override string ToString()
         {
             var str = new StringBuilder();
-            for (int y = Height - 1; y >= 0; y--)
+            for (int y = Max.Y; y >= Min.Y; y--)
             {
-                string indent = new String(' ', y * 2);
+                string indent = new String(' ', (y - Min.Y) * 2);
                 var row1 = new StringBuilder(indent);
                 var row2 = new StringBuilder(indent);
                 var row3 = new StringBuilder(indent);
 
-                for (int x = 0; x < Width; x++)
+                for (int x = Min.X; x <= Max.X; x++)
                 {
                     var atom = GetAtom(new Vector2(x, y));
                     if (atom == null)

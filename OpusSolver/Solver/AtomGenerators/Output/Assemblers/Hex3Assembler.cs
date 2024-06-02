@@ -5,7 +5,7 @@ using System.Linq;
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 {
     /// <summary>
-    /// Assembles molecules that have size of 3 or less. i.e. Those that fit within this hex:
+    /// Assembles molecules that fit within a hexagon of diagonal length 3 and have a central atom, e.g.
     ///   O - O
     ///  / \ / \
     /// O - O - O
@@ -14,6 +14,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
     /// </summary>
     public class Hex3Assembler : MoleculeAssembler
     {
+        private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(Hex3Assembler));
+
         private class ProductAssemblyInfo
         {
             public Molecule Product { get; private set; }
@@ -51,6 +53,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             {
                 Product = product;
 
+                if (CenterAtom == null)
+                {
+                    throw new ArgumentException($"{nameof(Hex3Assembler)} can't handle molecules with the center atom missing.");
+                }
+
                 CenterOperations = GenerateCenterOperations().ToList();
                 m_allOperations.AddRange(CenterOperations);
 
@@ -80,6 +87,12 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             public HexRotation GetOutputRotation()
             {
+                if (!m_allOperations.Any())
+                {
+                    // This occurs when the molecule has only 1 atom
+                    return HexRotation.R0;
+                }
+
                 var rot = m_allOperations.Last().FinalRotation;
                 if (CounterclockwiseOperations.Any())
                 {
@@ -97,8 +110,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             private IEnumerable<Operation> GenerateCenterOperations()
             {
-                // TODO: Handle molecules with no center atom
-                // TODO: Handle molecules smaller than 3x3
                 // Get the atoms that need to be bonded to the center atom
                 var atoms = GetRadialAtomsWhere((dir, atom) => atom.Bonds[dir + HexRotation.R180] != BondType.None);
 
@@ -176,7 +187,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 // Get the atoms that need to be bonded to the next atom in a clockwise direction
                 var atoms = GetRadialAtomsWhere((dir, atom) => atom.Bonds[dir - HexRotation.R120] != BondType.None);
 
-                var currentDir = m_allOperations.Last().FinalRotation;
+                // TODO: Handle this case a bit better. Might be better to store current rotation separately while we build the operations? Same in CCW case below.
+                var currentDir = m_allOperations.LastOrDefault()?.FinalRotation ?? HexRotation.R0; // null case is for when there's only a single atom in the molecule
                 currentDir = currentDir.Rotate60Clockwise();
 
                 // Start with the atom next to the first one we've already grabbed
@@ -252,7 +264,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 // Get the atoms that need to be bonded to the next atom in a counter-clockwise direction
                 var atoms = GetRadialAtomsWhere((dir, atom) => atom.Bonds[dir + HexRotation.R120] != BondType.None);
 
-                var currentDir = m_allOperations.Last().FinalRotation;
+                var currentDir = m_allOperations.LastOrDefault()?.FinalRotation ?? HexRotation.R0;
                 if (!ClockwiseOperations.Any())
                 {
                     // Account for the direction change that occurs when moving the molecule down one row at the start
@@ -493,17 +505,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             Writer.WriteGrabResetAction(m_horizontalArm, Instruction.MoveNegative);
             Writer.Write(m_assemblyArm, Instruction.Grab);
 
-            var ops = m_currentProductAssemblyInfo.CenterOperations;
-            if (!ops.Any())
-            {
-                // TODO: Move atom to output
-                // TODO: For a monoatomic atom we can probably put the product right next to these arms
-                yield return null;
-                yield break;
-            }
-
             // Bond radial atoms to the center atom
-            foreach (var op in ops)
+            var centerOps = m_currentProductAssemblyInfo.CenterOperations;
+            foreach (var op in centerOps)
             {
                 switch (op.Type)
                 {
@@ -527,8 +531,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             var counterclockwiseOps = m_currentProductAssemblyInfo.CounterclockwiseOperations;
             if (!clockwiseOps.Any() && !counterclockwiseOps.Any())
             {
-                // Move the other arm out the way to avoid a collision
-                Writer.Write(m_horizontalArm, [Instruction.MoveNegative, Instruction.MovePositive], updateTime: false);
+                if (centerOps.Any())
+                {
+                    // Move the other arm out the way to avoid a collision
+                    Writer.Write(m_horizontalArm, [Instruction.MoveNegative, Instruction.MovePositive], updateTime: false);
+                }
 
                 // Move to the output area without creating any extra bonds
                 var instructions = new[] { Instruction.RotateClockwise, Instruction.MovePositive, Instruction.Reset };
@@ -628,6 +635,62 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                     Writer.WriteGrabResetAction(outputArms[i], armInstruction);
                 }
             }
+        }
+
+        public static bool IsProductCompatible(Molecule product)
+        {
+            if (product.Size > 3)
+            {
+                return false;
+            }
+
+            if (product.Width == 3 && product.Height == 3 && product.DiagonalLength == 3 && product.GetAtom(new Vector2(0, 0)) != null)
+            {
+                // This is a 3x3 triangle which is bigger than a 3x3 hex
+                return false;
+            }
+
+            var originalGlyphPosition = product.GlyphTransform.Position;
+
+            // Try to fix missing center atom
+            if (product.GetAtom(new Vector2(1, 1)) == null)
+            {
+                if (product.Size == 1)
+                {
+                    product.OffsetBy(new Vector2(1, 1));
+                }
+                else if (product.Height <= 2)
+                {
+                    // We can't move this molecule up:
+                    // O       O
+                    //  \     /
+                    //   O - O 
+                    if (product.GetAtom(new Vector2(2, 1)) == null)
+                    {
+                        product.OffsetBy(new Vector2(0, 1));
+                    }
+                }
+            }
+            else if (product.GetAtom(new Vector2(0, 0)) != null)
+            {
+                if (product.Width == 2 && product.Height == 2 && product.GetAtom(new Vector2(0, 1)) != null)
+                {
+                    product.OffsetBy(new Vector2(1, 0));
+                }
+                else
+                {
+                    product.OffsetBy(new Vector2(0, 1));
+                }
+            }
+
+            if (product.GetAtom(new Vector2(1, 1)) == null)
+            {
+                sm_log.Debug($"Product {product.ID} has no center atom so can't be used by {nameof(Hex3Assembler)}.");
+                product.OffsetBy(originalGlyphPosition - product.GlyphTransform.Position);
+                return false;
+            }
+
+            return true;
         }
     }
 }
