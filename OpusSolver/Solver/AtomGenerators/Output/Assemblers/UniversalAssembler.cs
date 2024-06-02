@@ -116,6 +116,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
                 if (y == 0)
                 {
+                    Writer.AdjustTime(-1);
                     m_productConveyor.MoveProductToOutputLocation(m_currentProduct);
                 }
                 yield return null;
