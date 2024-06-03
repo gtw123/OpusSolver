@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace OpusSolver.Verifier
+namespace SolutionVerifier
 {
     internal static class NativeMethods
     {

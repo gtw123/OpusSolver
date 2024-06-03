@@ -4,6 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpusSolver", "OpusSolver\OpusSolver.csproj", "{193959C5-6207-403E-8CD7-F2D3E12283F3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FAC8CCFA-3787-43CC-9FCE-86A6F64B0223} = {FAC8CCFA-3787-43CC-9FCE-86A6F64B0223}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolutionVerifier", "SolutionVerifier\SolutionVerifier.csproj", "{FAC8CCFA-3787-43CC-9FCE-86A6F64B0223}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +20,10 @@ Global
 		{193959C5-6207-403E-8CD7-F2D3E12283F3}.Debug|x64.Build.0 = Debug|x64
 		{193959C5-6207-403E-8CD7-F2D3E12283F3}.Release|x64.ActiveCfg = Release|x64
 		{193959C5-6207-403E-8CD7-F2D3E12283F3}.Release|x64.Build.0 = Release|x64
+		{FAC8CCFA-3787-43CC-9FCE-86A6F64B0223}.Debug|x64.ActiveCfg = Debug|x64
+		{FAC8CCFA-3787-43CC-9FCE-86A6F64B0223}.Debug|x64.Build.0 = Debug|x64
+		{FAC8CCFA-3787-43CC-9FCE-86A6F64B0223}.Release|x64.ActiveCfg = Release|x64
+		{FAC8CCFA-3787-43CC-9FCE-86A6F64B0223}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

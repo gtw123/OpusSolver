@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Text;
 
-namespace OpusSolver.Verifier
+namespace SolutionVerifier
 {
     public class VerifierException : Exception
     {
         public int? Cycle { get; set; }
-        public Vector2? Location { get; set; }
+        public (int, int)? Location { get; set; }
 
-        public VerifierException(string message, int? cycle = null, Vector2? location = null)
+        public VerifierException(string message)
             : base(message)
         {
-            Cycle = cycle;
-            Location = location;
         }
 
         public VerifierException(IntPtr verifier, bool includeCycleAndLocation)
@@ -23,7 +21,7 @@ namespace OpusSolver.Verifier
             if (includeCycleAndLocation)
             {
                 Cycle = NativeMethods.verifier_error_cycle(verifier);
-                Location = new Vector2(NativeMethods.verifier_error_location_u(verifier), NativeMethods.verifier_error_location_v(verifier));
+                Location = (NativeMethods.verifier_error_location_u(verifier), NativeMethods.verifier_error_location_v(verifier));
             }
 
             NativeMethods.verifier_error_clear(verifier);

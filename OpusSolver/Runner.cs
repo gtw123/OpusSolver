@@ -2,7 +2,9 @@
 using OpusSolver.Solver;
 using OpusSolver.Verifier;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace OpusSolver
 {
@@ -31,16 +33,41 @@ namespace OpusSolver
 
         public void Run()
         {
-            int totalPuzzlesSolved = 0;
+            var generatedSolutions = GenerateSolutions();
 
+            int totalSuccessfulSolutions;
+            if (!m_args.SkipVerification)
+            {
+                VerifySolutions(generatedSolutions);
+                totalSuccessfulSolutions = generatedSolutions.Count(s => s.Verified);
+            }
+            else
+            {
+                totalSuccessfulSolutions = generatedSolutions.Count();
+            }
+
+            string verifyMessage = m_args.SkipVerification ? "" : "and verified ";
+            sm_log.Info($"Successfully generated {verifyMessage}solutions for {totalSuccessfulSolutions}/{m_args.PuzzleFiles.Count} puzzles.");
+
+            if (m_reportWriter != null)
+            {
+                sm_log.Info($"Report saved to \"{m_args.ReportFile}\"");
+                m_reportWriter.WriteLine($"Successful solutions: {totalSuccessfulSolutions}/{m_args.PuzzleFiles.Count}");
+            }
+        }
+
+        private List<GeneratedSolution> GenerateSolutions()
+        {
             sm_log.Info($"Generating solutions to \"{m_args.OutputDir}\"");
 
+            var generatedSolutions = new List<GeneratedSolution>();
             foreach (var puzzleFile in m_args.PuzzleFiles)
             {
                 string solutionFile = Path.Combine(m_args.OutputDir, Path.GetFileNameWithoutExtension(puzzleFile) + ".solution");
-                if (SolvePuzzle(puzzleFile, solutionFile))
+                var generatedSolution = GenerateSolution(puzzleFile, solutionFile);
+                if (generatedSolution != null)
                 {
-                    totalPuzzlesSolved++;
+                    generatedSolutions.Add(generatedSolution);
                 }
 
                 Console.Write(".");
@@ -48,17 +75,10 @@ namespace OpusSolver
 
             Console.WriteLine();
 
-            string verifyMessage = m_args.SkipVerification ? "" : "and verified ";
-            sm_log.Info($"Successfully generated {verifyMessage}solutions for {totalPuzzlesSolved}/{m_args.PuzzleFiles.Count} puzzles.");
-
-            if (m_reportWriter != null)
-            {
-                sm_log.Info($"Report saved to \"{m_args.ReportFile}\"");
-                m_reportWriter.WriteLine($"Successful solutions: {totalPuzzlesSolved}/{m_args.PuzzleFiles.Count}");
-            }
+            return generatedSolutions;
         }
 
-        private bool SolvePuzzle(string puzzleFile, string solutionFile)
+        private GeneratedSolution GenerateSolution(string puzzleFile, string solutionFile)
         {
             string puzzleName = null;
 
@@ -74,25 +94,9 @@ namespace OpusSolver
                 var solution = solver.Solve();
 
                 sm_log.Debug($"Writing solution to \"{solutionFile}\"");
-                // It might be more efficient to write the solution to a byte array first and pass that to the verifier,
-                // rather than writing it to disk twice. But it's also convenient having a copy on disk even if the
-                // verification fails so that we can debug it in the game.
                 SolutionWriter.WriteSolution(solution, solutionFile);
 
-                if (!m_args.SkipVerification)
-                {
-                    sm_log.Debug("Verifying solution");
-                    using var verifier = new SolutionVerifier(puzzleFile, solutionFile);
-                    var metrics = verifier.CalculateMetrics();
-                    sm_log.Debug($"Cost/cycles/area/instructions: {metrics.Cost}/{metrics.Cycles}/{metrics.Area}/{metrics.Instructions}");
-                    m_reportWriter?.WriteLine($"{puzzle.Name},\"{puzzleFile}\",{metrics.Cost},{metrics.Cycles},{metrics.Area},{metrics.Instructions}");
-
-                    sm_log.Debug($"Writing metrics to solution file");
-                    solution.Metrics = metrics;
-                    SolutionWriter.WriteSolution(solution, solutionFile);
-                }
-
-                return true;
+                return new GeneratedSolution { PuzzleFile = puzzleFile, SolutionFile = solutionFile, Solution = solution };
             }
             catch (Exception e)
             {
@@ -106,9 +110,6 @@ namespace OpusSolver
                     case SolverException:
                         message = "Error solving puzzle";
                         break;
-                    case VerifierException:
-                        message = "Error verifying solution to puzzle";
-                        break;
                     default:
                         message = "Internal error while solving puzzle";
                         exceptionDetail = e.ToString();
@@ -121,10 +122,25 @@ namespace OpusSolver
                 }
                 message += $" \"{puzzleFile}\": {exceptionDetail}";
 
-                // Write a new line to first because there may be progress dots on the current line
+                // Write a new line first because there may be progress dots on the current line
                 Console.WriteLine();
                 sm_log.Error(message);
-                return false;
+                return null;
+            }
+        }
+
+        private void VerifySolutions(List<GeneratedSolution> generatedSolutions)
+        {
+            sm_log.Info("Verifying solutions...");
+
+            var verifier = new SolutionVerifier();
+            verifier.Verify(generatedSolutions);
+
+            foreach (var generatedSolution in generatedSolutions.Where(s => s.Verified))
+            {
+                var solution = generatedSolution.Solution;
+                var metrics = solution.Metrics;
+                m_reportWriter?.WriteLine($"{solution.Puzzle.Name},\"{generatedSolution.PuzzleFile}\",{metrics.Cost},{metrics.Cycles},{metrics.Area},{metrics.Instructions}");
             }
         }
     }
