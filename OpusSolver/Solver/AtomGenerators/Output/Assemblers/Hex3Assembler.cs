@@ -20,7 +20,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         {
             public Molecule Product { get; private set; }
 
-            public Atom CenterAtom => Product.GetAtom(new Vector2(1, 1));
+            public Atom CenterAtom { get; private set; }
 
             public enum OperationType
             {
@@ -52,7 +52,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             public ProductAssemblyInfo(Molecule product)
             {
                 Product = product;
-
+                CenterAtom = GetCenterAtom(product);
                 if (CenterAtom == null)
                 {
                     throw new ArgumentException($"{nameof(Hex3Assembler)} can't handle molecules with the center atom missing.");
@@ -434,8 +434,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             // Build the products in reverse order so that the final product is closer to the assembly area (saves a few cycles)
             foreach (var product in products.Reverse())
             {
-                // Offset so the the center of the molecule is at (0, 0) (need to do this before rotating it)
-                var transform = new Transform2D(-new Vector2(1, 1), HexRotation.R0);
+                // Offset so the the center of the molecule is at (0, 0) (need to do this before rotating it
+                var transform = new Transform2D(-m_assemblyInfo[product.ID].CenterAtom.Position, HexRotation.R0);
 
                 var rotation = m_assemblyInfo[product.ID].GetOutputRotation() + rotationOffset;
 
@@ -462,7 +462,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             foreach (var product in products.Reverse())
             {
                 // Offset so the the center of the molecule is at (0, 0) (need to do this before rotating it)
-                var transform = new Transform2D(-new Vector2(1, 1), HexRotation.R0);
+                var transform = new Transform2D(-m_assemblyInfo[product.ID].CenterAtom.Position, HexRotation.R0);
 
                 var rotation = m_assemblyInfo[product.ID].GetOutputRotation() + rotationOffset;
 
@@ -652,24 +652,33 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 return false;
             }
 
-            var originalGlyphPosition = product.GlyphTransform.Position;
+            if (GetCenterAtom(product) == null)
+            {
+                sm_log.Debug($"Product {product.ID} has no center atom so can't be used by {nameof(Hex3Assembler)}.");
+                return false;
+            }
 
-            // Try to fix missing center atom
-            if (product.GetAtom(new Vector2(1, 1)) == null)
+            return true;
+        }
+
+        private static Atom GetCenterAtom(Molecule product)
+        {
+            var centerPosition = new Vector2(1, 1);
+            if (product.GetAtom(centerPosition) == null)
             {
                 if (product.Size == 1)
                 {
-                    product.OffsetBy(new Vector2(1, 1));
+                    centerPosition = new Vector2(0, 0);
                 }
                 else if (product.Height <= 2)
                 {
-                    // We can't move this molecule up:
+                    // We can't use a lower center for this molecule:
                     // O       O
                     //  \     /
                     //   O - O 
                     if (product.GetAtom(new Vector2(2, 1)) == null)
                     {
-                        product.OffsetBy(new Vector2(0, 1));
+                        centerPosition = new Vector2(1, 0);
                     }
                 }
             }
@@ -677,22 +686,15 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             {
                 if (product.Width == 2 && product.Height == 2 && product.GetAtom(new Vector2(0, 1)) != null)
                 {
-                    product.OffsetBy(new Vector2(1, 0));
+                    centerPosition = new Vector2(0, 1);
                 }
                 else
                 {
-                    product.OffsetBy(new Vector2(0, 1));
+                    centerPosition = new Vector2(1, 0);
                 }
             }
 
-            if (product.GetAtom(new Vector2(1, 1)) == null)
-            {
-                sm_log.Debug($"Product {product.ID} has no center atom so can't be used by {nameof(Hex3Assembler)}.");
-                product.OffsetBy(originalGlyphPosition - product.GlyphTransform.Position);
-                return false;
-            }
-
-            return true;
+            return product.GetAtom(centerPosition);
         }
     }
 }
