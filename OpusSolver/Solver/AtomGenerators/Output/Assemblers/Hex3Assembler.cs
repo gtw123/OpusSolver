@@ -663,38 +663,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
         private static Atom GetCenterAtom(Molecule product)
         {
-            var centerPosition = new Vector2(1, 1);
-            if (product.GetAtom(centerPosition) == null)
-            {
-                if (product.Size == 1)
-                {
-                    centerPosition = new Vector2(0, 0);
-                }
-                else if (product.Height <= 2)
-                {
-                    // We can't use a lower center for this molecule:
-                    // O       O
-                    //  \     /
-                    //   O - O 
-                    if (product.GetAtom(new Vector2(2, 1)) == null)
-                    {
-                        centerPosition = new Vector2(1, 0);
-                    }
-                }
-            }
-            else if (product.GetAtom(new Vector2(0, 0)) != null)
-            {
-                if (product.Width == 2 && product.Height == 2 && product.GetAtom(new Vector2(0, 1)) != null)
-                {
-                    centerPosition = new Vector2(0, 1);
-                }
-                else
-                {
-                    centerPosition = new Vector2(1, 0);
-                }
-            }
+            bool IsCentralAtom(Atom atom) => product.Atoms.All(atom2 => atom == atom2 || product.AreAtomsAdjacent(atom, atom2));
+            int GetBondCount(Atom atom) => atom.Bonds.Values.Count(b => b != BondType.None);
 
-            return product.GetAtom(centerPosition);
+            // Get the atom with the most bonds because that reduces the need to have multiple bonders in the assembler
+            return product.Atoms.Where(atom => IsCentralAtom(atom)).OrderByDescending(atom => GetBondCount(atom)).FirstOrDefault();
         }
     }
 }

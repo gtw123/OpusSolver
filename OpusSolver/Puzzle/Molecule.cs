@@ -106,6 +106,17 @@ namespace OpusSolver
             return GetAtom(position.OffsetInDirection(direction, 1));
         }
 
+        /// <summary>
+        /// Returns whether atom1 is next to atom2 on the hex grid, ignoring bonds.
+        /// </summary>
+        public bool AreAtomsAdjacent(Atom atom1, Atom atom2)
+        {
+            var offset = atom2.Position - atom1.Position;
+            return (offset.X == 0 && Math.Abs(offset.Y) == 1)
+                || (offset.Y == 0 && Math.Abs(offset.X) == 1)
+                || (offset.X == -offset.Y && Math.Abs(offset.X) == 1);
+        }
+
         public IEnumerable<Atom> GetRow(int row)
         {
             return Enumerable.Range(0, Width).Select(x => GetAtom(new Vector2(x, row))).Where(a => a != null);
