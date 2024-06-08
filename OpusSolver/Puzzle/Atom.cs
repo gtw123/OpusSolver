@@ -17,9 +17,9 @@ namespace OpusSolver
         /// <summary>
         /// The bonds of this atom in each of the 6 directions around it.
         /// </summary>
-        public Dictionary<HexRotation, BondType> Bonds { get; private set; }
+        public HexRotationDictionary<BondType> Bonds { get; private set; }
 
-        public Atom(Element element, Dictionary<HexRotation, BondType> bonds, Vector2 position)
+        public Atom(Element element, HexRotationDictionary<BondType> bonds, Vector2 position)
         {
             Element = element;
             Position = position;

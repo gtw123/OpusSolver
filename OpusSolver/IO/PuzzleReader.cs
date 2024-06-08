@@ -182,7 +182,7 @@ namespace OpusSolver.IO
         {
             public Element Element;
             public Vector2 Position;
-            public Dictionary<HexRotation, BondType> Bonds = new();
+            public HexRotationDictionary<BondType> Bonds = new();
 
             public void AddBond(HexRotation direction, BondType bondType)
             {
@@ -196,7 +196,7 @@ namespace OpusSolver.IO
 
             public Atom BuildAtom()
             {
-                var bonds = new Dictionary<HexRotation, BondType>();
+                var bonds = new HexRotationDictionary<BondType>();
                 foreach (var direction in HexRotation.All)
                 {
                     var bondType = BondType.None;

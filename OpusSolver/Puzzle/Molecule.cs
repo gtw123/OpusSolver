@@ -153,7 +153,7 @@ namespace OpusSolver
             {
                 atom.Position = atom.Position.RotateBy(rotation);
 
-                var oldBonds = new Dictionary<HexRotation, BondType>(atom.Bonds);
+                var oldBonds = new HexRotationDictionary<BondType>(atom.Bonds);
                 foreach (var (dir, type) in oldBonds)
                 {
                     atom.Bonds[dir + rotation] = type;
@@ -217,9 +217,8 @@ namespace OpusSolver
                     if (atom == leftmostAtom)
                     {
                         // Bond the atom to the rest of the molecule by copying the bonds from the repeat atom
-                        foreach (var dir in HexRotation.All)
+                        foreach (var (dir, bondType) in repeatAtom.Bonds)
                         {
-                            var bondType = repeatAtom.Bonds[dir];
                             if (bondType != BondType.None)
                             {
                                 newAtom.Bonds[dir] = bondType;

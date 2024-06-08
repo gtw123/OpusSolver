@@ -13,6 +13,11 @@ namespace OpusSolver
             m_data = new();
         }
 
+        public HexRotationDictionary(HexRotationDictionary<T> other)
+        {
+            m_data = new(other.m_data);
+        }
+
         public T this[HexRotation rot]
         {
             get => m_data[rot];
@@ -46,6 +51,14 @@ namespace OpusSolver
         public bool TryGetValue(HexRotation key, out T value)
         {
             return m_data.TryGetValue(key, out value);
+        }
+
+        /// <summary>
+        /// Enumerates the items in this dictionary in a counterclockwise direction starting from HexRotation.R0.
+        /// </summary>
+        public IEnumerator<KeyValuePair<HexRotation, T>> GetEnumerator()
+        {
+            return m_data.GetEnumerator();
         }
 
         /// <summary>
