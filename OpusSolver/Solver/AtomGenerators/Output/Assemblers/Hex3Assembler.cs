@@ -448,21 +448,12 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                     Writer.Write(m_horizontalArm, [Instruction.MoveNegative, Instruction.MovePositive], updateTime: false);
                 }
 
-                // Move to the output area without creating any extra bonds
-                var instructions = new[] { Instruction.RotateClockwise, Instruction.MovePositive, Instruction.Reset };
-                if (m_useSimplerRighthandOutputs)
-                {
-                    instructions = [Instruction.RotateClockwise, Instruction.Reset];
-                }
-                Writer.Write(m_assemblyArm, instructions);
-
-                Writer.AdjustTime(-1);
-                MoveProductToOutput(m_currentProductAssemblyInfo.Product, m_rightOutputArms, Instruction.RotateCounterclockwise);
+                MoveProductToRighthandOutput(m_currentProductAssemblyInfo.Product, !m_useSimplerRighthandOutputs);
                 yield return null;
                 yield break;
             }
 
-            // Move the molecule down one row so we can weld radial atoms together or to new atoms
+            // Move the molecule down one row so we can weld radial atoms in a clockwise direction
             Writer.Write(m_assemblyArm, Instruction.MovePositive);
             foreach (var dummy in ProcessOperations(clockwiseOps))
             {
@@ -471,14 +462,12 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             if (!counterclockwiseOps.Any())
             {
-                Writer.Write(m_assemblyArm, [Instruction.RotateClockwise, Instruction.Reset]);
-                Writer.AdjustTime(-1);
-                MoveProductToOutput(m_currentProductAssemblyInfo.Product, m_rightOutputArms, Instruction.RotateCounterclockwise);
+                MoveProductToRighthandOutput(m_currentProductAssemblyInfo.Product);
                 yield return null;
                 yield break;
             }
 
-            // Rotate the molecule so we can weld atoms to the top RHS
+            // Rotate the molecule so we can weld radial atoms in a counterclockwise direction
             Writer.Write(m_assemblyArm, Instruction.RotateCounterclockwise);
             foreach (var dummy in ProcessOperations(counterclockwiseOps,
                 afterGrab: () => Writer.WriteGrabResetAction(m_horizontalArm, Instruction.MovePositive)))
@@ -486,9 +475,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 yield return dummy;
             }
 
-            Writer.Write(m_assemblyArm, [Instruction.RotateCounterclockwise, Instruction.Reset]);
-            Writer.AdjustTime(-1);
-            MoveProductToOutput(m_currentProductAssemblyInfo.Product, m_leftOutputArms, Instruction.RotateClockwise);
+            MoveProductToLefthandOutput(m_currentProductAssemblyInfo.Product);
             yield return null;
         }
 
@@ -520,6 +507,23 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                         throw new InvalidOperationException($"Invalid operation {op.Type}.");
                 }
             }
+        }
+
+        private void MoveProductToRighthandOutput(Molecule product, bool moveAfterRotate = false)
+        {
+            Instruction[] instructions = moveAfterRotate ? [Instruction.RotateClockwise, Instruction.MovePositive, Instruction.Reset]
+                : [Instruction.RotateClockwise, Instruction.Reset];
+
+            Writer.Write(m_assemblyArm, instructions);
+            Writer.AdjustTime(-1);
+            MoveProductToOutput(product, m_rightOutputArms, Instruction.RotateCounterclockwise);
+        }
+
+        private void MoveProductToLefthandOutput(Molecule product)
+        {
+            Writer.Write(m_assemblyArm, [Instruction.RotateCounterclockwise, Instruction.Reset]);
+            Writer.AdjustTime(-1);
+            MoveProductToOutput(product, m_leftOutputArms, Instruction.RotateClockwise);
         }
 
         private void MoveProductToOutput(Molecule product, List<Arm> outputArms, Instruction armInstruction)
