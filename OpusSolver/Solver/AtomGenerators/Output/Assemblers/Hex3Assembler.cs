@@ -16,27 +16,27 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
     {
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(Hex3Assembler));
 
+        public enum OperationType
+        {
+            RotateClockwise,
+            RotateCounterclockwise,
+            GrabAtom,
+            Bond,
+            MoveAwayFromBonder,
+            MoveTowardBonder,
+        }
+        public class Operation
+        {
+            public OperationType Type;
+            public HexRotation FinalRotation;
+            public Atom Atom;
+        }
+
         private class ProductAssemblyInfo
         {
             public Molecule Product { get; private set; }
 
             public Atom CenterAtom { get; private set; }
-
-            public enum OperationType
-            {
-                RotateClockwise,
-                RotateCounterclockwise,
-                GrabAtom,
-                Bond,
-                MoveAwayFromBonder,
-                MoveTowardBonder,
-            }
-            public class Operation
-            {
-                public OperationType Type;
-                public HexRotation FinalRotation;
-                public Atom Atom;
-            }
 
             public IEnumerable<Operation> CenterOperations { get; private set; }
             public IEnumerable<Operation> ClockwiseOperations { get; private set; }
@@ -568,28 +568,28 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             yield return null;
         }
 
-        private IEnumerable<object> ProcessOperations(IEnumerable<ProductAssemblyInfo.Operation> centerOps, Action afterGrab = null)
+        private IEnumerable<object> ProcessOperations(IEnumerable<Operation> centerOps, Action afterGrab = null)
         {
             foreach (var op in centerOps)
             {
                 switch (op.Type)
                 {
-                    case ProductAssemblyInfo.OperationType.RotateClockwise:
+                    case OperationType.RotateClockwise:
                         Writer.Write(m_assemblyArm, Instruction.PivotClockwise);
                         break;
-                    case ProductAssemblyInfo.OperationType.RotateCounterclockwise:
+                    case OperationType.RotateCounterclockwise:
                         Writer.Write(m_assemblyArm, Instruction.PivotCounterclockwise);
                         break;
-                    case ProductAssemblyInfo.OperationType.GrabAtom:
+                    case OperationType.GrabAtom:
                         yield return null;
                         afterGrab?.Invoke();
                         break;
-                    case ProductAssemblyInfo.OperationType.Bond:
+                    case OperationType.Bond:
                         break;
-                    case ProductAssemblyInfo.OperationType.MoveAwayFromBonder:
+                    case OperationType.MoveAwayFromBonder:
                         Writer.Write(m_assemblyArm, Instruction.MovePositive);
                         break;
-                    case ProductAssemblyInfo.OperationType.MoveTowardBonder:
+                    case OperationType.MoveTowardBonder:
                         Writer.Write(m_assemblyArm, Instruction.MoveNegative);
                         break;
                     default:
