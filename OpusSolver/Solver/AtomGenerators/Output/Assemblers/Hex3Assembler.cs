@@ -35,17 +35,18 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private class ProductAssemblyInfo
         {
             public Molecule Product { get; private set; }
-
             public Atom CenterAtom { get; private set; }
 
-            public IEnumerable<Operation> CenterOperations { get; private set; }
-            public IEnumerable<Operation> ClockwiseOperations { get; private set; }
-            public IEnumerable<Operation> CounterclockwiseOperations { get; private set; }
+            public IEnumerable<Operation> CenterOperations => m_centerOperations;
+            public IEnumerable<Operation> ClockwiseOperations => m_clockwiseOperations;
+            public IEnumerable<Operation> CounterclockwiseOperations => m_counterclockwiseOperations;
+            public IEnumerable<Operation> AllOperations => CenterOperations.Concat(ClockwiseOperations).Concat(CounterclockwiseOperations);
+
+            private List<Operation> m_centerOperations;
+            private List<Operation> m_clockwiseOperations;
+            private List<Operation> m_counterclockwiseOperations;
 
             private bool m_needAvoidBondBeforeCounterclockwiseOperations = false;
-
-            private readonly List<Operation> m_allOperations = new();
-
             private HexRotation m_currentDirection = HexRotation.R0;
             private readonly HashSet<HexRotation> m_grabbedAtoms = new();
             private readonly HashSet<HexRotation> m_constructedClockwiseBonds = new(); // Whether a bond has been constructed in a clockwise direction from the atom in the specified radial direction
@@ -59,42 +60,32 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                     throw new ArgumentException($"{nameof(Hex3Assembler)} can't handle molecules with the center atom missing.");
                 }
 
-                CenterOperations = GenerateCenterOperations().ToList();
-                m_allOperations.AddRange(CenterOperations);
+                m_centerOperations = GenerateCenterOperations().ToList();
+                m_clockwiseOperations = GenerateClockwiseOperations().ToList();
+                m_counterclockwiseOperations = GenerateCounterclockwiseOperations().ToList();
 
-                ClockwiseOperations = GenerateClockwiseOperations().ToList();
-                m_allOperations.AddRange(ClockwiseOperations);
-
-                var counterclockwiseOperations = GenerateCounterclockwiseOperations().ToList();
-
-                // TODO: Find a more elegant way to do this. Also, it might be possible to avoid it in some cases by pivoting before rotating to LH bonder.
-                if (m_needAvoidBondBeforeCounterclockwiseOperations && counterclockwiseOperations.Any())
+                // TODO: Can we avoid this in some cases by pivoting before rotating to LH bonder?
+                if (m_needAvoidBondBeforeCounterclockwiseOperations && m_counterclockwiseOperations.Any())
                 {
-                    var op = new Operation { Type = OperationType.MoveAwayFromBonder, FinalRotation = m_allOperations.Last().FinalRotation };
-                    var temp = ClockwiseOperations.ToList();
-                    temp.Add(op);
-                    ClockwiseOperations = temp;
-                    m_allOperations.Add(op);
+                    var rot = m_centerOperations.Concat(m_clockwiseOperations).Last().FinalRotation;
+                    m_clockwiseOperations.Add(new Operation { Type = OperationType.MoveAwayFromBonder, FinalRotation = rot });
                 }
-
-                CounterclockwiseOperations = counterclockwiseOperations;
-                m_allOperations.AddRange(CounterclockwiseOperations);
             }
 
             public IEnumerable<Element> GetElementsInBuildOrder()
             {
-                return new[] { CenterAtom.Element }.Concat(m_allOperations.Where(op => op.Type == OperationType.GrabAtom).Select(op => op.Atom.Element));
+                return new[] { CenterAtom.Element }.Concat(AllOperations.Where(op => op.Type == OperationType.GrabAtom).Select(op => op.Atom.Element));
             }
 
             public HexRotation GetOutputRotation()
             {
-                if (!m_allOperations.Any())
+                if (!AllOperations.Any())
                 {
                     // This occurs when the molecule has only 1 atom
                     return HexRotation.R0;
                 }
 
-                var rot = m_allOperations.Last().FinalRotation;
+                var rot = AllOperations.Last().FinalRotation;
                 if (CounterclockwiseOperations.Any())
                 {
                     return HexRotation.R120 - rot;
@@ -209,7 +200,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                             bool wouldCreateUnwantedBonds = false;
                             for (int i = 0; i < numRotations; i++)
                             {
-                                newDir = newDir + rotationDir;
+                                newDir += rotationDir;
                                 if (m_grabbedAtoms.Contains(newDir) && m_grabbedAtoms.Contains(newDir.Rotate60Clockwise()))
                                 {
                                     if (atoms[newDir] == null)
