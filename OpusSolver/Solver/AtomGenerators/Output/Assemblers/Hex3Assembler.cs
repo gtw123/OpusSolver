@@ -125,26 +125,13 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
                 // Enumerate the atoms so that lastAtomDir is last
                 var startDir = lastAtomDir.Rotate60Clockwise();
-                bool isFirstBond = true;
+                m_currentDirection = atoms.EnumerateClockwise(startFrom: startDir).FirstOrDefault().Key;
                 foreach (var (dir, atom) in atoms.EnumerateClockwise(startFrom: startDir))
                 {
-                    if (!isFirstBond)
+                    var (numRotations, rotationDir) = CalculateRotation(m_currentDirection, dir);
+                    foreach (var op in CreateRotationOperations(numRotations, rotationDir, false, false))
                     {
-                        var (numRotations, rotationDir) = CalculateRotation(m_currentDirection, dir);
-                        for (int i = 0; i < numRotations; i++)
-                        {
-                            m_currentDirection += rotationDir;
-                            yield return new Operation
-                            {
-                                Type = (rotationDir == HexRotation.R60) ? OperationType.RotateClockwise : OperationType.RotateCounterclockwise,
-                                FinalRotation = m_currentDirection
-                            };
-                        }
-                    }
-                    else
-                    {
-                        m_currentDirection = dir;
-                        isFirstBond = false;
+                        yield return op;
                     }
 
                     m_grabbedAtoms[dir] = atom;
@@ -168,7 +155,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 return (numRotations, rotationDir);
             }
 
-
             private IEnumerable<Operation> GenerateClockwiseOperations()
             {
                 // Get the atoms that need to be bonded to the next atom in a clockwise direction
@@ -187,7 +173,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
                         // Check if rotating without moving would create any unwanted bonds
                         var newDir = m_currentDirection;
-                        bool wouldCreateUnwantedBonds = false;
+                        bool moveWhileRotating = false;
                         for (int i = 0; i < numRotations; i++)
                         {
                             newDir += rotationDir;
@@ -195,31 +181,15 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                             {
                                 if (!atoms.ContainsKey(newDir))
                                 {
-                                    wouldCreateUnwantedBonds = true;
+                                    moveWhileRotating = true;
                                     break;
                                 }
                             }
                         }
 
-                        if (wouldCreateUnwantedBonds)
+                        foreach (var op in CreateRotationOperations(numRotations, rotationDir, moveWhileRotating, moveWhileRotating))
                         {
-                            yield return new Operation { Type = OperationType.MoveAwayFromBonder, FinalRotation = m_currentDirection }; 
-                        }
-
-                        for (int i = 0; i < numRotations; i++)
-                        {
-                            // make sure new dir + clockwise don't both have atoms and shouldn't have a bond
-                            m_currentDirection += rotationDir;
-                            yield return new Operation
-                            {
-                                Type = (rotationDir == HexRotation.R60) ? OperationType.RotateClockwise : OperationType.RotateCounterclockwise,
-                                FinalRotation = m_currentDirection
-                            };
-                        }
-
-                        if (wouldCreateUnwantedBonds)
-                        {
-                            yield return new Operation { Type = OperationType.MoveTowardBonder, FinalRotation = m_currentDirection };
+                            yield return op;
                         }
 
                         m_constructedClockwiseBonds.Add(dir);
@@ -261,11 +231,12 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                     {
                         var (numRotations, rotationDir) = CalculateRotation(m_currentDirection, dir);
 
-                        bool wouldCreateUnwantedBonds = false;
+                        bool moveBefore = false;
+                        bool moveAfter = false;
                         if (isFirstOp && m_needAvoidBondBeforeCounterclockwiseOperations)
                         {
                             // In this case we don't need to write the "move away" op, only the "move toward"
-                            wouldCreateUnwantedBonds = true;
+                            moveAfter = true;
                         }
                         else
                         {
@@ -278,31 +249,17 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                                 {
                                     if (!atoms.ContainsKey(newDir))
                                     {
-                                        wouldCreateUnwantedBonds = true;
+                                        moveBefore = true;
+                                        moveAfter = true;
                                         break;
                                     }
                                 }
                             }
-
-                            if (wouldCreateUnwantedBonds)
-                            {
-                                yield return new Operation { Type = OperationType.MoveAwayFromBonder, FinalRotation = m_currentDirection };
-                            }
                         }
 
-                        for (int i = 0; i < numRotations; i++)
+                        foreach (var op in CreateRotationOperations(numRotations, rotationDir, moveBefore, moveAfter))
                         {
-                            m_currentDirection += rotationDir;
-                            yield return new Operation
-                            {
-                                Type = (rotationDir == HexRotation.R60) ? OperationType.RotateClockwise : OperationType.RotateCounterclockwise,
-                                FinalRotation = m_currentDirection
-                            };
-                        }
-
-                        if (wouldCreateUnwantedBonds)
-                        {
-                            yield return new Operation { Type = OperationType.MoveTowardBonder, FinalRotation = m_currentDirection };
+                            yield return op;
                         }
 
                         m_constructedClockwiseBonds.Add(dir.Rotate60Counterclockwise());
@@ -319,6 +276,29 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
                         isFirstOp = false;
                     }
+                }
+            }
+
+            private IEnumerable<Operation> CreateRotationOperations(int numRotations, HexRotation rotationDir, bool moveBeforeRotating, bool moveAfterRotatin)
+            {
+                if (moveBeforeRotating)
+                {
+                    yield return new Operation { Type = OperationType.MoveAwayFromBonder, FinalRotation = m_currentDirection };
+                }
+
+                for (int i = 0; i < numRotations; i++)
+                {
+                    m_currentDirection += rotationDir;
+                    yield return new Operation
+                    {
+                        Type = (rotationDir == HexRotation.R60) ? OperationType.RotateClockwise : OperationType.RotateCounterclockwise,
+                        FinalRotation = m_currentDirection
+                    };
+                }
+
+                if (moveAfterRotatin)
+                {
+                    yield return new Operation { Type = OperationType.MoveTowardBonder, FinalRotation = m_currentDirection };
                 }
             }
         }
