@@ -509,24 +509,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             // Bond radial atoms to the center atom
             var centerOps = m_currentProductAssemblyInfo.CenterOperations;
-            foreach (var op in centerOps)
+            foreach (var dummy in ProcessOperations(centerOps))
             {
-                switch (op.Type)
-                {
-                    case ProductAssemblyInfo.OperationType.RotateClockwise:
-                        Writer.Write(m_assemblyArm, Instruction.PivotClockwise);
-                        break;
-                    case ProductAssemblyInfo.OperationType.RotateCounterclockwise:
-                        Writer.Write(m_assemblyArm, Instruction.PivotCounterclockwise);
-                        break;
-                    case ProductAssemblyInfo.OperationType.GrabAtom:
-                        yield return null;
-                        break;
-                    case ProductAssemblyInfo.OperationType.Bond:
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Invalid operation {op.Type} while bonding atoms to center atom.");
-                }
+                yield return dummy;
             }
 
             var clockwiseOps = m_currentProductAssemblyInfo.ClockwiseOperations;
@@ -543,7 +528,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 var instructions = new[] { Instruction.RotateClockwise, Instruction.MovePositive, Instruction.Reset };
                 if (m_useSimplerRighthandOutputs)
                 {
-                    instructions = new[] { Instruction.RotateClockwise, Instruction.Reset };
+                    instructions = [Instruction.RotateClockwise, Instruction.Reset];
                 }
                 Writer.Write(m_assemblyArm, instructions);
 
@@ -555,31 +540,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             // Move the molecule down one row so we can weld radial atoms together or to new atoms
             Writer.Write(m_assemblyArm, Instruction.MovePositive);
-
-            foreach (var op in clockwiseOps)
+            foreach (var dummy in ProcessOperations(clockwiseOps))
             {
-                switch (op.Type)
-                {
-                    case ProductAssemblyInfo.OperationType.RotateClockwise:
-                        Writer.Write(m_assemblyArm, Instruction.PivotClockwise);
-                        break;
-                    case ProductAssemblyInfo.OperationType.RotateCounterclockwise:
-                        Writer.Write(m_assemblyArm, Instruction.PivotCounterclockwise);
-                        break;
-                    case ProductAssemblyInfo.OperationType.GrabAtom:
-                        yield return null;
-                        break;
-                    case ProductAssemblyInfo.OperationType.Bond:
-                        break;
-                    case ProductAssemblyInfo.OperationType.MoveAwayFromBonder:
-                        Writer.Write(m_assemblyArm, Instruction.MovePositive);
-                        break;
-                    case ProductAssemblyInfo.OperationType.MoveTowardBonder:
-                        Writer.Write(m_assemblyArm, Instruction.MoveNegative);
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Invalid operation {op.Type} while bonding atoms clockwise.");
-                }
+                yield return dummy;
             }
 
             if (!counterclockwiseOps.Any())
@@ -593,8 +556,21 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             // Rotate the molecule so we can weld atoms to the top RHS
             Writer.Write(m_assemblyArm, Instruction.RotateCounterclockwise);
+            foreach (var dummy in ProcessOperations(counterclockwiseOps,
+                afterGrab: () => Writer.WriteGrabResetAction(m_horizontalArm, Instruction.MovePositive)))
+            {
+                yield return dummy;
+            }
 
-            foreach (var op in counterclockwiseOps)
+            Writer.Write(m_assemblyArm, [Instruction.RotateCounterclockwise, Instruction.Reset]);
+            Writer.AdjustTime(-1);
+            MoveProductToOutput(m_currentProductAssemblyInfo.Product, m_leftOutputArms, Instruction.RotateClockwise);
+            yield return null;
+        }
+
+        private IEnumerable<object> ProcessOperations(IEnumerable<ProductAssemblyInfo.Operation> centerOps, Action afterGrab = null)
+        {
+            foreach (var op in centerOps)
             {
                 switch (op.Type)
                 {
@@ -606,7 +582,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                         break;
                     case ProductAssemblyInfo.OperationType.GrabAtom:
                         yield return null;
-                        Writer.WriteGrabResetAction(m_horizontalArm, Instruction.MovePositive);
+                        afterGrab?.Invoke();
                         break;
                     case ProductAssemblyInfo.OperationType.Bond:
                         break;
@@ -617,14 +593,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                         Writer.Write(m_assemblyArm, Instruction.MoveNegative);
                         break;
                     default:
-                        throw new InvalidOperationException($"Invalid operation {op.Type} while bonding atoms counterclockwise.");
+                        throw new InvalidOperationException($"Invalid operation {op.Type}.");
                 }
             }
-
-            Writer.Write(m_assemblyArm, [Instruction.RotateCounterclockwise, Instruction.Reset]);
-            Writer.AdjustTime(-1);
-            MoveProductToOutput(m_currentProductAssemblyInfo.Product, m_leftOutputArms, Instruction.RotateClockwise);
-            yield return null;
         }
 
         private void MoveProductToOutput(Molecule product, List<Arm> outputArms, Instruction armInstruction)
