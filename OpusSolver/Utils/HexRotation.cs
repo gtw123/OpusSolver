@@ -7,7 +7,7 @@ namespace OpusSolver
     /// Represents a rotation on the hex grid, where a positive rotation represents a counterclockwise rotation.
     /// When interpreted as a direction, a rotation of 0 is in the direction of the positive X axis.
     /// </summary>
-    public readonly struct HexRotation : IEquatable<HexRotation>
+    public readonly struct HexRotation : IEquatable<HexRotation>, IComparable<HexRotation>
     {
         private readonly int m_angle;
 
@@ -87,6 +87,11 @@ namespace OpusSolver
         public override string ToString()
         {
             return m_angle.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public int CompareTo(HexRotation other)
+        {
+            return this.IntValue - other.IntValue;
         }
     }
 }
