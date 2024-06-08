@@ -92,11 +92,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 }
                 else if (ClockwiseOperations.Any())
                 {
-                    return HexRotation.R120 - rot - HexRotation.R60;
+                    return HexRotation.R60 - rot;
                 }
                 else
                 {
-                    return HexRotation.R180 - rot - HexRotation.R60;
+                    return HexRotation.R120 - rot;
                 }
             }
 
