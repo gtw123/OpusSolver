@@ -64,6 +64,11 @@ namespace OpusSolver
             return v.Multiply(scale);
         }
 
+        public static Vector2 operator *(int scale, Vector2 v)
+        {
+            return v.Multiply(scale);
+        }
+
         public Vector2 Add(Vector2 other)
         {
             return new Vector2(X + other.X, Y + other.Y);

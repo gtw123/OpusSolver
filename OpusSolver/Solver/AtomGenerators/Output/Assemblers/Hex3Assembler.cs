@@ -328,11 +328,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
         private readonly Dictionary<int, ProductAssemblyInfo> m_assemblyInfo;
         private readonly LoopingCoroutine<object> m_assembleCoroutine;
         
-
         private readonly Arm m_horizontalArm;
         private readonly Arm m_assemblyArm;
-        private readonly List<Arm> m_rightOutputArms = new();
-        private readonly List<Arm> m_leftOutputArms = new();
+        private readonly List<Arm> m_rightOutputArms;
+        private readonly List<Arm> m_leftOutputArms;
         private bool m_useSimplerRighthandOutputs = false;
 
         private ProductAssemblyInfo m_currentProductAssemblyInfo;
@@ -367,69 +366,52 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             if (righthandProducts.Any())
             {
+                var initialPosition = new Vector2(3, -3);
                 // If we're only using center bonds, we can offset the outputs a little to save some cost/cycles
-                BuildRighthandOutputs(righthandProducts, m_useSimplerRighthandOutputs ? new Vector2(0, 1) : new Vector2(0, 0));
+                if (m_useSimplerRighthandOutputs)
+                {
+                    initialPosition += new Vector2(0, 1);
+                }
+
+                m_rightOutputArms = AddOutputs(righthandProducts, initialPosition, new Vector2(3, -3), HexRotation.R60);
             }
             if (lefthandProducts.Any())
             {
-                BuildLefthandOutputs(lefthandProducts);
+                m_leftOutputArms = AddOutputs(lefthandProducts, new Vector2(-1, -3), new Vector2(0, -3), -HexRotation.R60);
             }
         }
 
-        private void BuildRighthandOutputs(IEnumerable<Molecule> products, Vector2 outputOffset)
+        private List<Arm> AddOutputs(IEnumerable<Molecule> products, Vector2 initialPosition, Vector2 offset, HexRotation rotationOffset)
         {
-            int index = 0;
-            HexRotation rotationOffset = HexRotation.R0;
+            var arms = new List<Arm>();
+            var currentRotationOffset = HexRotation.R0;
 
             // Build the products in reverse order so that the final product is closer to the assembly area (saves a few cycles)
-            foreach (var product in products.Reverse())
-            {
-                // Offset so the the center of the molecule is at (0, 0) (need to do this before rotating it
-                var transform = new Transform2D(-m_assemblyInfo[product.ID].CenterAtom.Position, HexRotation.R0);
-
-                var rotation = m_assemblyInfo[product.ID].GetOutputRotation() + rotationOffset;
-
-                // Rotate the glyph and move it to the correct location
-                var productCenter = new Vector2(3 + index * 3, -3 - index * 3) + outputOffset;
-                transform = new Transform2D(productCenter, rotation).Apply(transform);
-                new Product(this, transform.Position, transform.Rotation, product);
-
-                m_outputLocationsById[product.ID] = index;
-                if (index > 0)
-                {
-                    m_rightOutputArms.Add(new Arm(this, productCenter + new Vector2(0, 3), HexRotation.R180, ArmType.Arm1, 3));
-                }
-
-                rotationOffset = rotationOffset.Rotate60Counterclockwise();
-                index++;
-            }
-        }
-
-        private void BuildLefthandOutputs(IEnumerable<Molecule> products)
-        {
             int index = 0;
-            HexRotation rotationOffset = HexRotation.R0;
             foreach (var product in products.Reverse())
             {
                 // Offset so the the center of the molecule is at (0, 0) (need to do this before rotating it)
                 var transform = new Transform2D(-m_assemblyInfo[product.ID].CenterAtom.Position, HexRotation.R0);
 
-                var rotation = m_assemblyInfo[product.ID].GetOutputRotation() + rotationOffset;
+                var rotation = m_assemblyInfo[product.ID].GetOutputRotation() + currentRotationOffset;
 
                 // Rotate the glyph and move it to the correct location
-                var productCenter = new Vector2(-1, -3 - index * 3);
+                var productCenter = initialPosition + index * offset;
                 transform = new Transform2D(productCenter, rotation).Apply(transform);
                 new Product(this, transform.Position, transform.Rotation, product);
 
                 m_outputLocationsById[product.ID] = index;
                 if (index > 0)
                 {
-                    m_leftOutputArms.Add(new Arm(this, productCenter + new Vector2(-3, 3), HexRotation.R0, ArmType.Arm1, 3));
+                    var armRotation = (rotationOffset == HexRotation.R60) ? HexRotation.R180 : HexRotation.R0;
+                    arms.Add(new Arm(this, productCenter - offset - new Vector2(3, 0).RotateBy(armRotation), armRotation, ArmType.Arm1, 3));
                 }
 
-                rotationOffset = rotationOffset.Rotate60Clockwise();
+                currentRotationOffset += rotationOffset;
                 index++;
             }
+
+            return arms;
         }
 
         public override IEnumerable<Element> GetProductElementOrder(Molecule product)
