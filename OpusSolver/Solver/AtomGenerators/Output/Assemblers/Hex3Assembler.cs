@@ -48,7 +48,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
             private bool m_needAvoidBondBeforeCounterclockwiseOperations = false;
             private HexRotation m_currentDirection = HexRotation.R0;
-            private readonly HashSet<HexRotation> m_grabbedAtoms = new();
+            private readonly HexRotationDictionary<Atom> m_grabbedAtoms = new();
             private readonly HashSet<HexRotation> m_constructedClockwiseBonds = new(); // Whether a bond has been constructed in a clockwise direction from the atom in the specified radial direction
 
             public ProductAssemblyInfo(Molecule product)
@@ -103,7 +103,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             private IEnumerable<Operation> GenerateCenterOperations()
             {
                 // Get the atoms that need to be bonded to the center atom
-                var atoms = GetRadialAtomsWhere((dir, atom) => atom.Bonds[dir + HexRotation.R180] != BondType.None);
+                var atoms = Product.GetAdjacentAtoms(CenterAtom.Position, (dir, atom) => atom.Bonds[dir + HexRotation.R180] != BondType.None);
 
                 // After we've bonded the radial atoms to the center atom, we'll move the molecule down one cell,
                 // which means the top two atoms are on top of a bonder. This could create an unwanted bond,
@@ -147,7 +147,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                         isFirstBond = false;
                     }
 
-                    m_grabbedAtoms.Add(dir);
+                    m_grabbedAtoms[dir] = atom;
                     yield return new Operation { Type = OperationType.GrabAtom, FinalRotation = m_currentDirection, Atom = atom };
                 }
             }
@@ -172,17 +172,16 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             private IEnumerable<Operation> GenerateClockwiseOperations()
             {
                 // Get the atoms that need to be bonded to the next atom in a clockwise direction
-                var atoms = GetRadialAtomsWhere((dir, atom) => atom.Bonds[dir - HexRotation.R120] != BondType.None);
+                var atoms = Product.GetAdjacentAtoms(CenterAtom.Position, (dir, atom) => atom.Bonds[dir - HexRotation.R120] != BondType.None);
 
                 m_currentDirection = m_currentDirection.Rotate60Clockwise();
 
                 // Start with the atom next to the first one we've already grabbed
-                var startDir = HexRotation.All.FirstOrDefault(dir => m_grabbedAtoms.Contains(dir));
-                startDir = startDir.Rotate60Counterclockwise();
+                var startDir = m_grabbedAtoms.Keys.FirstOrDefault().Rotate60Counterclockwise();
                 foreach (var (dir, atom) in atoms.EnumerateCounterclockwise(startFrom: startDir))
                 {
                     // We can only do anything if the next atom has already been grabbed
-                    if (m_grabbedAtoms.Contains(dir.Rotate60Clockwise()))
+                    if (m_grabbedAtoms.ContainsKey(dir.Rotate60Clockwise()))
                     {
                         var (numRotations, rotationDir) = CalculateRotation(m_currentDirection, dir);
 
@@ -192,7 +191,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                         for (int i = 0; i < numRotations; i++)
                         {
                             newDir += rotationDir;
-                            if (m_grabbedAtoms.Contains(newDir) && m_grabbedAtoms.Contains(newDir.Rotate60Clockwise()))
+                            if (m_grabbedAtoms.ContainsKey(newDir) && m_grabbedAtoms.ContainsKey(newDir.Rotate60Clockwise()))
                             {
                                 if (!atoms.ContainsKey(newDir))
                                 {
@@ -225,9 +224,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
                         m_constructedClockwiseBonds.Add(dir);
 
-                        if (!m_grabbedAtoms.Contains(dir))
+                        if (!m_grabbedAtoms.ContainsKey(dir))
                         {
-                            m_grabbedAtoms.Add(dir);
+                            m_grabbedAtoms[dir] = atom;
                             yield return new Operation { Type = OperationType.GrabAtom, FinalRotation = m_currentDirection, Atom = atom };
                         }
                         else
@@ -241,11 +240,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
             private IEnumerable<Operation> GenerateCounterclockwiseOperations()
             {
                 // Get the atoms that need to be bonded to the next atom in a counter-clockwise direction
-                var atoms = GetRadialAtomsWhere((dir, atom) => atom.Bonds[dir + HexRotation.R120] != BondType.None);
+                var atoms = Product.GetAdjacentAtoms(CenterAtom.Position, (dir, atom) => atom.Bonds[dir + HexRotation.R120] != BondType.None);
 
                 m_currentDirection -= HexRotation.R120;
 
-                if (m_grabbedAtoms.Contains(m_currentDirection) && m_grabbedAtoms.Contains(m_currentDirection.Rotate60Counterclockwise()))
+                if (m_grabbedAtoms.ContainsKey(m_currentDirection) && m_grabbedAtoms.ContainsKey(m_currentDirection.Rotate60Counterclockwise()))
                 {
                     if (!atoms.ContainsKey(m_currentDirection))
                     {
@@ -254,8 +253,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 }
 
                 // Start with the atom next to the first one we've already grabbed
-                var startDir = HexRotation.All.FirstOrDefault(dir => m_grabbedAtoms.Contains(dir));
-                startDir = startDir.Rotate60Clockwise();
+                var startDir = m_grabbedAtoms.Keys.FirstOrDefault().Rotate60Clockwise();
                 bool isFirstOp = true;
                 foreach (var (dir, atom) in atoms.EnumerateClockwise(startFrom: startDir))
                 {
@@ -276,7 +274,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                             for (int i = 0; i < numRotations; i++)
                             {
                                 newDir += rotationDir;
-                                if (m_grabbedAtoms.Contains(newDir) && m_grabbedAtoms.Contains(newDir.Rotate60Counterclockwise()))
+                                if (m_grabbedAtoms.ContainsKey(newDir) && m_grabbedAtoms.ContainsKey(newDir.Rotate60Counterclockwise()))
                                 {
                                     if (!atoms.ContainsKey(newDir))
                                     {
@@ -309,9 +307,9 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
                         m_constructedClockwiseBonds.Add(dir.Rotate60Counterclockwise());
 
-                        if (!m_grabbedAtoms.Contains(dir))
+                        if (!m_grabbedAtoms.ContainsKey(dir))
                         {
-                            m_grabbedAtoms.Add(dir);
+                            m_grabbedAtoms[dir] = atom;
                             yield return new Operation { Type = OperationType.GrabAtom, FinalRotation = m_currentDirection, Atom = atom };
                         }
                         else
@@ -322,21 +320,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                         isFirstOp = false;
                     }
                 }
-            }
-
-            private HexRotationDictionary<Atom> GetRadialAtomsWhere(Func<HexRotation, Atom, bool> includeAtom)
-            {
-                var result = new HexRotationDictionary<Atom>();
-                foreach (var dir in HexRotation.All)
-                {
-                    var atom = Product.GetAdjacentAtom(CenterAtom.Position, dir);
-                    if (atom != null && includeAtom(dir, atom))
-                    {
-                        result[dir] = atom;
-                    }
-                }
-
-                return result;
             }
         }
 

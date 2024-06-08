@@ -106,6 +106,21 @@ namespace OpusSolver
             return GetAtom(position.OffsetInDirection(direction, 1));
         }
 
+        public HexRotationDictionary<Atom> GetAdjacentAtoms(Vector2 position, Func<HexRotation, Atom, bool> includeAtom = null)
+        {
+            var result = new HexRotationDictionary<Atom>();
+            foreach (var dir in HexRotation.All)
+            {
+                var atom = GetAdjacentAtom(position, dir);
+                if (atom != null && (includeAtom == null || includeAtom(dir, atom)))
+                {
+                    result[dir] = atom;
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Returns whether atom1 is next to atom2 on the hex grid, ignoring bonds.
         /// </summary>
