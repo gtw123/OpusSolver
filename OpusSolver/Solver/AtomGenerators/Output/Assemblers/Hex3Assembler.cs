@@ -416,15 +416,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
 
         public override IEnumerable<Element> GetProductElementOrder(Molecule product)
         {
-            var assemblyInfo = m_assemblyInfo[product.ID];
-            if (assemblyInfo.CenterAtom != null)
-            {
-                return assemblyInfo.GetElementsInBuildOrder();
-            }
-            else
-            {
-                throw new NotImplementedException("Molecules without a center atom are yet supported");
-            }
+            return m_assemblyInfo[product.ID].GetElementsInBuildOrder();
         }
 
         public override void AddAtom(Element element, int productID)
