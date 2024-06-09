@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver
@@ -14,7 +15,7 @@ namespace OpusSolver.Solver
         public IEnumerable<Program> Fragments => m_fragments;
 
         private List<Program> m_fragments = new List<Program>();
-        private InstructionWriter m_writer;
+        private Program m_currentFragment;
 
         public ProgramWriter()
         {
@@ -23,9 +24,8 @@ namespace OpusSolver.Solver
 
         public void NewFragment()
         {
-            var fragment = new Program();
-            m_fragments.Add(fragment);
-            m_writer = new InstructionWriter(fragment);
+            m_currentFragment = new Program();
+            m_fragments.Add(m_currentFragment);
         }
 
         /// <summary>
@@ -81,12 +81,28 @@ namespace OpusSolver.Solver
 
         public void Write(IEnumerable<Arm> arms, IEnumerable<Instruction> instructions, bool updateTime = true)
         {
-            m_writer.AddInstructions(arms, instructions, updateTime);
+            m_currentFragment.AddInstructions(arms, instructions, updateTime);
         }
 
         public void AdjustTime(int deltaTime)
         {
-            m_writer.AdjustTime(deltaTime);
+            m_currentFragment.AdjustTime(deltaTime);
+        }
+
+        /// <summary>
+        /// Appends another fragment to the current one, at the current writer position.
+        /// </summary>
+        public void AppendFragment(Program fragment, bool updateTime = true)
+        {
+            foreach (var (arm, instructions) in fragment.Instructions)
+            {
+                m_currentFragment.AddInstructions([arm], instructions, updateTime: false);
+            }
+
+            if (updateTime)
+            {
+                m_currentFragment.AdjustTime(fragment.CurrentTime);
+            }
         }
     }
 }

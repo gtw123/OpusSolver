@@ -58,6 +58,11 @@
     <Compile Include="GeneratedSolution.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="Solution\MoleculeInputOutput.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\CenterAtomMoleculeBuilder.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\MissingCenterAtomMoleculeBuilder.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\AssemblyArea.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\MoleculeBuilder.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\OutputLocation.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\Hex3Assembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\SingleMonoatomicAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\MonoatomicAssembler.cs" />
@@ -91,7 +96,6 @@
     <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\MonoatomicDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\VanBerloGenerator.cs" />
     <Compile Include="Solver\ElementPipeline.cs" />
-    <Compile Include="Solver\InstructionWriter.cs" />
     <Compile Include="Solver\SolutionGenerator.cs" />
     <Compile Include="Solver\ElementGenerators\InputGenerator.cs" />
     <Compile Include="Solver\ElementGenerators\ElementBuffer.cs" />
