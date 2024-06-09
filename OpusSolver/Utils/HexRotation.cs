@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace OpusSolver
@@ -92,6 +93,29 @@ namespace OpusSolver
         public int CompareTo(HexRotation other)
         {
             return this.IntValue - other.IntValue;
+        }
+
+        /// <summary>
+        /// Calculates the shortest sequence of rotations to get from the current rotation to targetRot.
+        /// </summary>
+        /// <returns>A list of the intermediate rotations, including the target rotation.
+        /// Returns an empty list if no rotations are required.</returns>
+        public IEnumerable<HexRotation> CalculateRotationsTo(HexRotation targetRot)
+        {
+            var numRotations = (targetRot - this).IntValue;
+            var rotationDir = R60;
+            if (numRotations >= 3)
+            {
+                numRotations = Count - numRotations;
+                rotationDir = -R60;
+            }
+
+            var rot = this;
+            for (int i = 0; i < numRotations; i++)
+            {
+                rot += rotationDir;
+                yield return rot;
+            }
         }
     }
 }

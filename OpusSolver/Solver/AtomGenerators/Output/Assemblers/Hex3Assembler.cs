@@ -128,8 +128,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 m_currentDirection = atoms.EnumerateClockwise(startFrom: startDir).FirstOrDefault().Key;
                 foreach (var (dir, atom) in atoms.EnumerateClockwise(startFrom: startDir))
                 {
-                    var (numRotations, rotationDir) = CalculateRotation(m_currentDirection, dir);
-                    foreach (var op in CreateRotationOperations(numRotations, rotationDir, false, false))
+                    var rotations = m_currentDirection.CalculateRotationsTo(dir);
+                    foreach (var op in AddRotationOperations(rotations, false, false))
                     {
                         yield return op;
                     }
@@ -137,22 +137,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                     m_grabbedAtoms[dir] = atom;
                     yield return new Operation { Type = OperationType.GrabAtom, FinalRotation = m_currentDirection, Atom = atom };
                 }
-            }
-
-            /// <summary>
-            /// Calculates the rotations required to get from currentDir to targetDir.
-            /// </summary>
-            private (int numRotations, HexRotation rotationDir) CalculateRotation(HexRotation currentDir, HexRotation targetDir)
-            {
-                var numRotations = (targetDir - currentDir).IntValue;
-                var rotationDir = HexRotation.R60;
-                if (numRotations >= 3)
-                {
-                    numRotations = HexRotation.Count - numRotations;
-                    rotationDir = -HexRotation.R60;
-                }
-
-                return (numRotations, rotationDir);
             }
 
             private IEnumerable<Operation> GenerateClockwiseOperations()
@@ -169,25 +153,14 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                     // We can only do anything if the next atom has already been grabbed
                     if (m_grabbedAtoms.ContainsKey(dir.Rotate60Clockwise()))
                     {
-                        var (numRotations, rotationDir) = CalculateRotation(m_currentDirection, dir);
+                        var rotations = m_currentDirection.CalculateRotationsTo(dir);
 
                         // Check if rotating without moving would create any unwanted bonds
-                        var newDir = m_currentDirection;
-                        bool moveWhileRotating = false;
-                        for (int i = 0; i < numRotations; i++)
-                        {
-                            newDir += rotationDir;
-                            if (m_grabbedAtoms.ContainsKey(newDir) && m_grabbedAtoms.ContainsKey(newDir.Rotate60Clockwise()))
-                            {
-                                if (!atoms.ContainsKey(newDir))
-                                {
-                                    moveWhileRotating = true;
-                                    break;
-                                }
-                            }
-                        }
+                        bool moveWhileRotating = rotations.Any(newDir =>
+                            m_grabbedAtoms.ContainsKey(newDir) && m_grabbedAtoms.ContainsKey(newDir.Rotate60Clockwise())
+                            && !atoms.ContainsKey(newDir));
 
-                        foreach (var op in CreateRotationOperations(numRotations, rotationDir, moveWhileRotating, moveWhileRotating))
+                        foreach (var op in AddRotationOperations(rotations, moveWhileRotating, moveWhileRotating))
                         {
                             yield return op;
                         }
@@ -229,35 +202,24 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 {
                     if (!m_constructedClockwiseBonds.Contains(dir.Rotate60Counterclockwise()))
                     {
-                        var (numRotations, rotationDir) = CalculateRotation(m_currentDirection, dir);
+                        var rotations = m_currentDirection.CalculateRotationsTo(dir);
 
-                        bool moveBefore = false;
-                        bool moveAfter = false;
+                        bool moveWhileRotating = false;
+                        bool moveOnlyAfterRotating = false;
                         if (isFirstOp && m_needAvoidBondBeforeCounterclockwiseOperations)
                         {
                             // In this case we don't need to write the "move away" op, only the "move toward"
-                            moveAfter = true;
+                            moveOnlyAfterRotating = true;
                         }
                         else
                         {
                             // Check if rotating without moving would create any unwanted bonds
-                            var newDir = m_currentDirection;
-                            for (int i = 0; i < numRotations; i++)
-                            {
-                                newDir += rotationDir;
-                                if (m_grabbedAtoms.ContainsKey(newDir) && m_grabbedAtoms.ContainsKey(newDir.Rotate60Counterclockwise()))
-                                {
-                                    if (!atoms.ContainsKey(newDir))
-                                    {
-                                        moveBefore = true;
-                                        moveAfter = true;
-                                        break;
-                                    }
-                                }
-                            }
+                            moveWhileRotating = rotations.Any(newDir =>
+                                m_grabbedAtoms.ContainsKey(newDir) && m_grabbedAtoms.ContainsKey(newDir.Rotate60Counterclockwise())
+                                && !atoms.ContainsKey(newDir));
                         }
 
-                        foreach (var op in CreateRotationOperations(numRotations, rotationDir, moveBefore, moveAfter))
+                        foreach (var op in AddRotationOperations(rotations, moveWhileRotating, moveWhileRotating || moveOnlyAfterRotating))
                         {
                             yield return op;
                         }
@@ -279,24 +241,24 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
                 }
             }
 
-            private IEnumerable<Operation> CreateRotationOperations(int numRotations, HexRotation rotationDir, bool moveBeforeRotating, bool moveAfterRotatin)
+            private IEnumerable<Operation> AddRotationOperations(IEnumerable<HexRotation> rotations, bool moveBeforeRotating, bool moveAfterRotating)
             {
                 if (moveBeforeRotating)
                 {
                     yield return new Operation { Type = OperationType.MoveAwayFromBonder, FinalRotation = m_currentDirection };
                 }
 
-                for (int i = 0; i < numRotations; i++)
+                if (rotations.Any())
                 {
-                    m_currentDirection += rotationDir;
-                    yield return new Operation
+                    var type = (rotations.First() - m_currentDirection == HexRotation.R60) ? OperationType.RotateClockwise : OperationType.RotateCounterclockwise;
+                    foreach (var rot in rotations)
                     {
-                        Type = (rotationDir == HexRotation.R60) ? OperationType.RotateClockwise : OperationType.RotateCounterclockwise,
-                        FinalRotation = m_currentDirection
-                    };
+                        m_currentDirection = rot;
+                        yield return new Operation { Type = type, FinalRotation = m_currentDirection };
+                    }
                 }
 
-                if (moveAfterRotatin)
+                if (moveAfterRotating)
                 {
                     yield return new Operation { Type = OperationType.MoveTowardBonder, FinalRotation = m_currentDirection };
                 }
