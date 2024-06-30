@@ -98,13 +98,16 @@ namespace OpusSolver
         /// <summary>
         /// Calculates the shortest sequence of rotations to get from the current rotation to targetRot.
         /// </summary>
+        /// <param name="targetRot">The target rotation</param>
+        /// <param name="rotateClockwiseIf180Degrees">If true, then use clockwise rotations if the difference between the
+        /// current rotation and the target is exactly 180 degrees; if false, use counterclockwise rotations</param>
         /// <returns>A list of the intermediate rotations, including the target rotation.
         /// Returns an empty list if no rotations are required.</returns>
-        public IEnumerable<HexRotation> CalculateRotationsTo(HexRotation targetRot)
+        public IEnumerable<HexRotation> CalculateRotationsTo(HexRotation targetRot, bool rotateClockwiseIf180Degrees = false)
         {
             var numRotations = (targetRot - this).IntValue;
             var rotationDir = R60;
-            if (numRotations >= 3)
+            if (numRotations > 3 || (numRotations == 3 && rotateClockwiseIf180Degrees))
             {
                 numRotations = Count - numRotations;
                 rotationDir = -R60;

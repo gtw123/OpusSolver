@@ -140,7 +140,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
             m_currentDirection = atoms.EnumerateClockwise(startFrom: startDir).FirstOrDefault().Key;
             foreach (var (dir, atom) in atoms.EnumerateClockwise(startFrom: startDir))
             {
-                var rotations = m_currentDirection.CalculateRotationsTo(dir);
+                var rotations = m_currentDirection.CalculateRotationsTo(dir, rotateClockwiseIf180Degrees: true);
                 foreach (var op in AddRotationOperations(rotations, false, false))
                 {
                     yield return op;
@@ -165,7 +165,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
                 // We can only do anything if the next atom has already been grabbed
                 if (m_grabbedAtoms.ContainsKey(dir.Rotate60Clockwise()))
                 {
-                    var rotations = m_currentDirection.CalculateRotationsTo(dir);
+                    var rotations = m_currentDirection.CalculateRotationsTo(dir, rotateClockwiseIf180Degrees: true);
 
                     // Check if rotating without moving would create any unwanted bonds
                     bool moveWhileRotating = rotations.Any(newDir =>
@@ -214,7 +214,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
             {
                 if (!m_constructedClockwiseBonds.Contains(dir.Rotate60Counterclockwise()))
                 {
-                    var rotations = m_currentDirection.CalculateRotationsTo(dir);
+                    var rotations = m_currentDirection.CalculateRotationsTo(dir, rotateClockwiseIf180Degrees: false);
 
                     bool moveWhileRotating = false;
                     bool moveOnlyAfterRotating = false;
