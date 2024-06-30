@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
+namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
 {
     /// <summary>
     /// Assembles molecules that fit within a hexagon of diagonal length 3 and have a central atom, e.g.

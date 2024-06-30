@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using OpusSolver.Solver.AtomGenerators.Output.Assemblers;
+using OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3;
 
 namespace OpusSolver.Solver.AtomGenerators.Output
 {

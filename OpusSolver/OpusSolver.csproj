@@ -58,7 +58,7 @@
     <Compile Include="GeneratedSolution.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="Solution\MoleculeInputOutput.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3Assembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\Hex3Assembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\SingleMonoatomicAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\MonoatomicAssembler.cs" />
     <Compile Include="Utils\HexRotationDictionary.cs" />
