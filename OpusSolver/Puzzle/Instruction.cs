@@ -27,6 +27,7 @@
             switch (instruction)
             {
                 case Instruction.None:                      str = "."; break;
+                case Instruction.Wait:                      str = "-"; break;
                 case Instruction.PivotCounterclockwise:     str = "Q"; break;
                 case Instruction.Extend:                    str = "W"; break;
                 case Instruction.PivotClockwise:            str = "E"; break;
