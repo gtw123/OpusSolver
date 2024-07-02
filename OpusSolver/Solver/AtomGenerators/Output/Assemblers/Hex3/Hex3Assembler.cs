@@ -20,11 +20,17 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
 
         private readonly Dictionary<int, MoleculeBuilder> m_moleculeBuilders = new();
         private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines = new();
-        private readonly Dictionary<int, int> m_outputLocationsById = new();
+
+        private class ProductOutput
+        {
+            public int OutputIndex;
+            public bool UseSimpleOutput;
+        }
+
+        private readonly Dictionary<int, ProductOutput> m_outputs = new();
 
         private readonly List<Arm> m_rightOutputArms;
         private readonly List<Arm> m_leftOutputArms;
-        private bool m_useSimplerRighthandOutputs = false;
 
         public Hex3Assembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer)
@@ -49,26 +55,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
             }
 
             var lefthandProducts = products.Where(p => m_moleculeBuilders[p.ID].OutputLocation == OutputLocation.Left);
-            var righthandProducts = products.Except(lefthandProducts);
-            m_useSimplerRighthandOutputs = righthandProducts.All(p => m_moleculeBuilders[p.ID].OutputLocation == OutputLocation.RightSimple);
-
-            if (righthandProducts.Any())
-            {
-                var initialPosition = new Vector2(3, -3);
-                // If we're only using center bonds, we can offset the outputs a little to save some cost/cycles
-                if (m_useSimplerRighthandOutputs)
-                {
-                    initialPosition += new Vector2(0, 1);
-                }
-
-                m_rightOutputArms = AddOutputs(righthandProducts, initialPosition, new Vector2(3, -3), HexRotation.R60);
-            }
-            if (lefthandProducts.Any())
-            {
-                m_leftOutputArms = AddOutputs(lefthandProducts, new Vector2(-1, -3), new Vector2(0, -3), -HexRotation.R60);
-            }
-
+            m_leftOutputArms = AddOutputs(lefthandProducts, new Vector2(-1, -3), new Vector2(0, -3), -HexRotation.R60);
             m_assemblyArea.IsLeftBonderUsed = lefthandProducts.Any();
+
+            var righthandProducts = products.Except(lefthandProducts);
+            m_rightOutputArms = AddOutputs(righthandProducts, new Vector2(3, -3), new Vector2(3, -3), HexRotation.R60);
         }
 
         private List<Arm> AddOutputs(IEnumerable<Molecule> products, Vector2 initialPosition, Vector2 offset, HexRotation rotationOffset)
@@ -76,6 +67,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
             var arms = new List<Arm>();
             var currentRotationOffset = HexRotation.R0;
 
+            bool allSimpleOutputs = products.All(p => m_moleculeBuilders[p.ID].OutputLocation == OutputLocation.RightSimple);
+			
             // Build the products in reverse order so that the final product is closer to the assembly area (saves a few cycles)
             int index = 0;
             foreach (var product in products.Reverse())
@@ -84,15 +77,23 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
 
                 // Offset so the the center of the molecule is at (0, 0) (need to do this before rotating it)
                 var transform = new Transform2D(-builder.CenterAtomPosition, HexRotation.R0);
-
                 var rotation = builder.OutputRotation + (builder.RequiresRotationsBetweenOutputPositions ? currentRotationOffset : HexRotation.R0);
 
-                // Rotate the glyph and move it to the correct location
                 var productCenter = initialPosition + index * offset;
+
+                // We only allow simple outputs for the first product, or if all products are simple outputs (otherwise
+                // we'd need to move all the output arms based on which product is being transported through them)
+                bool useSimpleOutput = builder.OutputLocation == OutputLocation.RightSimple && (index == 0 || allSimpleOutputs);
+                if (useSimpleOutput)
+                {
+                    productCenter += new Vector2(0, 1);
+                }
+
+                m_outputs[product.ID] = new ProductOutput { OutputIndex = index, UseSimpleOutput = useSimpleOutput };
+
                 transform = new Transform2D(productCenter + builder.OutputPositionOffset, rotation).Apply(transform);
                 new Product(this, transform.Position, transform.Rotation, product);
 
-                m_outputLocationsById[product.ID] = index;
                 if (index > 0)
                 {
                     var armRotation = (rotationOffset == HexRotation.R60) ? HexRotation.R180 : HexRotation.R0;
@@ -135,7 +136,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
                     MoveProductToRighthandOutput(builder.Product);
                     break;
                 case OutputLocation.RightSimple:
-                    MoveProductToRighthandOutput(builder.Product, !m_useSimplerRighthandOutputs);
+                    bool useSimpleOutput = m_outputs[builder.Product.ID].UseSimpleOutput;
+                    MoveProductToRighthandOutput(builder.Product, moveAfterRotate: !useSimpleOutput);
                     break;
                 case OutputLocation.RightNoCenter:
                     MoveProductToOutput(builder.Product, m_rightOutputArms, [Instruction.RotateCounterclockwise, Instruction.PivotClockwise]);
@@ -166,10 +168,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
 
         private void MoveProductToOutput(Molecule product, List<Arm> outputArms, IEnumerable<Instruction> armInstructions)
         {
-            int outputLocation = m_outputLocationsById[product.ID];
-            if (outputLocation > 0)
+            int outputIndex = m_outputs[product.ID].OutputIndex;
+            if (outputIndex > 0)
             {
-                for (int i = 0; i < outputLocation; i++)
+                for (int i = 0; i < outputIndex; i++)
                 {
                     Writer.WriteGrabResetAction(outputArms[i], armInstructions);
                 }
