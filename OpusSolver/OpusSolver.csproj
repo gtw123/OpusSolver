@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="CommandLineArguments.cs" />
     <Compile Include="GeneratedSolution.cs" />
+    <Compile Include="PuzzleAnalyzer.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="Solution\MoleculeInputOutput.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\CenterAtomMoleculeBuilder.cs" />

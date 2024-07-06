@@ -8,5 +8,6 @@ namespace OpusSolver
         public string OutputDir;
         public bool SkipVerification = false;
         public string ReportFile;
+        public bool AnalyzeOnly = false;
     }
 }

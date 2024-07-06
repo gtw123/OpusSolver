@@ -35,5 +35,10 @@ namespace OpusSolver
         {
             return Element.ToDebugString();
         }
+
+        public Atom Copy()
+        {
+            return new Atom(Element, Bonds, Position);
+        }
     }
 }

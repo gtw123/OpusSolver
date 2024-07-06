@@ -32,8 +32,16 @@ namespace OpusSolver
 
             try
             {
-                using var runner = new Runner(commandArgs);
-                runner.Run();
+                if (commandArgs.AnalyzeOnly)
+                {
+                    using var analyzer = new PuzzleAnalyzer(commandArgs);
+                    analyzer.Analyze();
+                }
+                else
+                {
+                    using var runner = new Runner(commandArgs);
+                    runner.Run();
+                }
                 sm_log.Info($"Total elapsed time: {m_timer.Elapsed.TotalSeconds:0.00} s");
                 return 0;
             }
@@ -87,10 +95,18 @@ namespace OpusSolver
                         commandArgs.ReportFile = args[++i];
                         break;
                     }
+                    case "--analyze":
+                        commandArgs.AnalyzeOnly = true;
+                        break;
                     default:
                         puzzlePaths.Add(args[i]);
                         break;
                 }
+            }
+
+            if (commandArgs.AnalyzeOnly && string.IsNullOrEmpty(commandArgs.ReportFile))
+            {
+                throw new ArgumentException("--analyze requires --report");
             }
 
             if (puzzlePaths.Count == 0)
@@ -131,6 +147,7 @@ namespace OpusSolver
             sm_log.Error("    --output <dir>        Directory to write solutions to (default is current dir)");
             sm_log.Error("    --exclude <file name> Name of a puzzle file to skip");
             sm_log.Error("    --noverify            Skip solution verification (useful if you don't have a copy of libverify)");
+            sm_log.Error("    --analyze             Analyze puzzles instead of solving them. Output will be written to the report file");
             sm_log.Error("    --report <file>       Generate a report file summarizing the solutions and their metrics");
         }
     }
