@@ -74,7 +74,6 @@
     <Compile Include="Solution\Metrics.cs" />
     <Compile Include="Solver\AtomGenerator.cs" />
     <Compile Include="Solver\AtomGenerators\Input\SimpleInputArea.cs" />
-    <Compile Include="Solver\AtomGenerators\Input\TrivialInputArea.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\LinearAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\MoleculeAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\SaltGeneratorNoPassThrough.cs" />

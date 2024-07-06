@@ -14,7 +14,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
         public const int MaxReagents = 4;
 
         public override Vector2 OutputPosition => new Vector2();
-        private List<MonoatomicDisassembler> m_disassemblers = new List<MonoatomicDisassembler>();
+        private List<MoleculeDisassembler> m_disassemblers = new List<MoleculeDisassembler>();
 
         public SimpleInputArea(ProgramWriter writer, IEnumerable<Molecule> reagents)
             : base(writer)
@@ -24,17 +24,23 @@ namespace OpusSolver.Solver.AtomGenerators.Input
                 throw new ArgumentException($"{nameof(SimpleInputArea)} can't handle reagents with multiple atoms.");
             }
 
-            if (reagents.Count() == 1)
-            {
-                throw new ArgumentException($"{nameof(SimpleInputArea)} should not be used with only one reagent.");
-            }
-
             if (reagents.Count() > MaxReagents)
             {
                 throw new ArgumentException(Invariant($"{nameof(SimpleInputArea)} can't handle more than {MaxReagents} distinct reagents."));
             }
 
+            CreateDisassemblers(reagents);
+        }
+
+        private void CreateDisassemblers(IEnumerable<Molecule> reagents)
+        {
             var reagentsList = reagents.ToList();
+            if (reagentsList.Count == 1)
+            {
+                m_disassemblers.Add(new SingleMonoatomicDisassembler(this, Writer, new Vector2(0, 0), reagentsList[0]));
+                return;
+            }
+
             var arm = new Arm(this, new Vector2(1, -1), HexRotation.R120, ArmType.Arm1, extension: 1);
             m_disassemblers.Add(new MonoatomicDisassembler(this, Writer, new Vector2(-1, 0), reagentsList[0], arm, Instruction.RotateClockwise));
 

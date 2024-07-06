@@ -59,11 +59,7 @@ namespace OpusSolver.Solver.ElementGenerators
 
             if (usedInputs.All(input => input.Molecule.Atoms.Count() == 1))
             {
-                if (usedInputs.Count() == 1)
-                {
-                    return new TrivialInputArea(writer, reagents);
-                }
-                else if (usedInputs.Count() <= SimpleInputArea.MaxReagents)
+                if (usedInputs.Count() <= SimpleInputArea.MaxReagents)
                 {
                     return new SimpleInputArea(writer, reagents);
                 }
