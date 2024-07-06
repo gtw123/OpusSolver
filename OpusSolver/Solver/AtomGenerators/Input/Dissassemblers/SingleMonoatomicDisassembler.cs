@@ -23,10 +23,9 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             new Reagent(this, new Vector2(0, 0), HexRotation.R0, molecule);
         }
 
-        public override Element GetNextAtom()
+        public override void GenerateNextAtom()
         {
             Writer.NewFragment();
-            return Element;
         }
     }
 }

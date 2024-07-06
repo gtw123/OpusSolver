@@ -15,13 +15,13 @@ namespace OpusSolver.Solver.AtomGenerators
 
         public override Vector2 OutputPosition => m_conveyor?.OutputPosition ?? new Vector2();
 
-        public ComplexInputArea(ProgramWriter writer, IEnumerable<Molecule> reagents)
+        public ComplexInputArea(ProgramWriter writer, IEnumerable<DisassemblyStrategy> disassemblyStrategies)
             : base(writer)
         {
-            var multiAtomReagents = reagents.Where(r => r.Atoms.Count() > 1);
+            var multiAtomReagents = disassemblyStrategies.Where(d => d.Molecule.Atoms.Count() > 1);
             AddMultiAtomDisassemblers(multiAtomReagents);
 
-            var singleAtomReagents = reagents.Where(r => r.Atoms.Count() == 1);
+            var singleAtomReagents = disassemblyStrategies.Where(d => d.Molecule.Atoms.Count() == 1).Select(d => d.Molecule);
             if (multiAtomReagents.Count() == 1 && singleAtomReagents.Count() == 1)
             {
                 // As an optimization, we don't bother creating an arm in this case
@@ -39,25 +39,16 @@ namespace OpusSolver.Solver.AtomGenerators
             }
         }
 
-        private void AddMultiAtomDisassemblers(IEnumerable<Molecule> reagents)
+        private void AddMultiAtomDisassemblers(IEnumerable<DisassemblyStrategy> disassemblyStrategies)
         {
-            foreach (var reagent in reagents)
+            foreach (var strategy in disassemblyStrategies)
             {
-                MoleculeDisassembler dissassember;
-                if (reagent.Height == 1)
-                {
-                    dissassember = new LinearDisassembler(this, Writer, new Vector2(0, 0), reagent);
-                }
-                else
-                {
-                    dissassember = new UniversalDisassembler(this, Writer, new Vector2(0, 0), reagent);
-                }
-
+                var disassembler = strategy.CreateDisassembler(this, Writer, new Vector2(0, 0));
                 if (m_disassemblers.Count > 0)
                 {
                     // Position this disassembler just above the previous one
                     var prevDisassembler = m_disassemblers[m_disassemblers.Count - 1];
-                    int y = prevDisassembler.Transform.Position.Y + prevDisassembler.Height - prevDisassembler.HeightBelowOrigin + dissassember.HeightBelowOrigin;
+                    int y = prevDisassembler.Transform.Position.Y + prevDisassembler.Height - prevDisassembler.HeightBelowOrigin + disassembler.HeightBelowOrigin;
 
                     // Keep the Y position a multiple of 2, so that it lines up with the arms of the conveyor
                     if (y % 2 > 0)
@@ -65,10 +56,10 @@ namespace OpusSolver.Solver.AtomGenerators
                         y++;
                     }
 
-                    dissassember.Transform.Position = new Vector2(0, y);
+                    disassembler.Transform.Position = new Vector2(0, y);
                 }
 
-                m_disassemblers.Add(dissassember);
+                m_disassemblers.Add(disassembler);
             }
         }
 
@@ -90,7 +81,7 @@ namespace OpusSolver.Solver.AtomGenerators
         public override void Generate(Element element, int id)
         {
             var disassembler = m_disassemblers.Single(i => i.Molecule.ID == id);
-            disassembler.GetNextAtom();
+            disassembler.GenerateNextAtom();
             m_conveyor?.MoveAtom(disassembler.Transform.Position.Y + disassembler.OutputPosition.Y);
         }
     }

@@ -74,9 +74,9 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             new Glyph(this, glyphPos.Add(2, 0), HexRotation.R0, GlyphType.Unbonding);
         }
 
-        public override Element GetNextAtom()
+        public override void GenerateNextAtom()
         {
-            return m_extractAtomsCoroutine.Next();
+            m_extractAtomsCoroutine.Next();
         }
 
         private IEnumerable<Element> ExtractAtoms()

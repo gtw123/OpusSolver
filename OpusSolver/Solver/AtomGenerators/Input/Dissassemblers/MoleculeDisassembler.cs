@@ -18,6 +18,6 @@
             Molecule = molecule;
         }
 
-        public abstract Element GetNextAtom();
+        public abstract void GenerateNextAtom();
     }
 }

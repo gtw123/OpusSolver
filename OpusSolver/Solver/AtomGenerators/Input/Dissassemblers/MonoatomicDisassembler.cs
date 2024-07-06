@@ -71,12 +71,10 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             }
         }
 
-        public override Element GetNextAtom()
+        public override void GenerateNextAtom()
         {
             Writer.NewFragment();
             Writer.WriteGrabResetAction(m_outputArm, m_instruction);
-
-            return Element;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using OpusSolver.Solver.AtomGenerators.Input.Dissassemblers;
 
 namespace OpusSolver.Solver.ElementGenerators
 {
@@ -13,13 +14,17 @@ namespace OpusSolver.Solver.ElementGenerators
         public bool HasPendingElements => m_currentIndex > 0;
         public bool Used { get; private set; }
 
+        public DisassemblyStrategy Strategy { get; private set; }
+
         private List<Element> m_elementSequence;
         private int m_currentIndex;
      
         public ElementInput(Molecule molecule)
         {
             Molecule = molecule;
-            m_elementSequence = molecule.GetAtomsInInputOrder().Select(a => a.Element).ToList();
+
+            Strategy = DisassemblerFactory.CreateDisassemblyStrategy(molecule);
+            m_elementSequence = Strategy.ElementInputOrder.ToList();
         }
 
         public Element GetNextElement()

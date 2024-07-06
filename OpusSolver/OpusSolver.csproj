@@ -56,6 +56,9 @@
     <Compile Include="PuzzleAnalyzer.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="Solution\MoleculeInputOutput.cs" />
+    <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\DisassemblerStrategy.cs" />
+    <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\DisassemblerFactory.cs" />
+    <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\NonLinear3BentDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\Input\Dissassemblers\SingleMonoatomicDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\CenterAtomMoleculeBuilder.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\MissingCenterAtomMoleculeBuilder.cs" />

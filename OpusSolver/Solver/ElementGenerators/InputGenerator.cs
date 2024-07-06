@@ -55,17 +55,15 @@ namespace OpusSolver.Solver.ElementGenerators
         protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
         {
             var usedInputs = m_inputs.Where(input => input.Used);
-            var reagents = usedInputs.Select(input => input.Molecule);
-
             if (usedInputs.All(input => input.Molecule.Atoms.Count() == 1))
             {
                 if (usedInputs.Count() <= SimpleInputArea.MaxReagents)
                 {
-                    return new SimpleInputArea(writer, reagents);
+                    return new SimpleInputArea(writer, usedInputs.Select(input => input.Molecule));
                 }
             }
 
-            return new AtomGenerators.ComplexInputArea(writer, reagents);
+            return new AtomGenerators.ComplexInputArea(writer, usedInputs.Select(input => input.Strategy));
         }
     }
 }

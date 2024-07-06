@@ -70,7 +70,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
         public override void Generate(Element element, int id)
         {
             var disassembler = m_disassemblers.Single(i => i.Molecule.ID == id);
-            disassembler.GetNextAtom();
+            disassembler.GenerateNextAtom();
         }
     }
 }

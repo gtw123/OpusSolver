@@ -14,7 +14,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
         private Arm m_grabArm;
         private Arm m_outputArm;
 
-        private LoopingCoroutine<Element> m_extractAtomsCoroutine;
+        private LoopingCoroutine<object> m_extractAtomsCoroutine;
 
         public LinearDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
             : base(parent, writer, position, molecule)
@@ -25,7 +25,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
                 throw new ArgumentException(Invariant($"Molecule must have height 1. Specified height: {molecule.Height}."), "molecule");
             }
 
-            m_extractAtomsCoroutine = new LoopingCoroutine<Element>(ExtractAtoms);
+            m_extractAtomsCoroutine = new LoopingCoroutine<object>(ExtractAtoms);
 
             var reagentPos = new Vector2(-Molecule.Width - 2, 1);
             new Reagent(this, reagentPos, HexRotation.R0, molecule);
@@ -36,17 +36,17 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
             new Glyph(this, new Vector2(-4, 0), HexRotation.R0, GlyphType.Unbonding);
         }
 
-        public override Element GetNextAtom()
+        public override void GenerateNextAtom()
         {
-            return m_extractAtomsCoroutine.Next();
+            m_extractAtomsCoroutine.Next();
         }
 
-        private IEnumerable<Element> ExtractAtoms()
+        private IEnumerable<object> ExtractAtoms()
         {
             Writer.NewFragment();
             Writer.Write(m_grabArm, new[] { Instruction.Grab, Instruction.Extend });
             Writer.WriteGrabResetAction(m_outputArm, Instruction.RotateCounterclockwise);
-            yield return Molecule.GetAtom(new Vector2(0, 0)).Element;
+            yield return null;
 
             for (int x = 1; x < Molecule.Width; x++)
             {
@@ -58,7 +58,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
                 }
 
                 Writer.WriteGrabResetAction(m_outputArm, Instruction.RotateCounterclockwise);
-                yield return Molecule.GetAtom(new Vector2(x, 0)).Element;
+                yield return null;
             }
         }
     }
