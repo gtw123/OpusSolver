@@ -22,7 +22,15 @@ namespace OpusSolver.Solver.AtomGenerators
             AddMultiAtomDisassemblers(multiAtomReagents);
 
             var singleAtomReagents = reagents.Where(r => r.Atoms.Count() == 1);
-            AddSingleAtomDisassemblers(singleAtomReagents);
+            if (multiAtomReagents.Count() == 1 && singleAtomReagents.Count() == 1)
+            {
+                // As an optimization, we don't bother creating an arm in this case
+                m_disassemblers.Add(new SingleMonoatomicDisassembler(this, Writer, new Vector2(0, 2), singleAtomReagents.First()));
+            }
+            else
+            {
+                AddSingleAtomDisassemblers(singleAtomReagents);
+            }
 
             if (m_disassemblers.Count > 1)
             {

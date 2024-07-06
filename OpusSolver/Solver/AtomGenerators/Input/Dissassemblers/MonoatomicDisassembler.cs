@@ -5,7 +5,7 @@ using static System.FormattableString;
 namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
 {
     /// <summary>
-    /// Generates atoms a from a monoatomic reagent molecule.
+    /// Generates atoms from a monoatomic reagent molecule.
     /// </summary>
     public class MonoatomicDisassembler : MoleculeDisassembler
     {
