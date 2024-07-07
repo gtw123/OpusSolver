@@ -20,6 +20,12 @@ namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
                 return new DisassemblyStrategy(molecule, (parent, writer, position) => new NonLinear3BentDisassembler(parent, writer, position, molecule),
                     NonLinear3BentDisassembler.GetElementInputOrder(molecule));
             }
+            else if (NonLinear3TriangleDisassembler.IsCompatible(molecule))
+            {
+                NonLinear3TriangleDisassembler.PrepareMolecule(molecule);
+                return new DisassemblyStrategy(molecule, (parent, writer, position) => new NonLinear3TriangleDisassembler(parent, writer, position, molecule),
+                    NonLinear3TriangleDisassembler.GetElementInputOrder(molecule));
+            }
 
             return new DisassemblyStrategy(molecule, (parent, writer, position) => new UniversalDisassembler(parent, writer, position, molecule));
         }
