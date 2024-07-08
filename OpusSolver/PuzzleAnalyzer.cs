@@ -1,4 +1,5 @@
 ﻿using OpusSolver.IO;
+using OpusSolver.Solver.AtomGenerators.Input.Dissassemblers;
 using OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3;
 using System;
 using System.Collections.Generic;
@@ -18,130 +19,11 @@ namespace OpusSolver
         {
             public int MaxAtomsPerMolecule;
             public List<Molecule> MoleculesByAtomCount;
-            public string Assembler;
 
             public MoleculeListInfo(IEnumerable<Molecule> molecules)
             {
                 MaxAtomsPerMolecule = molecules.Max(m => m.Atoms.Count());
                 MoleculesByAtomCount = molecules.OrderBy(m => m.Atoms.Count()).ToList();
-
-                if (molecules.First().Type == MoleculeType.Reagent)
-                {
-                    Assembler = DetermineReagentDisassembler(molecules);
-                }
-                else
-                {
-                    Assembler = DetermineProductAssembler(molecules);
-                }
-            }
-
-            private string DetermineReagentDisassembler(IEnumerable<Molecule> molecules)
-            {
-                if (molecules.All(m => m.Atoms.Count() == 1))
-                {
-                    if (molecules.Count() == 1)
-                    {
-                        return "TrivialInputArea";
-                    }
-                    else
-                    {
-                        return "SimpleInputArea";
-                    }
-                }
-
-                if (molecules.All(m => m.Height == 1))
-                {
-                    return "Linear";
-                }
-
-                if (molecules.All(m => Hex3Assembler.IsProductCompatible(m)))
-                {
-                    return "Universal(Hex3)";
-                }
-
-                return "Universal";
-            }
-
-            private bool IsHex3Plus1(Molecule molecule)
-            {
-                for (int i = 0; i < molecule.Atoms.Count(); i++)
-                {
-                    var atoms = molecule.Atoms.Select(a => a.Copy()).ToList();
-                    atoms.RemoveAt(i);
-
-                    var newMolecule = new Molecule(molecule.Type, atoms, molecule.ID);
-                    if (Hex3Assembler.IsProductCompatible(newMolecule))
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            private bool IsHex3Plus2(Molecule molecule)
-            {
-                for (int i = 0; i < molecule.Atoms.Count(); i++)
-                {
-                    for (int j = 0; j < i; j++)
-                    {
-                        var atoms = molecule.Atoms.Select(a => a.Copy()).ToList();
-                        atoms.RemoveAt(i);
-                        atoms.RemoveAt(j);
-
-                        var newMolecule = new Molecule(molecule.Type, atoms, molecule.ID);
-                        if (Hex3Assembler.IsProductCompatible(newMolecule))
-                        {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-            }
-
-            private string DetermineProductAssembler(IEnumerable<Molecule> molecules)
-            {
-                if (!molecules.Any(p => p.HasTriplex))
-                {
-                    if (molecules.All(p => p.Size == 1))
-                    {
-                        if (molecules.Count() == 1)
-                        {
-                            return "SingleMonoatomicAssembler";
-                        }
-                        else
-                        {
-                            return "MonoatomicAssembler";
-                        }
-                    }
-                    else if (molecules.All(p => p.IsLinear)) // include monoatomic products
-                    {
-                        return "LinearAssembler";
-                    }
-                    else if (molecules.All(p => Hex3Assembler.IsProductCompatible(p)))
-                    {
-                        return "Hex3Assembler";
-                    }
-                    else if (molecules.All(p => p.Width == 3 && p.Height == 3 && p.DiagonalLength == 3 && p.GetAtom(new Vector2(0, 0)) != null))
-                    {
-                        return "UniversalAssembler(3x3 triangle)";
-                    }
-                    else if (molecules.All(p => IsHex3Plus1(p)))
-                    {
-                        return "UniversalAssembler(Hex3 plus 1)";
-                    }
-                    else if (molecules.All(p => IsHex3Plus2(p)))
-                    {
-                        return "UniversalAssembler(Hex3 plus 2)";
-                    }
-                }
-                else
-                {
-                    return "UniversalAssembler(triplex)";
-                }
-
-                return "UniversalAssembler";
             }
         }
 
@@ -186,7 +68,7 @@ namespace OpusSolver
         {
             m_args = args;
             m_reportWriter = new StreamWriter(m_args.ReportFile);
-            m_reportWriter.WriteLine("Name,ReagentCount,Reagent1,Reagent2,Reagent3,Reagent4,Disassembler,ProductCount,Product1,Product2,Product3,Product4,Assembler,");
+            m_reportWriter.WriteLine("Name,ReagentCount,Reagent1,Reagent2,Reagent3,Reagent4,ProductCount,Product1,Product2,Product3,Product4,");
         }
 
         public void Dispose()
@@ -221,7 +103,6 @@ namespace OpusSolver
                     m_reportWriter.Write(",");
                 }
 
-                m_reportWriter.Write(puzzleInfo.Reagents.Assembler);
                 m_reportWriter.Write(",");
 
                 m_reportWriter.Write($"{puzzleInfo.Products.MoleculesByAtomCount.Count},");
@@ -234,7 +115,6 @@ namespace OpusSolver
                     m_reportWriter.Write(",");
                 }
 
-                m_reportWriter.Write(puzzleInfo.Products.Assembler);
                 m_reportWriter.Write(",");
                 m_reportWriter.WriteLine();
                 m_reportWriter.WriteLine();
@@ -246,6 +126,21 @@ namespace OpusSolver
                     {
                         var lines = reagent.ToString().Split([Environment.NewLine], StringSplitOptions.None).ToList();
                         int padWidth = lines.Max(line => line.Length) + 3;
+
+                        if (reagent.Type == MoleculeType.Reagent)
+                        {
+                            string disassembler = DetermineReagentDisassembler(reagent);
+                            if (disassembler.Length + 3 > padWidth)
+                            {
+                                padWidth = disassembler.Length + 3;
+                            }
+                            else
+                            {
+                                disassembler = new string(' ', (padWidth - disassembler.Length)/ 2) + disassembler;
+                            }
+                            lines.Insert(0, disassembler);
+                        }
+
                         for (int i = 0; i < lines.Count; i++)
                         {
                             if (lines[i].Length < padWidth)
@@ -271,10 +166,119 @@ namespace OpusSolver
                 m_reportWriter.WriteLine("Reagents:");
                 WriteMolecules(puzzleInfo.Reagents.MoleculesByAtomCount);
                 m_reportWriter.WriteLine("Products:");
+                m_reportWriter.Write("    " + DetermineProductAssembler(puzzleInfo.Products.MoleculesByAtomCount));
                 WriteMolecules(puzzleInfo.Products.MoleculesByAtomCount);
             }
 
             sm_log.Info($"Report saved to \"{m_args.ReportFile}\"");
+        }
+
+        private string DetermineReagentDisassembler(Molecule molecule)
+        {
+            if (molecule.Atoms.Count() == 1)
+            {
+                return "Single";
+            }
+            else if (molecule.Height == 1)
+            {
+                return "Linear";
+            }
+            else if (NonLinear3BentDisassembler.IsCompatible(molecule))
+            {
+                return "NonLinear3Bent";
+            }
+            else if (NonLinear3TriangleDisassembler.IsCompatible(molecule))
+            {
+                return "NonLinear3Triangle";
+            }
+            else if (Hex3Assembler.IsProductCompatible(molecule))
+            {
+                return "Universal(Hex3)";
+            }
+
+            return "Universal";
+        }
+
+        private bool IsHex3Plus1(Molecule molecule)
+        {
+            for (int i = 0; i < molecule.Atoms.Count(); i++)
+            {
+                var atoms = molecule.Atoms.Select(a => a.Copy()).ToList();
+                atoms.RemoveAt(i);
+
+                var newMolecule = new Molecule(molecule.Type, atoms, molecule.ID);
+                if (Hex3Assembler.IsProductCompatible(newMolecule))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsHex3Plus2(Molecule molecule)
+        {
+            for (int i = 0; i < molecule.Atoms.Count(); i++)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    var atoms = molecule.Atoms.Select(a => a.Copy()).ToList();
+                    atoms.RemoveAt(i);
+                    atoms.RemoveAt(j);
+
+                    var newMolecule = new Molecule(molecule.Type, atoms, molecule.ID);
+                    if (Hex3Assembler.IsProductCompatible(newMolecule))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private string DetermineProductAssembler(IEnumerable<Molecule> molecules)
+        {
+            if (!molecules.Any(p => p.HasTriplex))
+            {
+                if (molecules.All(p => p.Size == 1))
+                {
+                    if (molecules.Count() == 1)
+                    {
+                        return "SingleMonoatomicr";
+                    }
+                    else
+                    {
+                        return "Monoatomic";
+                    }
+                }
+                else if (molecules.All(p => p.IsLinear)) // include monoatomic products
+                {
+                    return "Linear";
+                }
+                else if (molecules.All(p => Hex3Assembler.IsProductCompatible(p)))
+                {
+                    return "Hex3";
+                }
+                else if (molecules.All(p => p.Width == 3 && p.Height == 3 && p.DiagonalLength == 3 && p.GetAtom(new Vector2(0, 0)) != null))
+                {
+                    return "Universal(3x3 triangle)";
+                }
+                else if (molecules.All(p => IsHex3Plus1(p)))
+                {
+                    return "Universal(Hex3 plus 1)";
+                }
+                else if (molecules.All(p => IsHex3Plus2(p)))
+                {
+                    return "Universal(Hex3 plus 2)";
+                }
+            }
+            else
+            {
+                return "Universal(triplex)";
+            }
+
+            return "Universal";
         }
 
         private PuzzleInfo LoadPuzzle(string puzzleFile)
