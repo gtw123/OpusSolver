@@ -131,11 +131,11 @@
     <Compile Include="Solution\Reagent.cs" />
     <Compile Include="Solution\Product.cs" />
     <Compile Include="Solver\SolverException.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\BondProgrammer.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Universal\BondProgrammer.cs" />
     <Compile Include="Solver\AtomGenerators\Input\AtomConveyor.cs" />
     <Compile Include="Solver\SolverComponent.cs" />
     <Compile Include="Solver\AtomGenerators\Output\ProductConveyor.cs" />
-    <Compile Include="Solver\AtomGenerators\Output\Assemblers\UniversalAssembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Universal\UniversalAssembler.cs" />
     <Compile Include="Solver\PuzzleSolver.cs" />
     <Compile Include="Utils\LoopingCoroutine.cs" />
     <Compile Include="Puzzle\ArmType.cs" />
