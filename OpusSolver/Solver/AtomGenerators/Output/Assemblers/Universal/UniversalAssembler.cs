@@ -25,6 +25,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
         private ProductConveyor m_productConveyor;
 
         private Molecule m_currentProduct;
+        private List<Atom> m_assembledAtoms;
         private int m_currentArm;
 
         public UniversalAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
@@ -100,6 +101,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
 
         private IEnumerable<object> Assemble()
         {
+            m_assembledAtoms = new List<Atom>();
             for (int y = m_currentProduct.Height - 1; y >= 0; y--)
             {
                 m_currentArm = Width - 1;
@@ -123,8 +125,61 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
             }
         }
 
+        /// <summary>
+        /// Returns all the atoms in allAtoms which are connected to startAtom.
+        /// </summary>
+        private static HashSet<Atom> GetConnectedAtoms(Atom startAtom, IEnumerable<Atom> allAtoms, bool ignoreTriplexBonds)
+        {
+            var seenAtoms = new HashSet<Atom>();
+            var connectedAtoms = new HashSet<Atom>();
+            var atomsToProcess = new Queue<Atom>([startAtom]);
+
+            while (atomsToProcess.Count > 0)
+            {
+                var atom = atomsToProcess.Dequeue();
+                seenAtoms.Add(atom);
+
+                foreach (var (dir, bondType) in atom.Bonds)
+                {
+                    if (bondType == BondType.Single || !ignoreTriplexBonds && bondType == BondType.Triplex)
+                    {
+                        var otherAtomPosition = atom.Position.OffsetInDirection(dir, 1);
+                        var otherAtom = allAtoms.Where(atom => atom.Position == otherAtomPosition).SingleOrDefault();
+                        if (otherAtom != null && !seenAtoms.Contains(otherAtom))
+                        {
+                            connectedAtoms.Add(otherAtom);
+                            atomsToProcess.Enqueue(otherAtom);
+                        }
+                    }
+                }
+            }
+
+            return connectedAtoms;
+        }
+
+        /// <summary>
+        /// Returns the atoms in a particular row that requiring grabbing in order to move the partially assembled
+        /// molecule as a single unit. Assumes that the atoms in rows greater than "row" have already been assembled
+        /// and bonded, and these atoms have been added to m_assembledAtoms.
+        /// </summary>
+        private IEnumerable<Atom> GetAtomsToGrabForRow(int row, bool ignoreTriplexBonds)
+        {
+            var connectedAtoms = new HashSet<Atom>();
+            for (int x = Width - 1; x >= 0; x--)
+            {
+                var atom = m_currentProduct.GetAtom(new Vector2(x, row));
+                if (atom != null && !connectedAtoms.Contains(atom))
+                {
+                    yield return atom;
+                    connectedAtoms.UnionWith(GetConnectedAtoms(atom, m_assembledAtoms, ignoreTriplexBonds));
+                }
+            }
+        }
+
         private void GrabAtom(Atom atom)
         {
+            m_assembledAtoms.Add(atom);
+
             var arm = m_lowerArms[m_currentArm];
             if (atom.Bonds[HexRotation.R0] == BondType.Single)
             {
@@ -180,7 +235,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
 
             Writer.Write(activeArms, Instruction.Reset);
             Writer.AdjustTime(-2);
-            Writer.Write(m_upperArms, new[] { Instruction.Retract, Instruction.Grab, Instruction.Extend });
+
+            // Work out which atoms we need to grab. Disregard triplex bonds as we haven't created those yet.
+            var grabArms = GetAtomsToGrabForRow(row, ignoreTriplexBonds: true).Select(atom => m_upperArms[atom.Position.X]);
+            Writer.Write(grabArms, [Instruction.Retract, Instruction.Grab, Instruction.Extend]);
 
             if (!programmer.Instructions.Any())
             {
@@ -217,8 +275,11 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
 
             if (row > 0)
             {
-                // Drop the molecule and re-grab it from the lower atoms. This is to ensure everything is connected.
-                Writer.Write(m_upperArms, new[] { Instruction.Drop, Instruction.Retract, Instruction.Grab });
+                // Drop the molecule and re-grab it from the lower atoms
+                Writer.Write(m_upperArms, [Instruction.Drop, Instruction.Retract]);
+
+                var grabArms = GetAtomsToGrabForRow(row, ignoreTriplexBonds: false).Select(atom => m_upperArms[atom.Position.X]);
+                Writer.Write(grabArms, Instruction.Grab);
                 Writer.Write(m_upperArms, programmer.ReturnInstructions);
                 Writer.Write(m_upperArms, Instruction.Extend);
             }
