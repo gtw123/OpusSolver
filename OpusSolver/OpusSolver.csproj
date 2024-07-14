@@ -69,6 +69,7 @@
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\Hex3\Hex3Assembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\SingleMonoatomicAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\MonoatomicAssembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\Assemblers\Universal\AssemblyArea.cs" />
     <Compile Include="Utils\HexRotationDictionary.cs" />
     <Compile Include="Utils\HexRotation.cs" />
     <Compile Include="Puzzle\PeriodicTable.cs" />

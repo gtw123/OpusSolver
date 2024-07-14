@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using static System.FormattableString;
 
 namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
 {
@@ -14,15 +12,14 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
 
         public int Width { get; private set; }
 
-        private IEnumerable<Molecule> m_products;
-        private bool m_hasTriplex;
-        private LoopingCoroutine<object> m_assembleCoroutine;
+        private readonly IEnumerable<Molecule> m_products;
+        private readonly LoopingCoroutine<object> m_assembleCoroutine;
 
-        private List<Arm> m_lowerArms;
-        private List<Arm> m_upperArms;
-        private List<Glyph> m_bonders = new List<Glyph>();
-        private HashSet<Glyph> m_usedBonders = new HashSet<Glyph>();
-        private ProductConveyor m_productConveyor;
+        private readonly AssemblyArea m_assemblyArea;
+        private IReadOnlyList<Arm> LowerArms => m_assemblyArea.LowerArms;
+        private IReadOnlyList<Arm> UpperArms => m_assemblyArea.UpperArms;
+
+        private readonly ProductConveyor m_productConveyor;
 
         private Molecule m_currentProduct;
         private List<Atom> m_assembledAtoms;
@@ -33,59 +30,12 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
         {
             Width = products.Max(p => p.Width);
 
+            bool hasTriplex = products.Any(p => p.HasTriplex);
+            m_assemblyArea = new AssemblyArea(this, writer, Width, hasTriplex);
+
             m_products = products;
-            m_hasTriplex = products.Any(p => p.HasTriplex);
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);
-
-            CreateBonders();
-            CreateArms();
-            CreateTracks();
-
             m_productConveyor = new ProductConveyor(this, writer, m_products);
-        }
-
-        private void CreateBonders()
-        {
-            var position = new Vector2(0, 0);
-            AddBonder(ref position, 0, 0, HexRotation.R0, GlyphType.Bonding);
-            AddBonder(ref position, Width + 2, 0, HexRotation.R60, GlyphType.Bonding);
-            AddBonder(ref position, Width, 0, HexRotation.R120, GlyphType.Bonding);
-
-            if (m_hasTriplex)
-            {
-                AddBonder(ref position, Width - 1, 0, HexRotation.R0, GlyphType.TriplexBonding);
-                AddBonder(ref position, 3, 0, HexRotation.R120, GlyphType.TriplexBonding);
-                AddBonder(ref position, 1, 1, HexRotation.R240, GlyphType.TriplexBonding);
-
-                AddBonder(ref position, Width - 1, -1, HexRotation.R0, GlyphType.Unbonding);
-                AddBonder(ref position, Width, 0, HexRotation.R60, GlyphType.Unbonding);
-                AddBonder(ref position, Width, 0, HexRotation.R120, GlyphType.Unbonding);
-            }
-        }
-
-        private void AddBonder(ref Vector2 position, int xOffset, int yOffset, HexRotation direction, GlyphType type)
-        {
-            position.X += xOffset;
-            position.Y += yOffset;
-            m_bonders.Add(new Glyph(this, position, direction, type));
-        }
-
-        private void CreateArms()
-        {
-            m_lowerArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(-Width + x + 1, -2), HexRotation.R60, ArmType.Piston, 2)).ToList();
-            m_upperArms = Enumerable.Range(0, Width).Select(x => new Arm(this, new Vector2(x + 2, -1), HexRotation.R60, ArmType.Piston, 2)).ToList();
-        }
-
-        private void CreateTracks()
-        {
-            int lowerTrackLength = Width * 4 - 1;
-            if (m_hasTriplex)
-            {
-                lowerTrackLength += Width * 4 + 2;
-            }
-
-            new Track(this, new Vector2(-Width + 1, -2), HexRotation.R0, lowerTrackLength);
-            new Track(this, new Vector2(2, -1), HexRotation.R0, lowerTrackLength - Width - 1);
         }
 
         public override IEnumerable<Element> GetProductElementOrder(Molecule product)
@@ -180,12 +130,12 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
         {
             m_assembledAtoms.Add(atom);
 
-            var arm = m_lowerArms[m_currentArm];
+            var arm = LowerArms[m_currentArm];
             if (atom.Bonds[HexRotation.R0] == BondType.Single)
             {
                 // No need to grab as the atom will have just been bonded to the
                 // existing atom on the bonder
-                SetUsedBonders(GlyphType.Bonding, HexRotation.R0);
+                m_assemblyArea.SetUsedBonders(GlyphType.Bonding, HexRotation.R0);
             }
             else
             {
@@ -208,7 +158,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
 
         private void FinishRow(int row)
         {
-            var activeArms = m_lowerArms.GetRange(m_currentArm + 1, Width - (m_currentArm + 1));
+            var activeArms = Enumerable.Range(m_currentArm + 1, Width - (m_currentArm + 1)).Select(i => LowerArms[i]);
 
             if (row == m_currentProduct.Height - 1)
             {
@@ -222,9 +172,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
 
         private void FinishFirstRow(int row, IEnumerable<Arm> activeArms)
         {
-            var programmer = new BondProgrammer(Width, m_currentProduct, row);
+            var programmer = new BondProgrammer(m_assemblyArea, m_currentProduct, row);
             programmer.Generate();
-            SetUsedBonders(programmer.UsedBonders);
 
             if (row == 0 && !programmer.Instructions.Any())
             {
@@ -237,26 +186,26 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
             Writer.AdjustTime(-2);
 
             // Work out which atoms we need to grab. Disregard triplex bonds as we haven't created those yet.
-            var grabArms = GetAtomsToGrabForRow(row, ignoreTriplexBonds: true).Select(atom => m_upperArms[atom.Position.X]);
+            var grabArms = GetAtomsToGrabForRow(row, ignoreTriplexBonds: true).Select(atom => UpperArms[atom.Position.X]);
             Writer.Write(grabArms, [Instruction.Retract, Instruction.Grab, Instruction.Extend]);
 
             if (!programmer.Instructions.Any())
             {
-                Writer.Write(m_upperArms, Instruction.Extend);
+                Writer.Write(UpperArms, Instruction.Extend);
                 return;
             }
 
-            Writer.Write(m_upperArms, programmer.Instructions);
-            Writer.Write(m_upperArms, programmer.ReturnInstructions);
+            Writer.Write(UpperArms, programmer.Instructions);
+            Writer.Write(UpperArms, programmer.ReturnInstructions);
 
             if (row == 0)
             {
                 // For a single-height molecule we can drop it as soon as the upper arms have returned.
-                Writer.Write(m_upperArms, Instruction.Drop);
+                Writer.Write(UpperArms, Instruction.Drop);
             }
             else
             {
-                Writer.Write(m_upperArms, Instruction.Extend);
+                Writer.Write(UpperArms, Instruction.Extend);
             }
         }
 
@@ -264,11 +213,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
         {
             Writer.Write(activeArms, Instruction.Extend);
 
-            var programmer = new BondProgrammer(Width, m_currentProduct, row);
+            var programmer = new BondProgrammer(m_assemblyArea, m_currentProduct, row);
             programmer.Generate();
-            SetUsedBonders(programmer.UsedBonders);
 
-            Writer.Write(activeArms.Concat(m_upperArms), programmer.Instructions);
+            Writer.Write(activeArms.Concat(UpperArms), programmer.Instructions);
 
             // We don't need to return the lower arms before resetting them, so save some instructions by just doing a reset
             Writer.Write(activeArms, Instruction.Reset, updateTime: false);
@@ -276,49 +224,24 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
             if (row > 0)
             {
                 // Drop the molecule and re-grab it from the lower atoms
-                Writer.Write(m_upperArms, [Instruction.Drop, Instruction.Retract]);
+                Writer.Write(UpperArms, [Instruction.Drop, Instruction.Retract]);
 
-                var grabArms = GetAtomsToGrabForRow(row, ignoreTriplexBonds: false).Select(atom => m_upperArms[atom.Position.X]);
+                var grabArms = GetAtomsToGrabForRow(row, ignoreTriplexBonds: false).Select(atom => UpperArms[atom.Position.X]);
                 Writer.Write(grabArms, Instruction.Grab);
-                Writer.Write(m_upperArms, programmer.ReturnInstructions);
-                Writer.Write(m_upperArms, Instruction.Extend);
+                Writer.Write(UpperArms, programmer.ReturnInstructions);
+                Writer.Write(UpperArms, Instruction.Extend);
             }
             else
             {
                 // Last row - no need to re-grab
-                Writer.Write(m_upperArms, programmer.ReturnInstructions);
-                Writer.Write(m_upperArms, Instruction.Reset);
+                Writer.Write(UpperArms, programmer.ReturnInstructions);
+                Writer.Write(UpperArms, Instruction.Reset);
             }
-        }
-
-        private void SetUsedBonders(IEnumerable<(GlyphType, HexRotation?)> bonders)
-        {
-            foreach (var (type, direction) in bonders)
-            {
-                SetUsedBonders(type, direction);
-            }
-        }
-
-        private void SetUsedBonders(GlyphType type, HexRotation? direction)
-        {
-            var bonders = m_bonders.Where(b => b.Type == type && (!direction.HasValue || b.Transform.Rotation == direction.Value));
-            if (!bonders.Any())
-            {
-                throw new ArgumentException(Invariant($"Can't find bonder of type {type} and direction {direction}."));
-            }
-
-            m_usedBonders.UnionWith(bonders);
         }
 
         public override void OptimizeParts()
         {
-            foreach (var bonder in m_bonders)
-            {
-                if (!m_usedBonders.Contains(bonder))
-                {
-                    bonder.Remove();
-                }
-            }
+            m_assemblyArea.OptimizeParts();
         }
     }
 }
