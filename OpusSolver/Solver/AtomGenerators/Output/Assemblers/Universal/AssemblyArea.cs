@@ -10,7 +10,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
         public override Vector2 OutputPosition => new Vector2();
 
         public int Width { get; private set; }
-        public bool HasTriplex { get; private set; }
+
+        public bool HasSingle60Bonder { get; private set; }
+        public bool HasSingle120Bonder { get; private set; }
+        public bool HasTriplexBonders { get; private set; }
 
         public IReadOnlyList<Arm> LowerArms { get; private set; }
         public IReadOnlyList<Arm> UpperArms { get; private set; }
@@ -20,11 +23,14 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
 
         private readonly HashSet<Glyph> m_usedBonders = new HashSet<Glyph>();
 
-        public AssemblyArea(SolverComponent parent, ProgramWriter writer, int width, bool hasTriplex)
+        public AssemblyArea(SolverComponent parent, ProgramWriter writer, int width, IEnumerable<Molecule> products)
             : base(parent, writer, new Vector2(0, 0))
         {
             Width = width;
-            HasTriplex = hasTriplex;
+
+            HasSingle60Bonder = products.Any(p => p.Atoms.Any(a => a.Bonds[HexRotation.R60] == BondType.Single));
+            HasSingle120Bonder = products.Any(p => p.Atoms.Any(a => a.Bonds[HexRotation.R120] == BondType.Single));
+            HasTriplexBonders = products.Any(p => p.HasTriplex);
 
             CreateArms();
             CreateBonders();
@@ -41,10 +47,28 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
         {
             var position = new Vector2(0, 0);
             AddBonder(ref position, 0, 0, HexRotation.R0, GlyphType.Bonding);
-            AddBonder(ref position, Width + 2, 0, HexRotation.R60, GlyphType.Bonding);
-            AddBonder(ref position, Width, 0, HexRotation.R120, GlyphType.Bonding);
 
-            if (HasTriplex)
+            position += new Vector2(2, 0);
+
+            if (HasSingle60Bonder)
+            {
+                AddBonder(ref position, Width, 0, HexRotation.R60, GlyphType.Bonding);
+            }
+            else
+            {
+                position += new Vector2(1, 0);
+            }
+
+            if (HasSingle120Bonder)
+            {
+                AddBonder(ref position, Width, 0, HexRotation.R120, GlyphType.Bonding);
+            }
+            else
+            {
+                position += new Vector2(1, 0);
+            }
+
+            if (HasTriplexBonders)
             {
                 AddBonder(ref position, Width - 1, 0, HexRotation.R0, GlyphType.TriplexBonding);
                 AddBonder(ref position, 3, 0, HexRotation.R120, GlyphType.TriplexBonding);
@@ -59,7 +83,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
         private void CreateTracks()
         {
             int lowerTrackLength = Width * 4 - 1;
-            if (HasTriplex)
+            if (HasTriplexBonders)
             {
                 lowerTrackLength += Width * 4 + 2;
             }

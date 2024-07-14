@@ -29,9 +29,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
             : base(parent, writer)
         {
             Width = products.Max(p => p.Width);
-
-            bool hasTriplex = products.Any(p => p.HasTriplex);
-            m_assemblyArea = new AssemblyArea(this, writer, Width, hasTriplex);
+            m_assemblyArea = new AssemblyArea(this, writer, Width, products);
 
             m_products = products;
             m_assembleCoroutine = new LoopingCoroutine<object>(Assemble);

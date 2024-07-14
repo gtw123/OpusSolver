@@ -42,9 +42,19 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
 
         private void AddBonds()
         {
-            // Do single bonds
-            MoveThroughBonder(GlyphType.Bonding, HexRotation.R60, m_assemblyArea.Width, a => a.Bonds[HexRotation.R60] == BondType.Single);
-            MoveThroughBonder(GlyphType.Bonding, HexRotation.R120, m_assemblyArea.Width - 1, a => a.Bonds[HexRotation.R120] == BondType.Single);
+            if (m_assemblyArea.HasSingle60Bonder)
+            {
+                MoveThroughBonder(GlyphType.Bonding, HexRotation.R60, m_assemblyArea.Width, a => a.Bonds[HexRotation.R60] == BondType.Single);
+            }
+            else
+            {
+                Add(Instruction.MovePositive);
+            }
+
+            if (m_assemblyArea.HasSingle120Bonder)
+            {
+                MoveThroughBonder(GlyphType.Bonding, HexRotation.R120, m_assemblyArea.Width - 1, a => a.Bonds[HexRotation.R120] == BondType.Single);
+            }
 
             if (HasTriplexBonds())
             {
