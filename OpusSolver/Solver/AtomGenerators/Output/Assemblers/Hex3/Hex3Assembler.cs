@@ -40,10 +40,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
             foreach (var product in products)
             {
                 MoleculeBuilder builder;
-                Atom centerAtom;
-                if ((centerAtom = GetCenterAtom(product)) != null)
+                var centralAtoms = GetCentralAtoms(product);
+                if (centralAtoms.Any())
                 {
-                    builder = new CenterAtomMoleculeBuilder(m_assemblyArea, product, centerAtom);
+                    builder = new CenterAtomMoleculeBuilder(m_assemblyArea, product, centralAtoms);
                 }
                 else
                 {
@@ -199,13 +199,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
             return true;
         }
 
-        private static Atom GetCenterAtom(Molecule product)
+        private static IEnumerable<Atom> GetCentralAtoms(Molecule product)
         {
             bool IsCentralAtom(Atom atom) => product.Atoms.All(atom2 => atom == atom2 || product.AreAtomsAdjacent(atom, atom2));
-            int GetBondCount(Atom atom) => atom.Bonds.Values.Count(b => b != BondType.None);
-
-            // Get the atom with the most bonds because that reduces the need to have multiple bonders in the assembler
-            return product.Atoms.Where(atom => IsCentralAtom(atom)).OrderByDescending(atom => GetBondCount(atom)).FirstOrDefault();
+            return product.Atoms.Where(atom => IsCentralAtom(atom));
         }
     }
 }

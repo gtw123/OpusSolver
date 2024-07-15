@@ -39,14 +39,15 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
         private readonly HexRotationDictionary<Atom> m_grabbedAtoms = new();
         private readonly HashSet<HexRotation> m_constructedClockwiseBonds = new(); // Whether a bond has been constructed in a clockwise direction from the atom in the specified radial direction
 
-        public CenterAtomMoleculeBuilder(AssemblyArea assemblyArea, Molecule product, Atom centerAtom)
+        public CenterAtomMoleculeBuilder(AssemblyArea assemblyArea, Molecule product, IEnumerable<Atom> centralAtoms)
             : base(assemblyArea, product)
         {
-            m_centerAtom = centerAtom;
-            if (m_centerAtom == null)
+            if (!centralAtoms.Any())
             {
-                throw new ArgumentException($"{nameof(CenterAtomMoleculeBuilder)} can't handle molecules with the center atom missing.");
+                throw new ArgumentException($"{nameof(CenterAtomMoleculeBuilder)} can't handle molecules with no center atom.");
             }
+
+            m_centerAtom = ChooseCenterAtom(centralAtoms);
 
             m_centerOperations = GenerateCenterOperations().ToList();
             m_clockwiseOperations = GenerateClockwiseOperations().ToList();
@@ -60,6 +61,25 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
             }
 
             GenerateInstructions();
+        }
+
+        private Atom ChooseCenterAtom(IEnumerable<Atom> centralAtoms)
+        {
+            // Get the number of atoms that would need a CCW bond if this was the center atom
+            int GetCCWBondCount(Atom atom)
+            {
+                return Product.GetAdjacentAtoms(atom.Position, (dir, atom) =>
+                    atom.Bonds[dir + HexRotation.R180] == BondType.None &&
+                    atom.Bonds[dir - HexRotation.R120] == BondType.None &&
+                    atom.Bonds[dir + HexRotation.R120] != BondType.None).Keys.Count;
+            }
+
+            int GetBondCount(Atom atom) => atom.Bonds.Values.Count(b => b != BondType.None);
+
+            // Choose the center atom to minimise the number of CCW bonds (preferably none) required on the outer atoms,
+            // then to maximise the number of bonds on the center atom itself. This to help avoid needing to do the extra
+            // assembly steps, which take extra cycles and may require more bonders.
+            return centralAtoms.OrderBy(atom => GetCCWBondCount(atom)).ThenByDescending(atom => GetBondCount(atom)).First();
         }
 
         public override IEnumerable<Element> GetElementsInBuildOrder()
