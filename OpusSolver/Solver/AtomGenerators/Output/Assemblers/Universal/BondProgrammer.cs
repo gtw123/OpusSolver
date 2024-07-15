@@ -56,14 +56,21 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
                 MoveThroughBonder(GlyphType.Bonding, HexRotation.R120, m_assemblyArea.Width - 1, a => a.Bonds[HexRotation.R120] == BondType.Single);
             }
 
-            if (HasTriplexBonds())
+            int? firstTriplexPosition = GetLeftmostTriplexBondPositionInCurrentRow();
+            if (firstTriplexPosition != null)
             {
                 // Move the product through all the triplex bonders
                 Add(Instruction.MovePositive, Instruction.Retract);
-                Repeat(Instruction.MovePositive, m_assemblyArea.Width + 3);
+
+                // We need to move the molecule by maxMoves to get past all the triplex bonders, but we can 
+                // extend early once we've made all the triplex bonds we need to make.
+                int maxMoves = m_assemblyArea.Width + 3;
+                Repeat(Instruction.MovePositive, maxMoves - firstTriplexPosition.Value);
                 Add(Instruction.Extend);
                 m_assemblyArea.SetUsedBonders(GlyphType.TriplexBonding, null);
 
+                Repeat(Instruction.MovePositive, firstTriplexPosition.Value);
+                
                 // Now remove any extra bonds created between fire atoms
                 MoveThroughBonder(GlyphType.Unbonding, HexRotation.R0, m_assemblyArea.Width - 1, a => IsUnbondedFirePair(a, HexRotation.R180));
                 MoveThroughBonder(GlyphType.Unbonding, HexRotation.R60, m_assemblyArea.Width, a => IsUnbondedFirePair(a, HexRotation.R60));
@@ -71,13 +78,18 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
             }
         }
 
-        private bool HasTriplexBonds()
+        private int? GetLeftmostTriplexBondPositionInCurrentRow()
         {
             var atoms = Molecule.GetRow(Row);
-            return atoms.Any(a => a.Bonds[HexRotation.R0] == BondType.Triplex || a.Bonds[HexRotation.R60] == BondType.Triplex || a.Bonds[HexRotation.R120] == BondType.Triplex);
+
+            int? pos0 = atoms.FirstOrDefault(atom => atom.Bonds[HexRotation.R0] == BondType.Triplex)?.Position.X;
+            int? pos60 = atoms.FirstOrDefault(atom => atom.Bonds[HexRotation.R60] == BondType.Triplex)?.Position.X;
+            int? pos120 = atoms.FirstOrDefault(atom => atom.Bonds[HexRotation.R120] == BondType.Triplex)?.Position.X - 1;
+
+            return MathUtils.Min(MathUtils.Min(pos0, pos60), pos120);
         }
 
-        /// <summary>
+        // <summary>
         /// Returns whether an atom and the atom in the specified direction are both fire atoms and have no bond between them.
         /// </summary>
         private bool IsUnbondedFirePair(Atom atom, HexRotation direction)
