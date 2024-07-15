@@ -245,7 +245,7 @@ namespace OpusSolver
                 {
                     if (molecules.Count() == 1)
                     {
-                        return "SingleMonoatomicr";
+                        return "SingleMonoatomic";
                     }
                     else
                     {
