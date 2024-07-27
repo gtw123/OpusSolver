@@ -20,12 +20,12 @@ namespace OpusSolver.Solver.ElementGenerators
 
         private List<ElementStack> m_stacks = new List<ElementStack>();
 
-        public ElementBuffer(CommandSequence commandSequence)
-            : base(commandSequence)
+        public ElementBuffer(CommandSequence commandSequence, Recipe recipe)
+            : base(commandSequence, recipe)
         {
         }
 
-        public override IEnumerable<Element> OutputElements => m_stacks.SelectMany(stack => stack.Elements);
+        protected override bool CanGenerateElement(Element element) => m_stacks.Any(stack => stack.Elements.Contains(element));
 
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {

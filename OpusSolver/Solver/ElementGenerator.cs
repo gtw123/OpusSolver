@@ -13,8 +13,10 @@ namespace OpusSolver.Solver
     {
         public ElementGenerator Parent { get; set; }
         public AtomGenerator AtomGenerator { get; private set; }
-        public abstract IEnumerable<Element> OutputElements { get; }
         public bool HasPendingElements => m_pendingElements.Any();
+
+        public Recipe Recipe { get; private set; }
+        public int CurrentUsages { get; private set; } = 0;
 
         protected CommandSequence CommandSequence { get; private set; }
 
@@ -26,9 +28,10 @@ namespace OpusSolver.Solver
 
         private Queue<PendingElement> m_pendingElements = new Queue<PendingElement>();
 
-        protected ElementGenerator(CommandSequence commandSequence)
+        protected ElementGenerator(CommandSequence commandSequence, Recipe recipe)
         {
             CommandSequence = commandSequence;
+            Recipe = recipe;
         }
 
         /// <summary>
@@ -37,7 +40,7 @@ namespace OpusSolver.Solver
         /// </summary>
         public Element RequestElement(Element element)
         {
-            return RequestElement(new[] { element });
+            return RequestElement([element]);
         }
 
         /// <summary>
@@ -60,7 +63,7 @@ namespace OpusSolver.Solver
             }
 
             // Now see if we can generate any of the requested elements ourselves
-            var compatibleElements = possibleElements.Intersect(OutputElements);
+            var compatibleElements = possibleElements.Where(e => CanGenerateElement(e));
             if (compatibleElements.Any())
             {
                 return GenerateElement(compatibleElements);
@@ -82,6 +85,8 @@ namespace OpusSolver.Solver
 
             throw new SolverException(Invariant($"Cannot find suitable generator to generate {String.Join(", ", possibleElements)}."));
         }
+
+        protected abstract bool CanGenerateElement(Element element);
 
         /// <summary>
         /// Adds the commands required to generate one of the specified elements.

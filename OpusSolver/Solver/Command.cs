@@ -6,7 +6,6 @@ namespace OpusSolver.Solver
     public enum CommandType
     {
         Consume,
-        PrepareToGenerate,
         Generate,
         PassThrough
     }
@@ -52,9 +51,6 @@ namespace OpusSolver.Solver
             {
                 case CommandType.Consume:
                     atomGenerator.Consume(Element, ID);
-                    break;
-                case CommandType.PrepareToGenerate:
-                    atomGenerator.PrepareToGenerate(Element);
                     break;
                 case CommandType.Generate:
                     atomGenerator.Generate(Element, ID);

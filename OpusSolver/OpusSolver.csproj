@@ -70,6 +70,9 @@
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\SingleMonoatomicAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\MonoatomicAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\Universal\AssemblyArea.cs" />
+    <Compile Include="Solver\Reaction.cs" />
+    <Compile Include="Solver\Recipe.cs" />
+    <Compile Include="Solver\RecipeGenerator.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\HexRotationDictionary.cs" />
     <Compile Include="Utils\HexRotation.cs" />
@@ -156,7 +159,12 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\LPSolve\LPSolve.csproj">
+      <Project>{7b992aa0-ad3b-49ac-b944-324bfa1203c5}</Project>
+      <Name>LPSolve</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

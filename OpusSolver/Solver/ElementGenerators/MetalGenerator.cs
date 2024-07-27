@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver.ElementGenerators
@@ -8,31 +9,58 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public abstract class MetalGenerator : ElementGenerator
     {
-        protected MetalGenerator(CommandSequence commandSequence)
-            : base(commandSequence)
+        protected MetalGenerator(CommandSequence commandSequence, Recipe recipe)
+            : base(commandSequence, recipe)
         {
         }
 
-        public override IEnumerable<Element> OutputElements => PeriodicTable.Metals;
+        protected abstract ReactionType ReactionType { get; }
+
+        protected IEnumerable<Element> GetAvailableSourceElementsForTarget(Element targetElement)
+        {
+            var sourceElement = targetElement - 1;
+
+            // We need to have a complete pathway from a source element to the target element, so we
+            // work backwards from the targetElement
+            while (sourceElement >= PeriodicTable.Metals.First())
+            {
+                if (!Recipe.HasAvailableReactions(ReactionType, inputElement: sourceElement))
+                {
+                    yield break;
+                }
+
+                yield return sourceElement;
+                sourceElement--;
+            }
+        }
+
+        protected override bool CanGenerateElement(Element element)
+        {
+            return GetAvailableSourceElementsForTarget(element).Any();
+        }
 
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {
-            var element = possibleElements.First();
-            var generated = Parent.RequestElement(PeriodicTable.GetMetalOrLower(element));
-            if (generated != element)
+            if (possibleElements.Count() > 1)
             {
-                CommandSequence.Add(CommandType.PrepareToGenerate, element, this);
-                CommandSequence.Add(CommandType.Consume, generated, this);
-                GenerateMetal(generated, element);
+                throw new InvalidOperationException($"MetalGenerator only supports generating one type of element but {possibleElements.Count()} were specified");
+            }
+
+            var targetElement = possibleElements.First();
+            var requestedElements = GetAvailableSourceElementsForTarget(targetElement);
+            var receivedElement = Parent.RequestElement(requestedElements);
+            if (receivedElement != targetElement)
+            {
+                GenerateMetal(receivedElement, targetElement);
             }
             else
             {
-                PassThrough(generated);
+                PassThrough(receivedElement);
             }
 
-            return element;
+            return targetElement;
         }
 
-        protected abstract void GenerateMetal(Element sourceMetal, Element destMetal);
+        protected abstract void GenerateMetal(Element firstMetal, Element targetMetal);
     }
 }

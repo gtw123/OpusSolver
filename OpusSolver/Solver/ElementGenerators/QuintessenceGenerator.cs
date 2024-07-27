@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver.ElementGenerators
@@ -8,12 +9,15 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class QuintessenceGenerator : ElementGenerator
     {
-        public QuintessenceGenerator(CommandSequence commandSequence)
-            : base(commandSequence)
+        public QuintessenceGenerator(CommandSequence commandSequence, Recipe recipe)
+            : base(commandSequence, recipe)
         {
         }
 
-        public override IEnumerable<Element> OutputElements => new[] { Element.Quintessence };
+        protected override bool CanGenerateElement(Element element)
+        {
+            return Recipe.HasAvailableReactions(ReactionType.Unification, outputElement: element);
+        }
 
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {
@@ -27,6 +31,8 @@ namespace OpusSolver.Solver.ElementGenerators
             }
 
             CommandSequence.Add(CommandType.Generate, Element.Quintessence, this);
+            Recipe.RecordReactionUsage(ReactionType.Unification);
+
             return Element.Quintessence;
         }
 

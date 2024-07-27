@@ -13,13 +13,14 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         private List<ElementInput> m_inputs;
 
-        public InputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> reagents)
-            : base(commandSequence)
+        public InputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> reagents, Recipe recipe)
+            : base(commandSequence, recipe)
         {
-            m_inputs = reagents.Select(reagent => new ElementInput(reagent)).ToList();
+            m_inputs = reagents.Where(r => recipe.HasAvailableReactions(ReactionType.Reagent, id: r.ID))
+                .Select(reagent => new ElementInput(reagent, recipe)).ToList();
         }
 
-        public override IEnumerable<Element> OutputElements => m_inputs.SelectMany(input => input.ElementSequence);
+        protected override bool CanGenerateElement(Element element) => true;
 
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {
@@ -32,10 +33,11 @@ namespace OpusSolver.Solver.ElementGenerators
 
         private ElementInput ChooseInput(IEnumerable<Element> possibleElements)
         {
-            var inputDistances = m_inputs.Select(input => new { input, distance = input.FindClosestElement(possibleElements) }).Where(x => x.distance != null);
+            var availableInputs = m_inputs.Where(input => Recipe.HasAvailableReactions(ReactionType.Reagent, id: input.Molecule.ID));
+            var inputDistances = availableInputs.Select(input => new { input, distance = input.FindClosestElement(possibleElements) }).Where(x => x.distance != null);
             if (!inputDistances.Any())
             {
-                throw new InvalidOperationException(Invariant($"Cannot find a suitable input to generate one of {String.Join(", ", possibleElements)}."));
+                throw new InvalidOperationException(Invariant($"Cannot find a suitable input to generate one of ({String.Join(", ", possibleElements)})."));
             }
 
             return inputDistances.MinBy(x => x.distance.Value).input;
@@ -54,7 +56,7 @@ namespace OpusSolver.Solver.ElementGenerators
 
         protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
         {
-            var usedInputs = m_inputs.Where(input => input.Used);
+            var usedInputs = m_inputs.Where(input => input.IsUsed);
             if (usedInputs.All(input => input.Molecule.Atoms.Count() == 1))
             {
                 if (usedInputs.Count() <= SimpleInputArea.MaxReagents)

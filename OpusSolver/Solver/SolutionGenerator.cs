@@ -18,16 +18,21 @@ namespace OpusSolver.Solver
         public SolutionGenerator(Puzzle puzzle)
         {
             m_puzzle = puzzle;
-            m_pipeline = new ElementPipeline(m_puzzle, m_commandSequence, m_writer);
         }
 
         public Solution Generate()
         {
+            CreateElementPipeline();
             GenerateCommandSequence();
             GenerateProgramFragments();
 
             var solution = CreateSolution();
             return OptimizeSolution(solution);
+        }
+
+        private void CreateElementPipeline()
+        {
+            m_pipeline = new ElementPipeline(m_puzzle, m_commandSequence, m_writer);
         }
 
         /// <summary>

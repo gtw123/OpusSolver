@@ -40,10 +40,6 @@
         {
         }
 
-        public virtual void PrepareToGenerate(Element element)
-        {
-        }
-
         /// <summary>
         /// Passes an atom through this generator without modifying it.
         /// </summary>

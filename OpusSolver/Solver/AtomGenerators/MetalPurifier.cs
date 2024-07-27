@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace OpusSolver.Solver.AtomGenerators
 {
@@ -8,30 +9,30 @@ namespace OpusSolver.Solver.AtomGenerators
     /// </summary>
     public class MetalPurifier : AtomGenerator
     {
+        public class PurificationSequence
+        {
+            public int ID;
+            public Element TargetMetal;
+            public Element LowestMetalUsed;
+        };
+
         private class Purifier
         {
             public Arm BigArm;
             public Arm SmallArm;
+            public Element? CurrentElement;
         }
 
         private List<Purifier> m_purifiers = new List<Purifier>();
 
-        private int m_size;
-        private LoopingCoroutine<object> m_consumeCoroutine;
+        private IReadOnlyList<PurificationSequence> m_sequences;
+        private readonly int m_size;
 
-        private Element m_targetMetal;
-        private int m_numPurifiers;
-
-        public MetalPurifier(ProgramWriter writer, int size)
+        public MetalPurifier(ProgramWriter writer, IReadOnlyList<PurificationSequence> sequences)
             : base(writer)
         {
-            m_size = size;
-            if (size < 1)
-            {
-                throw new ArgumentOutOfRangeException("size", size, "Size must be 1 or greater.");
-            }
-
-            m_consumeCoroutine = new LoopingCoroutine<object>(ConsumeMetal);
+            m_sequences = sequences;
+            m_size = sequences.Max(s => PeriodicTable.GetMetalDifference(s.LowestMetalUsed, s.TargetMetal));
 
             CreateObjects();
         }
@@ -56,63 +57,91 @@ namespace OpusSolver.Solver.AtomGenerators
             OutputArm = new Arm(this, new Vector2(m_size * 2 + 3, 0), HexRotation.R180, ArmType.Arm1, extension: 3);
         }
 
-        public override void PrepareToGenerate(Element element)
-        {
-            m_targetMetal = element;
-        }
-
         public override void Consume(Element element, int id)
         {
-            m_numPurifiers = PeriodicTable.GetMetalDifference(element, m_targetMetal);
-            m_consumeCoroutine.Next();
-        }
+            var sequence = m_sequences[id];
+            int purifierIndex = element - sequence.LowestMetalUsed;
 
-        private IEnumerable<object> ConsumeMetal()
-        {
-            for (int iteration = 1; iteration <= (1 << m_numPurifiers); iteration++)
+            // Move the atom to the target purifier
+            for (int index = 0; index < purifierIndex; index++)
             {
-                if (iteration % 2 == 1)
+                Writer.WriteGrabResetAction(m_purifiers[index].BigArm, Instruction.RotateCounterclockwise);
+            }
+
+            var purifier = m_purifiers[purifierIndex];
+            if (purifier.CurrentElement == null)
+            {
+                // Move to the far input cell of the purifier
+                if (purifierIndex == 0)
                 {
-                    Writer.WriteGrabResetAction(m_purifiers[0].BigArm, Instruction.Retract);
-                    yield return null;
-                    continue;
+                    // The first purifier uses a piston to move atoms to the other part of the glyph
+                    Writer.WriteGrabResetAction(purifier.BigArm, Instruction.Retract);
+                }
+                else
+                {
+                    // Use the previous purifier's small arm to move the atom to the correct location
+                    var previousPurifier = m_purifiers[purifierIndex - 1];
+                    Writer.AdjustTime(-1);
+                    Writer.Write(previousPurifier.SmallArm, Instruction.RotateCounterclockwise);
+                    Writer.WriteGrabResetAction(previousPurifier.SmallArm, Instruction.RotateCounterclockwise);
                 }
 
-                // Allow time for the atoms to transmute
-                Writer.AdjustTime(1);
+                purifier.CurrentElement = element;
+                return;
+            }
 
-                int power = 4;
-                for (int purifier = 0; purifier < m_numPurifiers - 1; purifier++)
+            // The purifier atom now has two atoms, so it will transmute to a new atom. We may then need
+            // to move that onto the next purifier.
+            int finalPurifierIndex = sequence.TargetMetal - sequence.LowestMetalUsed - 1;
+            while (purifierIndex <= finalPurifierIndex)
+            {
+                // Wait for the atoms to transmute
+                Writer.Write(purifier.SmallArm, Instruction.Wait);
+                purifier.CurrentElement = null;
+
+                if (purifierIndex == finalPurifierIndex)
                 {
-                    if (iteration % power == power / 2)
-                    {
-                        // Move to the far input cell of the purifier
-                        Writer.WriteGrabResetAction(m_purifiers[purifier].SmallArm, new[] { Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise });
-                        Writer.AdjustTime(1);
-                    }
-                    else if (iteration % power == 0)
-                    {
-                        // Move to the near input cell of the purifier
-                        Writer.WriteGrabResetAction(m_purifiers[purifier].SmallArm, Instruction.RotateCounterclockwise);
-                        Writer.AdjustTime(1);
-                    }
-
-                    power *= 2;
+                    // Move the atom to the end of this purifier
+                    Writer.WriteGrabResetAction(purifier.SmallArm, Instruction.RotateCounterclockwise);
+                    break;
                 }
 
-                yield return null;
+                // Move the generated atom to the next purifier
+                var nextPurifier = m_purifiers[purifierIndex + 1];
+                if (nextPurifier.CurrentElement == null)
+                {
+                    // Move to the far input cell of the purifier
+                    Writer.WriteGrabResetAction(purifier.SmallArm, [Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise]);
+                    nextPurifier.CurrentElement = element;
+                    break;
+                }
+                else
+                {
+                    // Move to the near input cell of the purifier
+                    Writer.WriteGrabResetAction(purifier.SmallArm, Instruction.RotateCounterclockwise);
+                }
+
+                purifierIndex++;
+                purifier = m_purifiers[purifierIndex];
             }
         }
 
         public override void Generate(Element element, int id)
         {
-            // Move the completed metal to the end of the last used purifier
-            Writer.WriteGrabResetAction(m_purifiers[m_numPurifiers - 1].SmallArm, Instruction.RotateCounterclockwise);
+            if (m_purifiers.Any(p => p.CurrentElement.HasValue))
+            {
+                throw new InvalidOperationException("Expected all purifiers to be empty but some still had elements.");
+            }
 
-            // Move past unused purifiers
-            PassThroughAtom(m_numPurifiers);
+            var sequence = m_sequences[id];
+            if (element != sequence.TargetMetal)
+            {
+                throw new InvalidOperationException($"Expected to generate an element of {sequence.TargetMetal} but {element} was requested.");
+            }
 
-            m_consumeCoroutine.Reset();
+            // Move the atom past the unused purifiers
+            int purifierIndex = element - sequence.LowestMetalUsed;
+            PassThroughAtom(purifierIndex);
         }
 
         public override void PassThrough(Element element)

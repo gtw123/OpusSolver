@@ -8,12 +8,15 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class MorsVitaeGenerator : ElementGenerator
     {
-        public MorsVitaeGenerator(CommandSequence commandSequence)
-            : base(commandSequence)
+        public MorsVitaeGenerator(CommandSequence commandSequence, Recipe recipe)
+            : base(commandSequence, recipe)
         {
         }
 
-        public override IEnumerable<Element> OutputElements => PeriodicTable.MorsVitae;
+        protected override bool CanGenerateElement(Element element)
+        {
+            return Recipe.HasAvailableReactions(ReactionType.Animismus, outputElement: element);
+        }
 
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {
@@ -24,7 +27,9 @@ namespace OpusSolver.Solver.ElementGenerators
             var secondElement = firstElement == Element.Mors ? Element.Vitae : Element.Mors;
 
             CommandSequence.Add(CommandType.Generate, firstElement, this);
+            Recipe.RecordReactionUsage(ReactionType.Animismus);
             AddPendingElement(secondElement);
+
             return firstElement;
         }
 

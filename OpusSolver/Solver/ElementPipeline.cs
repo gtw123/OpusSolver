@@ -24,11 +24,14 @@ namespace OpusSolver.Solver
         private CommandSequence m_commandSequence;
         private ProgramWriter m_writer;
 
+        private Dictionary<int, int> m_productCopyCounts;
         private HashSet<Element> m_generatedElements = new HashSet<Element>();
         private HashSet<Element> m_neededElements = new HashSet<Element>();
         private HashSet<Element> m_reagentElements = new HashSet<Element>();
         private bool m_needAnyCardinal = false;
         private List<ElementGenerator> m_generators = new List<ElementGenerator>();
+
+        private RecipeGenerator m_recipeGenerator = new RecipeGenerator();
 
         public ElementPipeline(Puzzle puzzle, CommandSequence commandSequence, ProgramWriter writer)
         {
@@ -41,25 +44,41 @@ namespace OpusSolver.Solver
 
         private void Build()
         {
-            // For convenience we build the pipeline in reverse order
-            AnalyzeProducts();
+            CalculateProductCopyCounts();
+            AnalyzeProductsAndReagents();
             AnalyzeQuintessence();
             AnalyzeMorsVitae();
             AnalyzeCardinals();
             AnalyzeSalt();
             AnalyzeCardinalsAgain();
             AnalyzeMetals();
-            AnalyzeReagents();
-       }
 
-        private void AnalyzeProducts()
+            var recipe = m_recipeGenerator.GenerateRecipe();
+            AddGenerators(recipe);
+        }
+
+        private void CalculateProductCopyCounts()
         {
-            OutputGenerator = new OutputGenerator(m_commandSequence, m_writer, m_puzzle.Products, m_puzzle.OutputScale);
-            AddGenerator(OutputGenerator);
+            bool anyRepeats = m_puzzle.Products.Any(product => product.HasRepeats);
+            int GetNumCopies(Molecule product)
+            {
+                // If there's a mix of repeating and non-repeating molecules, wee need to build extra copies
+                // of the non-repeating ones. This is to compensate for the fact that we build all copies of
+                // the repeating molecules at the same time.
+                return (anyRepeats && !product.HasRepeats) ? 6 * m_puzzle.OutputScale : 1;
+            }
+
+            m_productCopyCounts = m_puzzle.Products.ToDictionary(p => p.ID, p => GetNumCopies(p));
+        }
+
+        private void AnalyzeProductsAndReagents()
+        {
+            AddNeededElements(m_puzzle.Products.SelectMany(p => p.Atoms.Select(a => a.Element)));
+            m_recipeGenerator.AddProducts(m_puzzle.Products, m_productCopyCounts);
 
             m_reagentElements.UnionWith(m_puzzle.Reagents.SelectMany(p => p.Atoms.Select(a => a.Element)));
             AddGeneratedElements(m_reagentElements);
-            AddNeededElements(m_puzzle.Products.SelectMany(p => p.Atoms.Select(a => a.Element)));
+            m_recipeGenerator.AddReagents(m_puzzle.Reagents);
         }
 
         private void AnalyzeQuintessence()
@@ -68,9 +87,9 @@ namespace OpusSolver.Solver
             {
                 if (m_puzzle.AllowedGlyphs.Contains(GlyphType.Unification))
                 {
-                    AddGenerator(new QuintessenceGenerator(m_commandSequence));
                     AddGeneratedElement(Element.Quintessence);
                     AddNeededElements(PeriodicTable.Cardinals);
+                    m_recipeGenerator.AddReaction(ReactionType.Unification);
                 }
                 else
                 {
@@ -85,10 +104,9 @@ namespace OpusSolver.Solver
             {
                 if (m_puzzle.AllowedGlyphs.Contains(GlyphType.Animismus))
                 {
-                    AddGenerator(new ElementBuffer(m_commandSequence));
-                    AddGenerator(new MorsVitaeGenerator(m_commandSequence));
                     AddGeneratedElements(PeriodicTable.MorsVitae);
                     AddNeededElement(Element.Salt);
+                    m_recipeGenerator.AddReaction(ReactionType.Animismus);
                 }
                 else
                 {
@@ -105,9 +123,9 @@ namespace OpusSolver.Solver
                 {
                     if (m_reagentElements.Contains(Element.Salt) || m_reagentElements.Intersect(PeriodicTable.Cardinals).Any())
                     {
-                        AddGenerator(new VanBerloGenerator(m_commandSequence));
                         AddGeneratedElements(PeriodicTable.Cardinals);
                         AddNeededElement(Element.Salt);
+                        m_recipeGenerator.AddReaction(ReactionType.VanBerlo);
                     }
                 }
 
@@ -123,9 +141,9 @@ namespace OpusSolver.Solver
                 if (m_puzzle.AllowedGlyphs.Contains(GlyphType.Calcification))
                 {
                     // Use glyph of calcification
-                    AddGenerator(new SaltGenerator(m_commandSequence));
                     AddGeneratedElement(Element.Salt);
                     m_needAnyCardinal = true;   // Special case - we need at least one cardinal but don't care which one it is
+                    m_recipeGenerator.AddReaction(ReactionType.Calcification);
                 }
                 else
                 {
@@ -140,10 +158,9 @@ namespace OpusSolver.Solver
             {
                 if (m_puzzle.AllowedGlyphs.Contains(GlyphType.Dispersion) && m_reagentElements.Contains(Element.Quintessence))
                 {
-                    AddGenerator(new ElementBuffer(m_commandSequence));
-                    AddGenerator(new QuintessenceDisperserGenerator(m_commandSequence));
                     AddGeneratedElements(PeriodicTable.Cardinals);
                     AddNeededElement(Element.Quintessence);
+                    m_recipeGenerator.AddReaction(ReactionType.Dispersion);
                 }
                 else
                 {
@@ -160,15 +177,15 @@ namespace OpusSolver.Solver
                 if (m_puzzle.AllowedGlyphs.Contains(GlyphType.Projection) && m_reagentElements.Contains(Element.Quicksilver))
                 {
                     // Use glyph of projection + quicksilver
-                    AddGenerator(new MetalProjectorGenerator(m_commandSequence));
                     AddGeneratedElements(missing);
                     AddNeededElement(Element.Quicksilver);
+                    m_recipeGenerator.AddReaction(ReactionType.Projection);
                 }
                 else if (m_puzzle.AllowedGlyphs.Contains(GlyphType.Purification))
                 {
                     // Use glyph of purification
-                    AddGenerator(new MetalPurifierGenerator(m_commandSequence));
                     AddGeneratedElements(missing);
+                    m_recipeGenerator.AddReaction(ReactionType.Purification);
                 }
                 else
                 {
@@ -181,21 +198,6 @@ namespace OpusSolver.Solver
                         throw new SolverException("This puzzle requires metals to be promoted but doesn't allow the glyph of projection or the glyph of purification.");
                     }
                 }
-            }
-        }
-
-        private void AnalyzeReagents()
-        {
-            AddGenerator(new ElementBuffer(m_commandSequence));
-            AddGenerator(new InputGenerator(m_commandSequence, m_puzzle.Reagents));
-        }
-
-        private void AddGenerator(ElementGenerator generator)
-        {
-            m_generators.Insert(0, generator);
-            if (m_generators.Count > 1)
-            {
-                m_generators[1].Parent = generator;
             }
         }
 
@@ -237,6 +239,58 @@ namespace OpusSolver.Solver
         private IEnumerable<Element> GetMissingElements(IEnumerable<Element> elements)
         {
             return m_neededElements.Except(m_generatedElements).Intersect(elements);
+        }
+
+        private void AddGenerators(Recipe recipe)
+        {
+            AddGenerator(new InputGenerator(m_commandSequence, m_puzzle.Reagents, recipe));
+            AddGenerator(new ElementBuffer(m_commandSequence, recipe));
+
+            if (recipe.HasAvailableReactions(ReactionType.Purification))
+            {
+                AddGenerator(new MetalPurifierGenerator(m_commandSequence, recipe));
+            }
+
+            if (recipe.HasAvailableReactions(ReactionType.Projection))
+            {
+                AddGenerator(new MetalProjectorGenerator(m_commandSequence, recipe));
+            }
+
+            if (recipe.HasAvailableReactions(ReactionType.Dispersion))
+            {
+                AddGenerator(new QuintessenceDisperserGenerator(m_commandSequence, recipe));
+                AddGenerator(new ElementBuffer(m_commandSequence, recipe));
+            }
+
+            if (recipe.HasAvailableReactions(ReactionType.Calcification))
+            {
+                AddGenerator(new SaltGenerator(m_commandSequence, recipe));
+            }
+
+            if (recipe.HasAvailableReactions(ReactionType.VanBerlo))
+            {
+                AddGenerator(new VanBerloGenerator(m_commandSequence, recipe));
+            }
+
+            if (recipe.HasAvailableReactions(ReactionType.Animismus))
+            {
+                AddGenerator(new MorsVitaeGenerator(m_commandSequence, recipe));
+                AddGenerator(new ElementBuffer(m_commandSequence, recipe));
+            }
+
+            if (recipe.HasAvailableReactions(ReactionType.Unification))
+            {
+                AddGenerator(new QuintessenceGenerator(m_commandSequence, recipe));
+            }
+
+            OutputGenerator = new OutputGenerator(m_commandSequence, m_writer, m_puzzle.Products, recipe, m_productCopyCounts);
+            AddGenerator(OutputGenerator);
+        }
+
+        private void AddGenerator(ElementGenerator generator)
+        {
+            generator.Parent = m_generators.LastOrDefault();
+            m_generators.Add(generator);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver.ElementGenerators
@@ -8,24 +9,29 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class SaltGenerator : ElementGenerator
     {
-        public SaltGenerator(CommandSequence commandSequence)
-            : base(commandSequence)
+        public SaltGenerator(CommandSequence commandSequence, Recipe recipe)
+            : base(commandSequence, recipe)
         {
         }
 
-        public override IEnumerable<Element> OutputElements => new[] { Element.Salt };
+        protected override bool CanGenerateElement(Element element)
+        {
+            return Recipe.HasAvailableReactions(ReactionType.Calcification, outputElement: element);
+        }
 
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {
-            var generated = Parent.RequestElement(new[] { Element.Salt }.Concat(PeriodicTable.Cardinals));
-            if (generated != Element.Salt)
+            var allowedInputElements = Recipe.GetAvailableReactions(ReactionType.Calcification).SelectMany(r => r.Inputs.Keys);
+            var receivedElement = Parent.RequestElement(new[] { Element.Salt }.Concat(allowedInputElements));
+            if (receivedElement != Element.Salt)
             {
-                CommandSequence.Add(CommandType.Consume, generated, this);
+                CommandSequence.Add(CommandType.Consume, receivedElement, this);
                 CommandSequence.Add(CommandType.Generate, Element.Salt, this);
+                Recipe.RecordReactionUsage(ReactionType.Calcification, inputElement: receivedElement);
             }
             else
             {
-                PassThrough(generated);
+                PassThrough(receivedElement);
             }
 
             return Element.Salt;

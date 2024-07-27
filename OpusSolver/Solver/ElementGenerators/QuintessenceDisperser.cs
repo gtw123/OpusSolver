@@ -7,12 +7,15 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class QuintessenceDisperserGenerator : ElementGenerator
     {
-        public QuintessenceDisperserGenerator(CommandSequence commandSequence)
-            : base(commandSequence)
+        public QuintessenceDisperserGenerator(CommandSequence commandSequence, Recipe recipe)
+            : base(commandSequence, recipe)
         {
         }
 
-        public override IEnumerable<Element> OutputElements => PeriodicTable.Cardinals;
+        protected override bool CanGenerateElement(Element element)
+        {
+            return Recipe.HasAvailableReactions(ReactionType.Dispersion, outputElement: element);
+        }
 
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {
@@ -22,6 +25,8 @@ namespace OpusSolver.Solver.ElementGenerators
             AddPendingElement(Element.Water);
             AddPendingElement(Element.Fire);
             CommandSequence.Add(CommandType.Generate, Element.Earth, this);
+            Recipe.RecordReactionUsage(ReactionType.Dispersion);
+
             return Element.Earth;
         }
 

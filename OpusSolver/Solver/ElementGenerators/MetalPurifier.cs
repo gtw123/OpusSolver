@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace OpusSolver.Solver.ElementGenerators
 {
@@ -7,30 +9,59 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class MetalPurifierGenerator : MetalGenerator
     {
-        private int m_maxSize;
+        private List<AtomGenerators.MetalPurifier.PurificationSequence> m_sequences = new();
 
-        public MetalPurifierGenerator(CommandSequence commandSequence)
-            : base(commandSequence)
+        public MetalPurifierGenerator(CommandSequence commandSequence, Recipe recipe)
+            : base(commandSequence, recipe)
         {
         }
 
-        protected override void GenerateMetal(Element sourceMetal, Element destMetal)
-        {
-            int diff = PeriodicTable.GetMetalDifference(sourceMetal, destMetal);
-            m_maxSize = Math.Max(m_maxSize, diff);
+        protected override ReactionType ReactionType => ReactionType.Purification;
 
-            int numAtoms = 1 << diff;
-            for (int i = 1; i < numAtoms; i++)
+        protected override void GenerateMetal(Element sourceMetal, Element targetMetal)
+        {
+            var sequence = new AtomGenerators.MetalPurifier.PurificationSequence
             {
-                CommandSequence.Add(CommandType.Consume, Parent.RequestElement(sourceMetal), this);
+                ID = m_sequences.Count,
+                TargetMetal = targetMetal,
+                LowestMetalUsed = sourceMetal
+            };
+            m_sequences.Add(sequence);
+
+            CommandSequence.Add(CommandType.Consume, sourceMetal, this, sequence.ID);
+
+            int currentMetalValue = PeriodicTable.GetMetalPurity(sourceMetal);
+            int targetMetalValue = PeriodicTable.GetMetalPurity(targetMetal);
+
+            while (currentMetalValue < targetMetalValue)
+            {
+                var allowableMetals = PeriodicTable.GetMetalsWithPuritySameOrLower(targetMetalValue - currentMetalValue);
+                var requestedElements = allowableMetals.Intersect(GetAvailableSourceElementsForTarget(targetMetal)).ToArray();
+                var receivedElement = Parent.RequestElement(requestedElements);
+                CommandSequence.Add(CommandType.Consume, receivedElement, this, sequence.ID);
+
+                sequence.LowestMetalUsed = PeriodicTable.GetLowestMetal(sequence.LowestMetalUsed, receivedElement);
+
+                // Only record the reaction as used if the element gets combined with one we already have
+                int newMetalValue = currentMetalValue + PeriodicTable.GetMetalPurity(receivedElement);
+                for (var element = receivedElement; element < targetMetal; element++)
+                {
+                    int metalValue = PeriodicTable.GetMetalPurity(element);
+                    if ((currentMetalValue & metalValue) != 0 && (newMetalValue & metalValue) == 0)
+                    {
+                        Recipe.RecordReactionUsage(ReactionType.Purification, inputElement: element);
+                    }
+                }
+
+                currentMetalValue = newMetalValue;
             }
 
-            CommandSequence.Add(CommandType.Generate, destMetal, this);
+            CommandSequence.Add(CommandType.Generate, targetMetal, this, sequence.ID);
         }
 
         protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
         {
-            return new AtomGenerators.MetalPurifier(writer, m_maxSize);
+            return new AtomGenerators.MetalPurifier(writer, m_sequences);
         }
     }
 }
