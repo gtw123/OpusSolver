@@ -28,6 +28,11 @@ namespace OpusSolver.Solver
             m_fragments.Add(m_currentFragment);
         }
 
+        public Program GetLastFragmentForArm(Arm arm)
+        {
+            return m_fragments.LastOrDefault(f => f.Instructions.ContainsKey(arm));
+        }
+
         /// <summary>
         /// Adds a grab instruction, then the specified instruction, then a reset instruction.
         /// </summary>

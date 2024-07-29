@@ -80,8 +80,20 @@ namespace OpusSolver.Solver.AtomGenerators
 
         public override void EndSolution()
         {
-            Writer.NewFragment();
-            Writer.Write(m_wheelArm, Instruction.Reset);
+            // Add a reset instruction just after the last instruction written for this arm.
+            // Ideally we'd simply add a new fragment with a single instruction and let ProgramBuilder
+            // automatically move it to the correct position but unfortunately it doesn't currently
+            // support "floating" instructions like this. If it has adjacent fragments that share no arms
+            // then it'll simply combine them together rather than adjusting them separately so that they
+            // start as early as possible. This means we end up ranges of empty instructions in the
+            // final program.
+            var fragment = Writer.GetLastFragmentForArm(m_wheelArm);
+            if (fragment != null)
+            {
+                var instructions = fragment.GetArmInstructions(m_wheelArm);
+                int lastIndex = instructions.FindLastIndex(i => i != Instruction.None);
+                instructions.Insert(lastIndex + 1, Instruction.Reset);
+            }
         }
     }
 }
