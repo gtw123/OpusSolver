@@ -136,12 +136,20 @@ namespace OpusSolver
             var verifier = new SolutionVerifier();
             verifier.Verify(generatedSolutions);
 
+            var metricSums = new Metrics();
+
             foreach (var generatedSolution in generatedSolutions.Where(s => s.Verified))
             {
                 var solution = generatedSolution.Solution;
                 var metrics = solution.Metrics;
                 m_reportWriter?.WriteLine($"{solution.Puzzle.Name},\"{generatedSolution.PuzzleFile}\",{metrics.Cost},{metrics.Cycles},{metrics.Area},{metrics.Instructions}");
+
+                metricSums.Add(metrics);
             }
+
+            double total = generatedSolutions.Count;
+            m_reportWriter?.WriteLine($"Average,,{metricSums.Cost / total:.00},{metricSums.Cycles / total:.00},{metricSums.Area / total:.00},{metricSums.Instructions / total:.00}");
+
         }
     }
 }
