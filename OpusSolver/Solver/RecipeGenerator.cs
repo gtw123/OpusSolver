@@ -177,6 +177,22 @@ namespace OpusSolver.Solver
             {
                 hasWaste = true;
 
+                // Empirical testing shows that relaxing the contraints for cardinal elements sometimes gives a better
+                // solution than relaxing all constraints. So we do this first.
+                var cardinals = PeriodicTable.Cardinals.Intersect(m_usedElements);
+                if (cardinals.Any())
+                {
+                    foreach (var element in cardinals)
+                    {
+                        lp.SetContraintType(m_usedElements.IndexOf(element), ConstraintType.GE);
+                    }
+
+                    result = lp.Solve();
+                }
+            }
+
+            if (result == SolveResult.INFEASIBLE)
+            {
                 for (int i = 0; i < m_usedElements.Count; i++)
                 {
                     lp.SetContraintType(i, ConstraintType.GE);
