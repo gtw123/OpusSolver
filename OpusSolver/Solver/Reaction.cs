@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace OpusSolver.Solver
 {
@@ -20,5 +22,29 @@ namespace OpusSolver.Solver
         public int ID { get; private set; } = id;
         public IReadOnlyDictionary<Element, int> Inputs { get; private set; } = inputs;
         public IReadOnlyDictionary<Element, int> Outputs { get; private set; } = outputs;
+
+        public override string ToString()
+        {
+            string GetElementListString(IReadOnlyDictionary<Element, int> elements)
+            {
+                string GetCoefficientString(int value) => value > 1 ? $"{value} " : "";
+                return string.Join(" + ", elements.Select(p => $"{GetCoefficientString(p.Value)}{p.Key}"));
+            }
+
+            var str = new StringBuilder();
+
+            string idString = (Type == ReactionType.Reagent ? $" #{ID}" : "");
+            str.Append($"{Type}{idString}: ");
+
+            if (Type != ReactionType.Reagent)
+            {
+                str.Append(GetElementListString(Inputs));
+                str.Append(" -> ");
+            }
+
+            str.Append(GetElementListString(Outputs));
+
+            return str.ToString();
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using OpusSolver.Solver.ElementGenerators;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,6 +11,8 @@ namespace OpusSolver.Solver
     /// </summary>
     public class ElementPipeline
     {
+        private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(ElementPipeline));
+
         /// <summary>
         /// The sequence of element generators, ordered from inputs to outputs.
         /// </summary>
@@ -54,6 +57,8 @@ namespace OpusSolver.Solver
             AnalyzeMetals();
 
             var recipe = m_recipeGenerator.GenerateRecipe();
+            sm_log.Debug("Recipe:" + Environment.NewLine + recipe.ToString());
+
             AddGenerators(recipe);
         }
 

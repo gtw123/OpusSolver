@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace OpusSolver.Solver
 {
@@ -12,6 +13,8 @@ namespace OpusSolver.Solver
             public int CurrentUsages;
 
             public bool IsAvailable => CurrentUsages < MaxUsages;
+
+            public override string ToString() => $"{MaxUsages}x {Reaction}";
         }
 
         private readonly Dictionary<ReactionType, List<ReactionUsage>> m_reactions = new();
@@ -91,6 +94,23 @@ namespace OpusSolver.Solver
             }
 
             reaction.CurrentUsages++;
+        }
+
+        public override string ToString()
+        {
+            var str = new StringBuilder();
+            str.AppendLine($"Has waste: {HasWaste}");
+
+            var types = new[] { ReactionType.Reagent }.Concat(m_reactions.Keys.Where(k => k != ReactionType.Reagent));
+            foreach (var type in types)
+            {
+                foreach (var usage in m_reactions[type].Where(r => r.MaxUsages > 0))
+                {
+                    str.AppendLine(usage.ToString());
+                }
+            }
+
+            return str.ToString();
         }
     }
 }
