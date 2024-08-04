@@ -13,10 +13,28 @@ namespace OpusSolver.Solver
 
         public void AddReagents(IEnumerable<Molecule> reagents)
         {
+            // For each reagent, get the total number of atoms of each element
+            var reagentElementCountsByID = new Dictionary<int, Dictionary<Element, int>>();
             foreach (var reagent in reagents)
             {
-                var elementCounts = reagent.Atoms.Select(a => a.Element).GroupBy(e => e).ToDictionary(g => g.Key, g => g.Count());
-                m_reactions.Add(new Reaction(ReactionType.Reagent, reagent.ID, new Dictionary<Element, int>(), elementCounts));
+                reagentElementCountsByID[reagent.ID] = reagent.Atoms.Select(a => a.Element).GroupBy(e => e).ToDictionary(g => g.Key, g => g.Count());
+            }
+            
+            // Get all the molecules that have only one type of element. Having more than one of these is redundant,
+            // so we can remove some of them.
+            var singleElementReagents = reagentElementCountsByID.Where(p => p.Value.Count == 1).Select(p => new {ID = p.Key, Element = p.Value.Keys.First(), AtomCount = p.Value.Values.First()}).ToList();
+            foreach (var reagentsWithSameElement in singleElementReagents.GroupBy(p => p.Element))
+            {
+                // Remove all but the smallest of these. This saves cycles and cost on some solutions.
+                foreach (var reagentToRemove in reagentsWithSameElement.OrderBy(r => r.AtomCount).Skip(1))
+                {
+                    reagentElementCountsByID.Remove(reagentToRemove.ID);
+                }
+            }
+      
+            foreach (var (id, elementCounts) in reagentElementCountsByID)
+            {
+                m_reactions.Add(new Reaction(ReactionType.Reagent, id, new Dictionary<Element, int>(), elementCounts));
             }
         }
 
