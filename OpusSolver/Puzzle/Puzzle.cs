@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace OpusSolver
 {
@@ -26,6 +28,31 @@ namespace OpusSolver
             AllowedArmTypes = new HashSet<ArmType>(allowedArmTypes);
             AllowedGlyphs = new HashSet<GlyphType>(allowedGlyphs);
             OutputScale = outputScale;
+        }
+
+        public override string ToString()
+        {
+            var str = new StringBuilder();
+
+            str.AppendLine($"Name: {Name}");
+
+            str.AppendLine("Reagents:");
+            foreach (var reagent in Reagents)
+            {
+                str.Append(reagent.ToString());
+            }
+
+            str.AppendLine("Products:");
+            foreach (var product in Products)
+            {
+                str.Append(product.ToString());
+            }
+
+            str.AppendLine($"Allowed Arm Types: {string.Join(", ", AllowedArmTypes.OrderBy(t => t))}");
+            str.AppendLine($"Allowed Glyphs: {string.Join(", ", AllowedGlyphs.OrderBy(g => g))}");
+            str.AppendLine($"Output Scale: {OutputScale}");
+
+            return str.ToString();
         }
     }
 }

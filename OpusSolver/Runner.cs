@@ -88,7 +88,7 @@ namespace OpusSolver
                 var puzzle = PuzzleReader.ReadPuzzle(puzzleFile);
 
                 puzzleName = puzzle.Name;
-                sm_log.Debug($"Puzzle name: {puzzle.Name}");
+                sm_log.Debug($"Puzzle: " + Environment.NewLine + puzzle.ToString());
 
                 var solver = new PuzzleSolver(puzzle);
                 var solution = solver.Solve();
