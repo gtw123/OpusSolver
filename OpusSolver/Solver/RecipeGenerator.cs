@@ -142,7 +142,9 @@ namespace OpusSolver.Solver
             {
                 if (m_reactions[i].Type == ReactionType.Reagent)
                 {
-                    objValues[i] = 1.0;
+                    // Weight reagents by the number of atoms within them. This helps make the solver prioritise
+                    // smaller reagents rather than larger ones, which makes more efficient solutions in some cases.
+                    objValues[i] = 1.0 * m_reactions[i].Outputs.Sum(c => c.Value);
                 }
             }
 
