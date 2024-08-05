@@ -21,7 +21,7 @@ namespace OpusSolver.Solver.ElementGenerators
 
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {
-            var allowedInputElements = Recipe.GetAvailableReactions(ReactionType.Calcification).SelectMany(r => r.Inputs.Keys);
+            var allowedInputElements = Recipe.GetAvailableReactions(ReactionType.Calcification).SelectMany(r => r.Reaction.Inputs.Keys);
             var receivedElement = Parent.RequestElement(new[] { Element.Salt }.Concat(allowedInputElements));
             if (receivedElement != Element.Salt)
             {

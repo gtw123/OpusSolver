@@ -6,11 +6,21 @@ namespace OpusSolver.Solver
 {
     public class Recipe
     {
-        private class ReactionUsage
+        public class ReactionUsage(Reaction reaction, int maxUsages)
         {
-            public Reaction Reaction;
-            public int MaxUsages;
-            public int CurrentUsages;
+            public Reaction Reaction { get; private set; } = reaction;
+            public int MaxUsages { get; private set; } = maxUsages;
+            public int CurrentUsages { get; private set; }
+
+            public void RecordUsage()
+            {
+                if (CurrentUsages >= MaxUsages)
+                {
+                    throw new SolverException($"Attempted to use reaction ({Reaction}) more than the allowed number of times. Current usage count = {CurrentUsages}, max usage count = {MaxUsages}.");
+                }
+
+                CurrentUsages++;
+            }
 
             public bool IsAvailable => CurrentUsages < MaxUsages;
 
@@ -29,7 +39,7 @@ namespace OpusSolver.Solver
                 m_reactions[reaction.Type] = reactionList;
             }
 
-            reactionList.Add(new ReactionUsage { Reaction = reaction, MaxUsages = usageCount });
+            reactionList.Add(new ReactionUsage(reaction, usageCount));
         }
 
         public bool HasAvailableReactions(ReactionType type, int? id = null, Element? inputElement = null, Element? outputElement = null)
@@ -37,9 +47,9 @@ namespace OpusSolver.Solver
             return GetAvailableReactions(type, id, inputElement, outputElement).Any();
         }
 
-        public IEnumerable<Reaction> GetAvailableReactions(ReactionType type, int? id = null, Element? inputElement = null, Element? outputElement = null)
+        public IEnumerable<ReactionUsage> GetAvailableReactions(ReactionType type, int? id = null, Element? inputElement = null, Element? outputElement = null)
         {
-            return GetReactionUsages(type, id, inputElement, outputElement).Where(r => r.IsAvailable).Select(r => r.Reaction);
+            return GetReactionUsages(type, id, inputElement, outputElement).Where(r => r.IsAvailable);
         }
 
         private IEnumerable<ReactionUsage> GetReactionUsages(ReactionType type, int? id = null, Element? inputElement = null, Element? outputElement = null)
@@ -88,12 +98,7 @@ namespace OpusSolver.Solver
             }
 
             var reaction = reactions.First();
-            if (reaction.CurrentUsages >= reaction.MaxUsages)
-            {
-                throw new SolverException($"Attempted to use reaction ({GetTypeMessage()}) more than the allowed number of times. Current usage count = {reaction.CurrentUsages}, max usage count = {reaction.MaxUsages}.");
-            }
-
-            reaction.CurrentUsages++;
+            reaction.RecordUsage();
         }
 
         public override string ToString()
@@ -101,7 +106,7 @@ namespace OpusSolver.Solver
             var str = new StringBuilder();
             str.AppendLine($"Has waste: {HasWaste}");
 
-            var types = new[] { ReactionType.Reagent }.Concat(m_reactions.Keys.Where(k => k != ReactionType.Reagent));
+            var types = new[] { ReactionType.Reagent }.Concat(m_reactions.Keys.Where(k => k != ReactionType.Reagent && k != ReactionType.Product)).Concat([ReactionType.Product]);
             foreach (var type in types)
             {
                 foreach (var usage in m_reactions[type].Where(r => r.MaxUsages > 0))

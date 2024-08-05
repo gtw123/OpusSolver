@@ -7,6 +7,7 @@ namespace OpusSolver.Solver
     public enum ReactionType
     {
         Reagent,
+        Product,
         Calcification,
         VanBerlo,
         Projection,
@@ -33,16 +34,22 @@ namespace OpusSolver.Solver
 
             var str = new StringBuilder();
 
-            string idString = (Type == ReactionType.Reagent ? $" #{ID}" : "");
+            string idString = (Type == ReactionType.Reagent || Type == ReactionType.Product) ? $" #{ID}" : "";
             str.Append($"{Type}{idString}: ");
 
             if (Type != ReactionType.Reagent)
             {
                 str.Append(GetElementListString(Inputs));
-                str.Append(" -> ");
+                if (Type != ReactionType.Product)
+                {
+                    str.Append(" -> ");
+                }
             }
 
-            str.Append(GetElementListString(Outputs));
+            if (Type != ReactionType.Product)
+            {
+                str.Append(GetElementListString(Outputs));
+            }
 
             return str.ToString();
         }

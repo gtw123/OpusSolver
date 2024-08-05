@@ -12,17 +12,14 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         private ProgramWriter m_writer;
         private IEnumerable<Molecule> m_products;
-        private IReadOnlyDictionary<int, int> m_productCopyCounts;
 
         private SimpleOutputArea m_outputArea;
 
-        public OutputGenerator(CommandSequence commandSequence, ProgramWriter writer, IEnumerable<Molecule> products,
-            Recipe recipe, IReadOnlyDictionary<int, int> productCopyCounts)
+        public OutputGenerator(CommandSequence commandSequence, ProgramWriter writer, IEnumerable<Molecule> products, Recipe recipe)
             : base(commandSequence, recipe)
         {
             m_writer = writer;
             m_products = products;
-            m_productCopyCounts = productCopyCounts;
 
             m_outputArea = new SimpleOutputArea(m_writer, m_products);
         }
@@ -34,7 +31,8 @@ namespace OpusSolver.Solver.ElementGenerators
             foreach (var product in m_products)
             {
                 var elementOrder = m_outputArea.GetProductElementOrder(product);
-                for (int i = 0; i < m_productCopyCounts[product.ID]; i++)
+                int numCopies = Recipe.GetAvailableReactions(ReactionType.Product, id: product.ID).Single().MaxUsages;
+                for (int i = 0; i < numCopies; i++)
                 {
                     foreach (var element in elementOrder)
                     {

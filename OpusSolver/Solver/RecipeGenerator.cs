@@ -8,7 +8,7 @@ namespace OpusSolver.Solver
     public class RecipeGenerator
     {
         private readonly List<Reaction> m_reactions = new();
-        private Dictionary<Element, int> m_productCoefficients;
+        private readonly List<(Reaction Reaction, int Count)> m_productReactions = new();
         private List<Element> m_usedElements;
 
         public void AddReagents(IEnumerable<Molecule> reagents)
@@ -38,16 +38,20 @@ namespace OpusSolver.Solver
             }
         }
 
-        public void AddProducts(IEnumerable<Molecule> products, IReadOnlyDictionary<int, int> productCopyCounts)
+        public void AddProducts(IEnumerable<Molecule> products, int outputScale)
         {
-            var elementCounts = new List<(Element element, int count)>();
+            bool anyRepeats = products.Any(product => product.HasRepeats);
+
             foreach (var product in products)
             {
-                int numCopies = productCopyCounts[product.ID];
-                elementCounts.AddRange(product.Atoms.GroupBy(p => p.Element).Select(g => (g.Key, g.Count() * numCopies)));
+                // If there's a mix of repeating and non-repeating molecules, we need to build extra copies
+                // of the non-repeating ones. This is to compensate for the fact that we build all copies of
+                // the repeating molecules at the same time.
+                int numCopies = (anyRepeats && !product.HasRepeats) ? 6 * outputScale : 1;
+                var elementCounts = product.Atoms.Select(a => a.Element).GroupBy(e => e).ToDictionary(g => g.Key, g => g.Count());
+                var reaction = new Reaction(ReactionType.Product, product.ID, elementCounts, new Dictionary<Element, int>());
+                m_productReactions.Add((reaction, numCopies));
             }
-
-            m_productCoefficients = elementCounts.GroupBy(e => e.element).ToDictionary(g => g.Key, g => g.Sum(x => x.count));
         }
 
         public void AddReaction(ReactionType type)
@@ -123,7 +127,7 @@ namespace OpusSolver.Solver
         public Recipe GenerateRecipe()
         {
             m_usedElements = m_reactions.SelectMany(r => r.Inputs.Keys).Concat(m_reactions.SelectMany(r => r.Outputs.Keys))
-                .Concat(m_productCoefficients.Keys).Distinct().OrderBy(e => e).ToList();
+                .Concat(m_productReactions.SelectMany(r => r.Reaction.Inputs.Keys)).Distinct().OrderBy(e => e).ToList();
             using var lp = CreateLinearProgram();
             return SolveLinearProgram(lp);
         }
@@ -161,8 +165,13 @@ namespace OpusSolver.Solver
                     rowValues[i] = outputAtoms - inputAtoms;
                 }
 
-                m_productCoefficients.TryGetValue(element, out int productValue);
-                lp.AddConstraint(rowValues, ConstraintType.EQ, productValue);
+                int totalElementCount = 0;
+                foreach (var product in m_productReactions)
+                {
+                    product.Reaction.Inputs.TryGetValue(element, out int elementCount);
+                    totalElementCount += product.Count * elementCount;
+                }
+                lp.AddConstraint(rowValues, ConstraintType.EQ, totalElementCount);
             }
 
             return lp;
@@ -227,6 +236,11 @@ namespace OpusSolver.Solver
             for (int i = 0; i < values.Length; i++)
             {
                 recipe.AddReaction(m_reactions[i], (int)values[i]);
+            }
+
+            foreach (var product in m_productReactions)
+            {
+                recipe.AddReaction(product.Reaction, product.Count);
             }
 
             return recipe;

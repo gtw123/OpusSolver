@@ -27,7 +27,6 @@ namespace OpusSolver.Solver
         private CommandSequence m_commandSequence;
         private ProgramWriter m_writer;
 
-        private Dictionary<int, int> m_productCopyCounts;
         private HashSet<Element> m_generatedElements = new HashSet<Element>();
         private HashSet<Element> m_neededElements = new HashSet<Element>();
         private HashSet<Element> m_reagentElements = new HashSet<Element>();
@@ -47,7 +46,6 @@ namespace OpusSolver.Solver
 
         private void Build()
         {
-            CalculateProductCopyCounts();
             AnalyzeProductsAndReagents();
             AnalyzeQuintessence();
             AnalyzeMorsVitae();
@@ -62,24 +60,10 @@ namespace OpusSolver.Solver
             AddGenerators(recipe);
         }
 
-        private void CalculateProductCopyCounts()
-        {
-            bool anyRepeats = m_puzzle.Products.Any(product => product.HasRepeats);
-            int GetNumCopies(Molecule product)
-            {
-                // If there's a mix of repeating and non-repeating molecules, wee need to build extra copies
-                // of the non-repeating ones. This is to compensate for the fact that we build all copies of
-                // the repeating molecules at the same time.
-                return (anyRepeats && !product.HasRepeats) ? 6 * m_puzzle.OutputScale : 1;
-            }
-
-            m_productCopyCounts = m_puzzle.Products.ToDictionary(p => p.ID, p => GetNumCopies(p));
-        }
-
         private void AnalyzeProductsAndReagents()
         {
             AddNeededElements(m_puzzle.Products.SelectMany(p => p.Atoms.Select(a => a.Element)));
-            m_recipeGenerator.AddProducts(m_puzzle.Products, m_productCopyCounts);
+            m_recipeGenerator.AddProducts(m_puzzle.Products, m_puzzle.OutputScale);
 
             m_reagentElements.UnionWith(m_puzzle.Reagents.SelectMany(p => p.Atoms.Select(a => a.Element)));
             AddGeneratedElements(m_reagentElements);
@@ -288,7 +272,7 @@ namespace OpusSolver.Solver
                 AddGenerator(new QuintessenceGenerator(m_commandSequence, recipe));
             }
 
-            OutputGenerator = new OutputGenerator(m_commandSequence, m_writer, m_puzzle.Products, recipe, m_productCopyCounts);
+            OutputGenerator = new OutputGenerator(m_commandSequence, m_writer, m_puzzle.Products, recipe);
             AddGenerator(OutputGenerator);
         }
 
