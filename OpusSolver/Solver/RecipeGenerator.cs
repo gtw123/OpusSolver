@@ -129,7 +129,7 @@ namespace OpusSolver.Solver
             m_usedElements = m_reactions.SelectMany(r => r.Inputs.Keys).Concat(m_reactions.SelectMany(r => r.Outputs.Keys))
                 .Concat(m_productReactions.SelectMany(r => r.Reaction.Inputs.Keys)).Distinct().OrderBy(e => e).ToList();
             using var lp = CreateLinearProgram();
-            return SolveLinearProgram(lp);
+            return FindFeasibleRecipe(lp);
         }
 
         private LinearProgram CreateLinearProgram()
@@ -165,66 +165,90 @@ namespace OpusSolver.Solver
                     rowValues[i] = outputAtoms - inputAtoms;
                 }
 
-                int totalElementCount = 0;
-                foreach (var product in m_productReactions)
-                {
-                    product.Reaction.Inputs.TryGetValue(element, out int elementCount);
-                    totalElementCount += product.Count * elementCount;
-                }
-                lp.AddConstraint(rowValues, ConstraintType.EQ, totalElementCount);
+                // We leave the RH value set to 0 for now, as we'll set it later on in SetProductElementCounts
+                lp.AddConstraint(rowValues, ConstraintType.EQ, 0);
             }
 
             return lp;
         }
 
-        private Recipe SolveLinearProgram(LinearProgram lp)
+        private void SetProductElementCounts(LinearProgram lp, int productScale)
         {
-            bool hasWaste = false;
-            var result = lp.Solve();
-
-            if (result == SolveResult.INFEASIBLE)
+            for (int i = 0; i < m_usedElements.Count; i++)
             {
-                hasWaste = true;
-
-                // Empirical testing shows that relaxing the contraints for cardinal elements sometimes gives a better
-                // solution than relaxing all constraints. So we do this first.
-                var cardinals = PeriodicTable.Cardinals.Intersect(m_usedElements);
-                if (cardinals.Any())
+                int totalElementCount = 0;
+                foreach (var product in m_productReactions)
                 {
-                    foreach (var element in cardinals)
-                    {
-                        lp.SetContraintType(m_usedElements.IndexOf(element), ConstraintType.GE);
-                    }
-
-                    result = lp.Solve();
+                    product.Reaction.Inputs.TryGetValue(m_usedElements[i], out int elementCount);
+                    totalElementCount += product.Count * elementCount * productScale;
                 }
+                lp.SetConstraintValue(i, totalElementCount);
             }
-
-            if (result == SolveResult.INFEASIBLE)
-            {
-                for (int i = 0; i < m_usedElements.Count; i++)
-                {
-                    lp.SetContraintType(i, ConstraintType.GE);
-                }
-
-                result = lp.Solve();
-                if (result != SolveResult.OPTIMAL)
-                {
-                    throw new SolverException($"Could not find optimal solution to linear program even after relaxing constraints: solver returned {result}.");
-                }
-            }
-            else if (result != SolveResult.OPTIMAL)
-            {
-                throw new SolverException($"Could not solve linear program: solver returned {result}.");
-            }
-
-            var recipe = CreateRecipe(lp);
-            recipe.HasWaste = hasWaste;
-
-            return recipe;
         }
 
-        private Recipe CreateRecipe(LinearProgram lp)
+        private SolveResult SolveLinearProgram(LinearProgram lp, int productScale, bool hasWaste, out Recipe recipe)
+        {
+            SetProductElementCounts(lp, productScale);
+
+            var result = lp.Solve();
+            if (result == SolveResult.OPTIMAL)
+            {
+                recipe = CreateRecipe(lp, productScale);
+                recipe.HasWaste = hasWaste;
+            }
+            else
+            {
+                recipe = null;
+            }
+
+            return result;
+        }
+
+        private Recipe FindFeasibleRecipe(LinearProgram lp)
+        {
+            // First try to solve the LP exactly. We try different numbers of product counts because sometimes
+            // building multiple copies of a product lets us use a whole number of reagents which usually leads
+            // to a more optimal solution.
+            for (int scale = 1; scale <= 6; scale++)
+            {
+                if (SolveLinearProgram(lp, scale, hasWaste: true, out var recipe) == SolveResult.OPTIMAL)
+                {
+                    return recipe;
+                }
+            }
+
+            // Empirical testing shows that relaxing the contraints for cardinal elements sometimes gives a better
+            // solution than relaxing all constraints. So we do this first.
+            var cardinals = PeriodicTable.Cardinals.Intersect(m_usedElements);
+            if (cardinals.Any())
+            {
+                foreach (var element in cardinals)
+                {
+                    lp.SetConstraintType(m_usedElements.IndexOf(element), ConstraintType.GE);
+                }
+
+                if (SolveLinearProgram(lp, 1, hasWaste: true, out var recipe) == SolveResult.OPTIMAL)
+                {
+                    return recipe;
+                }
+            }
+
+            // Relax all constraints
+            for (int i = 0; i < m_usedElements.Count; i++)
+            {
+                lp.SetConstraintType(i, ConstraintType.GE);
+            }
+
+            var result = SolveLinearProgram(lp, 1, hasWaste: true, out var recipe2);
+            if (result == SolveResult.OPTIMAL)
+            {
+                return recipe2;
+            }
+
+            throw new SolverException($"Could not solve linear program even after relaxing all constraints: solver returned {result}.");
+        }
+
+        private Recipe CreateRecipe(LinearProgram lp, int productScale)
         {
             var values = lp.GetVariableValues();
             if (values.Length != m_reactions.Count)
@@ -240,7 +264,7 @@ namespace OpusSolver.Solver
 
             foreach (var product in m_productReactions)
             {
-                recipe.AddReaction(product.Reaction, product.Count);
+                recipe.AddReaction(product.Reaction, product.Count * productScale);
             }
 
             return recipe;

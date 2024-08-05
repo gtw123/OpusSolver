@@ -34,12 +34,21 @@ namespace LPSolve
             }
         }
 
-        public void SetContraintType(int constraintIndex, ConstraintType type)
+        public void SetConstraintType(int constraintIndex, ConstraintType type)
         {
             var result = NativeMethods.set_constr_type(m_lp, constraintIndex + 1, type);
             if (result != 1)
             {
                 throw new InvalidOperationException($"set_constr_type returned {result}");
+            }
+        }
+
+        public void SetConstraintValue(int constraintIndex, double value)
+        {
+            var result = NativeMethods.set_rh(m_lp, constraintIndex + 1, value);
+            if (result != 1)
+            {
+                throw new InvalidOperationException($"set_rh returned {result}");
             }
         }
 
