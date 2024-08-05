@@ -260,9 +260,9 @@ namespace OpusSolver
                         row1.Append(GetBondString(atom, HexRotation.R120));
                         row1.Append(GetBondString(atom, HexRotation.R60));
 
-                        row2.Append(GetBondString(atom, HexRotation.R180));
-                        row2.Append(atom?.ToString() ?? " ");
-                        row2.Append(GetBondString(atom, HexRotation.R0).Substring(0, 1));
+                        row2.Append(GetBondString(atom, HexRotation.R180).Substring(1));
+                        row2.Append(atom?.ToString() ?? "  ");
+                        row2.Append(GetBondString(atom, HexRotation.R0).Substring(1));
 
                         row3.Append(GetBondString(atom, HexRotation.R240));
                         row3.Append(GetBondString(atom, HexRotation.R300));
@@ -291,8 +291,8 @@ namespace OpusSolver
             return direction.IntValue switch
             {
                 0 or 3 => bondType == BondType.Single ? "--" : "==",
-                1 => bondType == BondType.Single ? " /" : "//",
-                2 => bondType == BondType.Single ? @" \" : @"\\",
+                1 => bondType == BondType.Single ? "/ " : "//",
+                2 => bondType == BondType.Single ? @"\ " : @"\\",
                 4 => bondType == BondType.Single ? "/ " : "//",
                 5 => bondType == BondType.Single ? @"\ " : @"\\",
                 _ => throw new ArgumentOutOfRangeException("direction", direction, Invariant($"Invalid direction."))

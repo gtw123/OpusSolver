@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Security.Policy;
 
 namespace OpusSolver
 {
@@ -26,13 +28,26 @@ namespace OpusSolver
     {
         public static string ToDebugString(this Element element)
         {
-            string str = Enum.GetName(typeof(Element), element).Substring(0, 1);
-            if (element == Element.Salt || element == Element.Quicksilver)
+            return element switch
             {
-                str = str.ToLowerInvariant();
-            }
-
-            return str;
+                Element.Salt => "Sa",
+                Element.Air => "Ai",
+                Element.Fire => "Fi",
+                Element.Water => "Wa",
+                Element.Earth => "Ea",
+                Element.Quicksilver => "Qs",
+                Element.Lead => "Pb",
+                Element.Tin => "Sn",
+                Element.Iron => "Fe",
+                Element.Copper => "Cu",
+                Element.Silver => "Ag",
+                Element.Gold => "Au",
+                Element.Mors => "Mo",
+                Element.Vitae => "Vi",
+                Element.Quintessence => "Qt",
+                Element.Repeat => "..",
+                _ => throw new ArgumentException($"Unknown element {element}.")
+            };
         }
     }
 }
