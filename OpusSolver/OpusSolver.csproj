@@ -70,6 +70,7 @@
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\SingleMonoatomicAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\MonoatomicAssembler.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\Universal\AssemblyArea.cs" />
+    <Compile Include="Solver\RecipeGenerator.cs" />
     <Compile Include="Solver\Reaction.cs" />
     <Compile Include="Solver\Recipe.cs" />
     <Compile Include="Solver\RecipeBuilder.cs" />

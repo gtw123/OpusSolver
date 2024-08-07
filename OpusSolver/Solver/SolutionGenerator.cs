@@ -11,13 +11,16 @@ namespace OpusSolver.Solver
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(SolutionGenerator));
 
         private Puzzle m_puzzle;
+        private Recipe m_recipe;
+
         private CommandSequence m_commandSequence = new CommandSequence();
         private ProgramWriter m_writer = new ProgramWriter();
         private ElementPipeline m_pipeline;
 
-        public SolutionGenerator(Puzzle puzzle)
+        public SolutionGenerator(Puzzle puzzle, Recipe recipe)
         {
             m_puzzle = puzzle;
+            m_recipe = recipe;
         }
 
         public Solution Generate()
@@ -32,7 +35,7 @@ namespace OpusSolver.Solver
 
         private void CreateElementPipeline()
         {
-            m_pipeline = new ElementPipeline(m_puzzle, m_commandSequence, m_writer);
+            m_pipeline = new ElementPipeline(m_puzzle, m_recipe, m_commandSequence, m_writer);
         }
 
         /// <summary>

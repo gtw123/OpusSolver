@@ -25,7 +25,8 @@ namespace OpusSolver.Solver
             CheckPreconditions();
             FixRepeatingMolecules();
 
-            var solution = new SolutionGenerator(Puzzle).Generate();
+            var generator = new RecipeGenerator(Puzzle);
+            var solution = new SolutionGenerator(Puzzle, generator.GenerateRecipe()).Generate();
             CheckAllowedGlyphs(solution);
 
             return solution;
