@@ -5,7 +5,7 @@ using LPSolve;
 
 namespace OpusSolver.Solver
 {
-    public class RecipeGenerator
+    public class RecipeBuilder
     {
         private readonly List<Reaction> m_reactions = new();
         private readonly List<(Reaction Reaction, int Count)> m_productReactions = new();

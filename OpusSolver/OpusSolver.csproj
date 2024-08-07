@@ -72,7 +72,7 @@
     <Compile Include="Solver\AtomGenerators\Output\Assemblers\Universal\AssemblyArea.cs" />
     <Compile Include="Solver\Reaction.cs" />
     <Compile Include="Solver\Recipe.cs" />
-    <Compile Include="Solver\RecipeGenerator.cs" />
+    <Compile Include="Solver\RecipeBuilder.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\HexRotationDictionary.cs" />
     <Compile Include="Utils\HexRotation.cs" />

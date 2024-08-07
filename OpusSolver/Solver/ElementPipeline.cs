@@ -33,7 +33,7 @@ namespace OpusSolver.Solver
         private bool m_needAnyCardinal = false;
         private List<ElementGenerator> m_generators = new List<ElementGenerator>();
 
-        private RecipeGenerator m_recipeGenerator = new RecipeGenerator();
+        private RecipeBuilder m_recipeBuilder = new RecipeBuilder();
 
         public ElementPipeline(Puzzle puzzle, CommandSequence commandSequence, ProgramWriter writer)
         {
@@ -54,7 +54,7 @@ namespace OpusSolver.Solver
             AnalyzeCardinalsAgain();
             AnalyzeMetals();
 
-            var recipe = m_recipeGenerator.GenerateRecipe();
+            var recipe = m_recipeBuilder.GenerateRecipe();
             sm_log.Debug("Recipe:" + Environment.NewLine + recipe.ToString());
 
             AddGenerators(recipe);
@@ -63,11 +63,11 @@ namespace OpusSolver.Solver
         private void AnalyzeProductsAndReagents()
         {
             AddNeededElements(m_puzzle.Products.SelectMany(p => p.Atoms.Select(a => a.Element)));
-            m_recipeGenerator.AddProducts(m_puzzle.Products, m_puzzle.OutputScale);
+            m_recipeBuilder.AddProducts(m_puzzle.Products, m_puzzle.OutputScale);
 
             m_reagentElements.UnionWith(m_puzzle.Reagents.SelectMany(p => p.Atoms.Select(a => a.Element)));
             AddGeneratedElements(m_reagentElements);
-            m_recipeGenerator.AddReagents(m_puzzle.Reagents);
+            m_recipeBuilder.AddReagents(m_puzzle.Reagents);
         }
 
         private void AnalyzeQuintessence()
@@ -78,7 +78,7 @@ namespace OpusSolver.Solver
                 {
                     AddGeneratedElement(Element.Quintessence);
                     AddNeededElements(PeriodicTable.Cardinals);
-                    m_recipeGenerator.AddReaction(ReactionType.Unification);
+                    m_recipeBuilder.AddReaction(ReactionType.Unification);
                 }
                 else
                 {
@@ -95,7 +95,7 @@ namespace OpusSolver.Solver
                 {
                     AddGeneratedElements(PeriodicTable.MorsVitae);
                     AddNeededElement(Element.Salt);
-                    m_recipeGenerator.AddReaction(ReactionType.Animismus);
+                    m_recipeBuilder.AddReaction(ReactionType.Animismus);
                 }
                 else
                 {
@@ -114,7 +114,7 @@ namespace OpusSolver.Solver
                     {
                         AddGeneratedElements(PeriodicTable.Cardinals);
                         AddNeededElement(Element.Salt);
-                        m_recipeGenerator.AddReaction(ReactionType.VanBerlo);
+                        m_recipeBuilder.AddReaction(ReactionType.VanBerlo);
                     }
                 }
 
@@ -132,7 +132,7 @@ namespace OpusSolver.Solver
                     // Use glyph of calcification
                     AddGeneratedElement(Element.Salt);
                     m_needAnyCardinal = true;   // Special case - we need at least one cardinal but don't care which one it is
-                    m_recipeGenerator.AddReaction(ReactionType.Calcification);
+                    m_recipeBuilder.AddReaction(ReactionType.Calcification);
                 }
                 else
                 {
@@ -149,7 +149,7 @@ namespace OpusSolver.Solver
                 {
                     AddGeneratedElements(PeriodicTable.Cardinals);
                     AddNeededElement(Element.Quintessence);
-                    m_recipeGenerator.AddReaction(ReactionType.Dispersion);
+                    m_recipeBuilder.AddReaction(ReactionType.Dispersion);
                 }
                 else
                 {
@@ -168,13 +168,13 @@ namespace OpusSolver.Solver
                     // Use glyph of projection + quicksilver
                     AddGeneratedElements(missing);
                     AddNeededElement(Element.Quicksilver);
-                    m_recipeGenerator.AddReaction(ReactionType.Projection);
+                    m_recipeBuilder.AddReaction(ReactionType.Projection);
                 }
                 else if (m_puzzle.AllowedGlyphs.Contains(GlyphType.Purification))
                 {
                     // Use glyph of purification
                     AddGeneratedElements(missing);
-                    m_recipeGenerator.AddReaction(ReactionType.Purification);
+                    m_recipeBuilder.AddReaction(ReactionType.Purification);
                 }
                 else
                 {
