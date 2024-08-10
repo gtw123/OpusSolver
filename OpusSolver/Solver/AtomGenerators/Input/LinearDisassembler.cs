@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using static System.FormattableString;
 
-namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
+namespace OpusSolver.Solver.AtomGenerators.Input
 {
     /// <summary>
     /// Dissassembles a multi-atom but linear molecule into single atoms.

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
+namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
     /// Assembles a single monoatomic molecule.

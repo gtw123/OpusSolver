@@ -1,9 +1,8 @@
-﻿using OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
+namespace OpusSolver.Solver.AtomGenerators.Output.Universal
 {
     public class AssemblyArea : SolverComponent
     {

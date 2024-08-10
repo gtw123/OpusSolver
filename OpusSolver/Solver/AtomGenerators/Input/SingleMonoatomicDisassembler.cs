@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
+namespace OpusSolver.Solver.AtomGenerators.Input
 {
     /// <summary>
     /// Generates atoms from a single monoatomic reagent molecule.

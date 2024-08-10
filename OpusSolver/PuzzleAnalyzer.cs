@@ -1,7 +1,7 @@
 ﻿using OpusSolver.IO;
 using OpusSolver.Solver;
-using OpusSolver.Solver.AtomGenerators.Input.Dissassemblers;
-using OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3;
+using OpusSolver.Solver.AtomGenerators.Input;
+using OpusSolver.Solver.AtomGenerators.Output.Hex3;
 using System;
 using System.Collections.Generic;
 using System.IO;

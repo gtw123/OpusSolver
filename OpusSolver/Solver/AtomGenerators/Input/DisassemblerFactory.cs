@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace OpusSolver.Solver.AtomGenerators.Input.Dissassemblers
+namespace OpusSolver.Solver.AtomGenerators.Input
 {
     public static class DisassemblerFactory
     {

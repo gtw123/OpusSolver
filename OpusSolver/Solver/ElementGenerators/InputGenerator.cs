@@ -65,7 +65,7 @@ namespace OpusSolver.Solver.ElementGenerators
                 }
             }
 
-            return new AtomGenerators.ComplexInputArea(writer, usedInputs.Select(input => input.Strategy));
+            return new ComplexInputArea(writer, usedInputs.Select(input => input.Strategy));
         }
     }
 }

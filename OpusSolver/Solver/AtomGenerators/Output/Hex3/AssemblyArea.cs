@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
+﻿namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
 {
     public class AssemblyArea : SolverComponent
     {

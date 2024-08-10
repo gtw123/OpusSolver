@@ -2,7 +2,7 @@
 using System.Linq;
 using System;
 
-namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3
+namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
 {
     /// <summary>
     /// Generates instructions for assembling a molecule that doesn't contain a center atom.

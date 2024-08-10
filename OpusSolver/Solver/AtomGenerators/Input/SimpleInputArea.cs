@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
-using OpusSolver.Solver.AtomGenerators.Input.Dissassemblers;
 
 namespace OpusSolver.Solver.AtomGenerators.Input
 {

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers
+namespace OpusSolver.Solver.AtomGenerators.Output
 {
     /// <summary>
     /// Assembles molecules from their component atoms.

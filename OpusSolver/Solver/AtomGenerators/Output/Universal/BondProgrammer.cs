@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal
+namespace OpusSolver.Solver.AtomGenerators.Output.Universal
 {
     /// <summary>
     /// Generates instructions for bonding a row of atoms to the previous row, and adding triplex bonds.

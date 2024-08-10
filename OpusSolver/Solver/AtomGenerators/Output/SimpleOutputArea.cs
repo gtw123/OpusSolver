@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using OpusSolver.Solver.AtomGenerators.Output.Assemblers;
-using OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3;
-using OpusSolver.Solver.AtomGenerators.Output.Assemblers.Universal;
+using OpusSolver.Solver.AtomGenerators.Output.Hex3;
+using OpusSolver.Solver.AtomGenerators.Output.Universal;
 
 namespace OpusSolver.Solver.AtomGenerators.Output
 {
