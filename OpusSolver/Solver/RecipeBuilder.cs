@@ -211,7 +211,7 @@ namespace OpusSolver.Solver
             // to a more optimal solution.
             for (int scale = 1; scale <= 6; scale++)
             {
-                if (SolveLinearProgram(lp, scale, hasWaste: true, out var recipe) == SolveResult.OPTIMAL)
+                if (SolveLinearProgram(lp, scale, hasWaste: false, out var recipe) == SolveResult.OPTIMAL)
                 {
                     return recipe;
                 }
