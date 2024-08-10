@@ -1,4 +1,5 @@
 ﻿using OpusSolver.IO;
+using OpusSolver.Solver;
 using OpusSolver.Solver.AtomGenerators.Input.Dissassemblers;
 using OpusSolver.Solver.AtomGenerators.Output.Assemblers.Hex3;
 using System;
@@ -33,6 +34,7 @@ namespace OpusSolver
             public string File;
             public MoleculeListInfo Reagents;
             public MoleculeListInfo Products;
+            public Recipe Recipe;
         }
 
         private class MoleculeListComparer : IComparer<MoleculeListInfo>
@@ -85,7 +87,9 @@ namespace OpusSolver
                 puzzles.Add(LoadPuzzle(puzzleFile));
             }
 
-            var orderedPuzzles = puzzles.OrderBy(p => p.Reagents, new MoleculeListComparer()).ThenBy(p => p.Products, new MoleculeListComparer());
+            var orderedPuzzles = puzzles.OrderBy(p => p.Reagents, new MoleculeListComparer())
+                .ThenBy(p => p.Recipe.GetAvailableReactionTypes().Count())
+                .ThenBy(p => p.Products, new MoleculeListComparer());
             //var orderedPuzzles = puzzles.OrderBy(p => p.Products, new MoleculeListComparer()).ThenBy(p => p.Reagents, new MoleculeListComparer());
 
             foreach (var puzzleInfo in orderedPuzzles)
@@ -168,6 +172,8 @@ namespace OpusSolver
                 m_reportWriter.WriteLine("Products:");
                 m_reportWriter.Write("    " + DetermineProductAssembler(puzzleInfo.Products.MoleculesByAtomCount));
                 WriteMolecules(puzzleInfo.Products.MoleculesByAtomCount);
+                m_reportWriter.WriteLine(puzzleInfo.Recipe);
+                m_reportWriter.WriteLine();
             }
 
             sm_log.Info($"Report saved to \"{m_args.ReportFile}\"");
@@ -284,6 +290,7 @@ namespace OpusSolver
         private PuzzleInfo LoadPuzzle(string puzzleFile)
         {
             var puzzle = PuzzleReader.ReadPuzzle(puzzleFile);
+            var generator = new RecipeGenerator(puzzle);
 
             return new PuzzleInfo
             {
@@ -291,6 +298,7 @@ namespace OpusSolver
                 File = puzzleFile,
                 Reagents = new MoleculeListInfo(puzzle.Reagents),
                 Products = new MoleculeListInfo(puzzle.Products),
+                Recipe = generator.GenerateRecipe()
             };
         }
     }

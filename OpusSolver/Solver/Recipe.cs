@@ -42,6 +42,11 @@ namespace OpusSolver.Solver
             reactionList.Add(new ReactionUsage(reaction, usageCount));
         }
 
+        public IEnumerable<ReactionType> GetAvailableReactionTypes()
+        {
+            return m_reactions.Where(u => u.Value.Any(r => r.IsAvailable)).Select(u => u.Key);
+        }
+
         public bool HasAvailableReactions(ReactionType type, int? id = null, Element? inputElement = null, Element? outputElement = null)
         {
             return GetAvailableReactions(type, id, inputElement, outputElement).Any();
