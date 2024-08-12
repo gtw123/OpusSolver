@@ -56,8 +56,8 @@
     <Compile Include="PuzzleAnalyzer.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="Solution\MoleculeInputOutput.cs" />
-    <Compile Include="Solver\AtomGenerators\Input\DisassemblerFactory.cs" />
-    <Compile Include="Solver\AtomGenerators\Input\DisassemblerStrategy.cs" />
+    <Compile Include="Solver\AtomGenerators\Input\DisassemblyStrategyFactory.cs" />
+    <Compile Include="Solver\AtomGenerators\Input\DisassemblyStrategy.cs" />
     <Compile Include="Solver\AtomGenerators\Input\LinearDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\Input\MoleculeDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\Input\MonoatomicDisassembler.cs" />

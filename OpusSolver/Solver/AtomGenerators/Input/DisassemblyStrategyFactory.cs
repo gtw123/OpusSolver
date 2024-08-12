@@ -2,7 +2,7 @@
 
 namespace OpusSolver.Solver.AtomGenerators.Input
 {
-    public static class DisassemblerFactory
+    public static class DisassemblyStrategyFactory
     {
         public static DisassemblyStrategy CreateDisassemblyStrategy(Molecule molecule)
         {

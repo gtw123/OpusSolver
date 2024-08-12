@@ -26,7 +26,7 @@ namespace OpusSolver.Solver.ElementGenerators
             Molecule = molecule;
             Recipe = recipe;
 
-            Strategy = DisassemblerFactory.CreateDisassemblyStrategy(molecule);
+            Strategy = DisassemblyStrategyFactory.CreateDisassemblyStrategy(molecule);
             m_elementSequence = Strategy.ElementInputOrder.ToList();
         }
 
