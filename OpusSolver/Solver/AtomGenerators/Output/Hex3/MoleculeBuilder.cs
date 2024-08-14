@@ -7,7 +7,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
     /// </summary>
     public abstract class MoleculeBuilder
     {
-        public AssemblyArea AssemblyArea { get; private set; }
         public Molecule Product { get; private set; }
 
         public abstract Vector2 CenterAtomPosition { get; }
@@ -17,15 +16,13 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
         public virtual Vector2 OutputPositionOffset => new Vector2(0, 0);
         public virtual bool RequiresRotationsBetweenOutputPositions { get; } = true;
 
-        protected ProgramWriter Writer { get; private set; } = new ProgramWriter();
-        public IEnumerable<Program> Fragments => Writer.Fragments;
-
-        public MoleculeBuilder(AssemblyArea assemblyArea, Molecule product)
+        public MoleculeBuilder(Molecule product)
         {
-            AssemblyArea = assemblyArea;
             Product = product;
         }
 
         public abstract IEnumerable<Element> GetElementsInBuildOrder();
+
+        public abstract IEnumerable<Program> GenerateFragments(AssemblyArea assemblyArea);
     }
 }

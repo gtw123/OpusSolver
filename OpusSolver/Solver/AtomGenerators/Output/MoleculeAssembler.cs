@@ -13,11 +13,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output
         }
 
         /// <summary>
-        /// Returns the required generation order of the elements of a product.
-        /// </summary>
-        public abstract IEnumerable<Element> GetProductElementOrder(Molecule product);
-
-        /// <summary>
         /// Adds an atom to the assembly area.
         /// </summary>
         public abstract void AddAtom(Element element, int productID);

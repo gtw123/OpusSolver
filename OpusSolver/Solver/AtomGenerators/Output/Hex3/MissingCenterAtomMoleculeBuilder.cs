@@ -29,14 +29,12 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
         private HexRotation m_outputRotation;
         private bool m_needsAllBonds;
 
-        public MissingCenterAtomMoleculeBuilder(AssemblyArea assemblyArea, Molecule product)
-            : base(assemblyArea, product)
+        public MissingCenterAtomMoleculeBuilder(Molecule product)
+            : base(product)
         {
             m_centerAtomPosition = FindCenterPosition();
 
             DetermineBuildOrder();
-
-            GenerateInstructions();
         }
 
         private void DetermineBuildOrder()
@@ -83,40 +81,44 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
             return commonPositions.First();
         }
 
-        private void GenerateInstructions()
+        public override IEnumerable<Program> GenerateFragments(AssemblyArea assemblyArea)
         {
+            var writer = new ProgramWriter();
+
             // Move the assembly arm so the product doesn't collide with it while being assembled
-            Writer.Write(AssemblyArea.AssemblyArm, Instruction.MovePositive);
+            writer.Write(assemblyArea.AssemblyArm, Instruction.MovePositive);
 
             // Move the first atom to the RHS of the bonder
-            Writer.Write(AssemblyArea.HorizontalArm, [Instruction.Grab, Instruction.MoveNegative]);
+            writer.Write(assemblyArea.HorizontalArm, [Instruction.Grab, Instruction.MoveNegative]);
 
             // Grab the second atom and rotate it so the two atoms are now facing away from the bonder
-            Writer.NewFragment();
-            Writer.Write(AssemblyArea.HorizontalArm, [Instruction.PivotCounterclockwise, Instruction.PivotCounterclockwise, Instruction.Reset]);
+            writer.NewFragment();
+            writer.Write(assemblyArea.HorizontalArm, [Instruction.PivotCounterclockwise, Instruction.PivotCounterclockwise, Instruction.Reset]);
 
             int atomCount = Product.Atoms.Count();
             for (int index = 2; index < atomCount; index++)
             {
-                Writer.NewFragment();
+                writer.NewFragment();
 
                 if (index < atomCount - 1)
                 {
-                    Writer.WriteGrabResetAction(AssemblyArea.HorizontalArm, [Instruction.MoveNegative, Instruction.PivotClockwise]);
+                    writer.WriteGrabResetAction(assemblyArea.HorizontalArm, [Instruction.MoveNegative, Instruction.PivotClockwise]);
                 }
             }
 
             if (m_needsAllBonds)
             {
-                Writer.WriteGrabResetAction(AssemblyArea.HorizontalArm, [Instruction.MoveNegative, Instruction.PivotClockwise]);
-                Writer.AdjustTime(2); // Move past the reset
+                writer.WriteGrabResetAction(assemblyArea.HorizontalArm, [Instruction.MoveNegative, Instruction.PivotClockwise]);
+                writer.AdjustTime(2); // Move past the reset
             }
 
             // Move the assembled molecule to the output area
-            Writer.WriteGrabResetAction(AssemblyArea.HorizontalArm, Instruction.RotateCounterclockwise);
+            writer.WriteGrabResetAction(assemblyArea.HorizontalArm, Instruction.RotateCounterclockwise);
 
-            Writer.Write(AssemblyArea.AssemblyArm, Instruction.Reset);
-            Writer.AdjustTime(-1);
+            writer.Write(assemblyArea.AssemblyArm, Instruction.Reset);
+            writer.AdjustTime(-1);
+
+            return writer.Fragments;
         }
     }
 }

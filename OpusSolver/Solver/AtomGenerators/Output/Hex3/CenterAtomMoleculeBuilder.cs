@@ -39,8 +39,8 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
         private readonly HexRotationDictionary<Atom> m_grabbedAtoms = new();
         private readonly HashSet<HexRotation> m_constructedClockwiseBonds = new(); // Whether a bond has been constructed in a clockwise direction from the atom in the specified radial direction
 
-        public CenterAtomMoleculeBuilder(AssemblyArea assemblyArea, Molecule product, IEnumerable<Atom> centralAtoms)
-            : base(assemblyArea, product)
+        public CenterAtomMoleculeBuilder(Molecule product, IEnumerable<Atom> centralAtoms)
+            : base(product)
         {
             if (!centralAtoms.Any())
             {
@@ -59,8 +59,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
                 var rot = m_centerOperations.Concat(m_clockwiseOperations).Last().FinalRotation;
                 m_clockwiseOperations.Add(new Operation { Type = OperationType.MoveAwayFromBonder, FinalRotation = rot });
             }
-
-            GenerateInstructions();
         }
 
         private Atom ChooseCenterAtom(IEnumerable<Atom> centralAtoms)
@@ -296,64 +294,68 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
             }
         }
 
-        private void GenerateInstructions()
+        public override IEnumerable<Program> GenerateFragments(AssemblyArea assemblyArea)
         {
+            var writer = new ProgramWriter();
+
             // Move the center atom to the RHS of the bonder
-            Writer.WriteGrabResetAction(AssemblyArea.HorizontalArm, Instruction.MoveNegative);
-            Writer.Write(AssemblyArea.AssemblyArm, Instruction.Grab);
+            writer.WriteGrabResetAction(assemblyArea.HorizontalArm, Instruction.MoveNegative);
+            writer.Write(assemblyArea.AssemblyArm, Instruction.Grab);
 
             // Bond radial atoms to the center atom
-            GenerateOperationInstructions(m_centerOperations);
+            GenerateOperationInstructions(writer, assemblyArea, m_centerOperations);
 
             if (!m_clockwiseOperations.Any() && !m_counterclockwiseOperations.Any())
             {
                 if (m_centerOperations.Any())
                 {
                     // Move the other arm out the way to avoid a collision
-                    Writer.Write(AssemblyArea.HorizontalArm, [Instruction.MoveNegative, Instruction.MovePositive], updateTime: false);
+                    writer.Write(assemblyArea.HorizontalArm, [Instruction.MoveNegative, Instruction.MovePositive], updateTime: false);
                 }
 
-                return;
+                return writer.Fragments;
             }
 
             // Move the molecule down one row so we can weld radial atoms in a clockwise direction
-            Writer.Write(AssemblyArea.AssemblyArm, Instruction.MovePositive);
-            GenerateOperationInstructions(m_clockwiseOperations);
+            writer.Write(assemblyArea.AssemblyArm, Instruction.MovePositive);
+            GenerateOperationInstructions(writer, assemblyArea, m_clockwiseOperations);
 
             if (!m_counterclockwiseOperations.Any())
             {
-                return;
+                return writer.Fragments;
             }
 
             // Rotate the molecule so we can weld radial atoms in a counterclockwise direction
-            Writer.Write(AssemblyArea.AssemblyArm, Instruction.RotateCounterclockwise);
-            GenerateOperationInstructions(m_counterclockwiseOperations,
-                afterGrab: () => Writer.WriteGrabResetAction(AssemblyArea.HorizontalArm, Instruction.MovePositive));
+            writer.Write(assemblyArea.AssemblyArm, Instruction.RotateCounterclockwise);
+            GenerateOperationInstructions(writer, assemblyArea, m_counterclockwiseOperations,
+                afterGrab: () => writer.WriteGrabResetAction(assemblyArea.HorizontalArm, Instruction.MovePositive));
+
+            return writer.Fragments;
         }
 
-        private void GenerateOperationInstructions(IEnumerable<Operation> operations, Action afterGrab = null)
+        private void GenerateOperationInstructions(ProgramWriter writer, AssemblyArea assemblyArea, IEnumerable<Operation> operations, Action afterGrab = null)
         {
             foreach (var op in operations)
             {
                 switch (op.Type)
                 {
                     case OperationType.RotateClockwise:
-                        Writer.Write(AssemblyArea.AssemblyArm, Instruction.PivotClockwise);
+                        writer.Write(assemblyArea.AssemblyArm, Instruction.PivotClockwise);
                         break;
                     case OperationType.RotateCounterclockwise:
-                        Writer.Write(AssemblyArea.AssemblyArm, Instruction.PivotCounterclockwise);
+                        writer.Write(assemblyArea.AssemblyArm, Instruction.PivotCounterclockwise);
                         break;
                     case OperationType.GrabAtom:
-                        Writer.NewFragment();
+                        writer.NewFragment();
                         afterGrab?.Invoke();
                         break;
                     case OperationType.Bond:
                         break;
                     case OperationType.MoveAwayFromBonder:
-                        Writer.Write(AssemblyArea.AssemblyArm, Instruction.MovePositive);
+                        writer.Write(assemblyArea.AssemblyArm, Instruction.MovePositive);
                         break;
                     case OperationType.MoveTowardBonder:
-                        Writer.Write(AssemblyArea.AssemblyArm, Instruction.MoveNegative);
+                        writer.Write(assemblyArea.AssemblyArm, Instruction.MoveNegative);
                         break;
                     default:
                         throw new InvalidOperationException($"Invalid operation {op.Type}.");

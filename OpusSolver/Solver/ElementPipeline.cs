@@ -77,7 +77,7 @@ namespace OpusSolver.Solver
                 AddGenerator(new QuintessenceGenerator(m_commandSequence, recipe));
             }
 
-            OutputGenerator = new OutputGenerator(m_commandSequence, m_writer, m_puzzle.Products, recipe);
+            OutputGenerator = new OutputGenerator(m_commandSequence, m_puzzle.Products, recipe);
             AddGenerator(OutputGenerator);
         }
 

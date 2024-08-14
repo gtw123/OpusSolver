@@ -65,6 +65,8 @@
     <Compile Include="Solver\AtomGenerators\Input\NonLinear3TriangleDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\Input\SingleMonoatomicDisassembler.cs" />
     <Compile Include="Solver\AtomGenerators\Input\UniversalDisassembler.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\AssemblyStrategyFactory.cs" />
+    <Compile Include="Solver\AtomGenerators\Output\AssemblyStrategy.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Hex3\AssemblyArea.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Hex3\CenterAtomMoleculeBuilder.cs" />
     <Compile Include="Solver\AtomGenerators\Output\Hex3\Hex3Assembler.cs" />

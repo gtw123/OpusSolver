@@ -1,4 +1,6 @@
-﻿using OpusSolver.Solver.AtomGenerators.Output;
+﻿using LPSolve;
+using OpusSolver.Solver.AtomGenerators.Input;
+using OpusSolver.Solver.AtomGenerators.Output;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,18 +12,14 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class OutputGenerator : ElementGenerator
     {
-        private ProgramWriter m_writer;
         private IEnumerable<Molecule> m_products;
+        private AssemblyStrategy m_assemblyStrategy;
 
-        private SimpleOutputArea m_outputArea;
-
-        public OutputGenerator(CommandSequence commandSequence, ProgramWriter writer, IEnumerable<Molecule> products, Recipe recipe)
+        public OutputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> products, Recipe recipe)
             : base(commandSequence, recipe)
         {
-            m_writer = writer;
             m_products = products;
-
-            m_outputArea = new SimpleOutputArea(m_writer, m_products);
+            m_assemblyStrategy = AssemblyStrategyFactory.CreateAssemblyStrategy(products);
         }
 
         protected override bool CanGenerateElement(Element element) => false;
@@ -30,7 +28,7 @@ namespace OpusSolver.Solver.ElementGenerators
         {
             foreach (var product in m_products)
             {
-                var elementOrder = m_outputArea.GetProductElementOrder(product);
+                var elementOrder = m_assemblyStrategy.GetProductBuildOrder(product);
                 int numCopies = Recipe.GetAvailableReactions(ReactionType.Product, id: product.ID).Single().MaxUsages;
                 for (int i = 0; i < numCopies; i++)
                 {
@@ -49,7 +47,7 @@ namespace OpusSolver.Solver.ElementGenerators
 
         protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
         {
-            return m_outputArea;
+            return new SimpleOutputArea(writer, m_assemblyStrategy);
         }
     }
 }

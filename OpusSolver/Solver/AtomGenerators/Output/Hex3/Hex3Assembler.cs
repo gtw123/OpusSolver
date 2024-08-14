@@ -17,9 +17,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
         public override Vector2 OutputPosition => new Vector2();
 
         private AssemblyArea m_assemblyArea;
-
-        private readonly Dictionary<int, MoleculeBuilder> m_moleculeBuilders = new();
-        private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines = new();
+        private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines;
 
         private class ProductOutput
         {
@@ -32,49 +30,31 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
         private readonly List<Arm> m_rightOutputArms;
         private readonly List<Arm> m_leftOutputArms;
 
-        public Hex3Assembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
+        public Hex3Assembler(SolverComponent parent, ProgramWriter writer, IEnumerable<MoleculeBuilder> builders)
             : base(parent, writer)
         {
             m_assemblyArea = new AssemblyArea(this, writer);
+            m_assembleCoroutines = builders.ToDictionary(b => b.Product.ID, b => new LoopingCoroutine<object>(() => Assemble(b)));
 
-            foreach (var product in products)
-            {
-                MoleculeBuilder builder;
-                var centralAtoms = GetCentralAtoms(product);
-                if (centralAtoms.Any())
-                {
-                    builder = new CenterAtomMoleculeBuilder(m_assemblyArea, product, centralAtoms);
-                }
-                else
-                {
-                    builder = new MissingCenterAtomMoleculeBuilder(m_assemblyArea, product);
-                }
+            var lefthandBuilders = builders.Where(b => b.OutputLocation == OutputLocation.Left);
+            m_leftOutputArms = AddOutputs(lefthandBuilders, new Vector2(-1, -3), new Vector2(0, -3), -HexRotation.R60);
+            m_assemblyArea.IsLeftBonderUsed = lefthandBuilders.Any();
 
-                m_moleculeBuilders[product.ID] = builder;
-                m_assembleCoroutines[product.ID] = new LoopingCoroutine<object>(() => Assemble(builder));
-            }
-
-            var lefthandProducts = products.Where(p => m_moleculeBuilders[p.ID].OutputLocation == OutputLocation.Left);
-            m_leftOutputArms = AddOutputs(lefthandProducts, new Vector2(-1, -3), new Vector2(0, -3), -HexRotation.R60);
-            m_assemblyArea.IsLeftBonderUsed = lefthandProducts.Any();
-
-            var righthandProducts = products.Except(lefthandProducts);
-            m_rightOutputArms = AddOutputs(righthandProducts, new Vector2(3, -3), new Vector2(3, -3), HexRotation.R60);
+            var righthandBuilders = builders.Except(lefthandBuilders);
+            m_rightOutputArms = AddOutputs(righthandBuilders, new Vector2(3, -3), new Vector2(3, -3), HexRotation.R60);
         }
 
-        private List<Arm> AddOutputs(IEnumerable<Molecule> products, Vector2 initialPosition, Vector2 offset, HexRotation rotationOffset)
+        private List<Arm> AddOutputs(IEnumerable<MoleculeBuilder> builders, Vector2 initialPosition, Vector2 offset, HexRotation rotationOffset)
         {
             var arms = new List<Arm>();
             var currentRotationOffset = HexRotation.R0;
 
-            bool allSimpleOutputs = products.All(p => m_moleculeBuilders[p.ID].OutputLocation == OutputLocation.RightSimple);
+            bool allSimpleOutputs = builders.All(b => b.OutputLocation == OutputLocation.RightSimple);
 			
             // Build the products in reverse order so that the final product is closer to the assembly area (saves a few cycles)
             int index = 0;
-            foreach (var product in products.Reverse())
+            foreach (var builder in builders.Reverse())
             {
-                var builder = m_moleculeBuilders[product.ID];
-
                 // Offset so the the center of the molecule is at (0, 0) (need to do this before rotating it)
                 var transform = new Transform2D(-builder.CenterAtomPosition, HexRotation.R0);
                 var rotation = builder.OutputRotation + (builder.RequiresRotationsBetweenOutputPositions ? currentRotationOffset : HexRotation.R0);
@@ -89,10 +69,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
                     productCenter += new Vector2(0, 1);
                 }
 
-                m_outputs[product.ID] = new ProductOutput { OutputIndex = index, UseSimpleOutput = useSimpleOutput };
+                m_outputs[builder.Product.ID] = new ProductOutput { OutputIndex = index, UseSimpleOutput = useSimpleOutput };
 
                 transform = new Transform2D(productCenter + builder.OutputPositionOffset, rotation).Apply(transform);
-                new Product(this, transform.Position, transform.Rotation, product);
+                new Product(this, transform.Position, transform.Rotation, builder.Product);
 
                 if (index > 0)
                 {
@@ -107,11 +87,6 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
             return arms;
         }
 
-        public override IEnumerable<Element> GetProductElementOrder(Molecule product)
-        {
-            return m_moleculeBuilders[product.ID].GetElementsInBuildOrder();
-        }
-
         public override void AddAtom(Element element, int productID)
         {
             m_assembleCoroutines[productID].Next();
@@ -119,9 +94,10 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
 
         private IEnumerable<object> Assemble(MoleculeBuilder builder)
         {
-            Writer.AppendFragment(builder.Fragments.First());
+            var fragments = builder.GenerateFragments(m_assemblyArea);
+            Writer.AppendFragment(fragments.First());
 
-            foreach (var fragment in builder.Fragments.Skip(1))
+            foreach (var fragment in fragments.Skip(1))
             {
                 yield return null;
                 Writer.AppendFragment(fragment);
@@ -197,6 +173,24 @@ namespace OpusSolver.Solver.AtomGenerators.Output.Hex3
             }
 
             return true;
+        }
+
+        public static IEnumerable<MoleculeBuilder> CreateMoleculeBuilders(IEnumerable<Molecule> products)
+        {
+            return products.Select(p => CreateMoleculeBuilder(p)).ToList();
+        }
+
+        private static MoleculeBuilder CreateMoleculeBuilder(Molecule product)
+        {
+            var centralAtoms = GetCentralAtoms(product);
+            if (centralAtoms.Any())
+            {
+                return new CenterAtomMoleculeBuilder(product, centralAtoms);
+            }
+            else
+            {
+                return new MissingCenterAtomMoleculeBuilder(product);
+            }
         }
 
         private static IEnumerable<Atom> GetCentralAtoms(Molecule product)
