@@ -1,5 +1,4 @@
-﻿using OpusSolver.Solver.AtomGenerators.Input;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver.AtomGenerators.Input

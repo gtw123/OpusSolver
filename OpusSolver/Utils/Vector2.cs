@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Security.Permissions;
 using static System.FormattableString;
 
 namespace OpusSolver

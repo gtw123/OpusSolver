@@ -1,6 +1,4 @@
-﻿using LPSolve;
-using OpusSolver.Solver.AtomGenerators.Input;
-using OpusSolver.Solver.AtomGenerators.Output;
+﻿using OpusSolver.Solver.AtomGenerators.Output;
 using System;
 using System.Collections.Generic;
 using System.Linq;
