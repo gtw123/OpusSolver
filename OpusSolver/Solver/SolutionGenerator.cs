@@ -26,7 +26,7 @@ namespace OpusSolver.Solver
         public Solution Generate()
         {
             CreateElementPipeline();
-            GenerateCommandSequence();
+            m_pipeline.GenerateCommandSequence();
             GenerateProgramFragments();
 
             var solution = CreateSolution();
@@ -35,26 +35,7 @@ namespace OpusSolver.Solver
 
         private void CreateElementPipeline()
         {
-            m_pipeline = new ElementPipeline(m_puzzle, m_recipe, m_commandSequence, m_writer);
-        }
-
-        /// <summary>
-        /// Generates a sequence of commands that will be used to generate the program.
-        /// We do this first rather than creating the program directly, as it gives us
-        /// the opportunity to decide what components we'll need (and their positions)
-        /// before creating them.
-        /// </summary>
-        private void GenerateCommandSequence()
-        {
-            sm_log.Debug("Generating command sequence");
-
-            m_pipeline.OutputGenerator.GenerateCommandSequence();
-            foreach (var generator in m_pipeline.ElementGenerators)
-            {
-                generator.EndSolution();
-            }
-
-            sm_log.Debug("Command sequence: " + Environment.NewLine + m_commandSequence.ToString());
+            m_pipeline = new ElementPipeline(m_puzzle, m_recipe, m_commandSequence);
         }
 
         /// <summary>
