@@ -83,6 +83,19 @@ namespace OpusSolver
                         excludedFiles.Add(args[++i]);
                         break;
                     }
+                    case "--type":
+                    {
+                        if (i + 1 >= args.Length)
+                        {
+                            throw new ArgumentException("Missing file for '--type' argument.");
+                        }
+                        string type = args[++i];
+                        if (!Enum.TryParse(type, true, out commandArgs.SolutionType))
+                        {
+                            throw new ArgumentException($"Unknown solution type {type}.");
+                        }
+                        break;
+                    }
                     case "--noverify":
                         commandArgs.SkipVerification = true;
                         break;
@@ -146,6 +159,8 @@ namespace OpusSolver
             sm_log.Error("Options:");
             sm_log.Error("    --output <dir>        Directory to write solutions to (default is current dir)");
             sm_log.Error("    --exclude <file name> Name of a puzzle file to skip");
+            string solutionTypes = string.Join(", ", Enum.GetNames(typeof(Solver.SolutionType)));
+            sm_log.Error($"    --type <type>         Generates solutions of this type. Valid types: {solutionTypes}");
             sm_log.Error("    --noverify            Skip solution verification (useful if you don't have a copy of libverify)");
             sm_log.Error("    --analyze             Analyze puzzles instead of solving them. Output will be written to the report file");
             sm_log.Error("    --report <file>       Generate a report file summarizing the solutions and their metrics");

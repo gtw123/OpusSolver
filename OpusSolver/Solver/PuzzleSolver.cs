@@ -9,11 +9,14 @@ namespace OpusSolver.Solver
     {
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(PuzzleSolver));
 
+        private SolutionType m_solutionType;
+
         public Puzzle Puzzle { get; private set; }
 
-        public PuzzleSolver(Puzzle puzzle)
+        public PuzzleSolver(Puzzle puzzle, SolutionType solutionType)
         {
             Puzzle = puzzle;
+            m_solutionType = solutionType;
         }
 
         public Solution Solve()
@@ -26,7 +29,7 @@ namespace OpusSolver.Solver
             FixRepeatingMolecules();
 
             var generator = new RecipeGenerator(Puzzle);
-            var solution = new SolutionGenerator(Puzzle, generator.GenerateRecipe()).Generate();
+            var solution = new SolutionGenerator(Puzzle, m_solutionType, generator.GenerateRecipe()).Generate();
             CheckAllowedGlyphs(solution);
 
             return solution;

@@ -90,7 +90,7 @@ namespace OpusSolver
                 puzzleName = puzzle.Name;
                 sm_log.Debug($"Puzzle: " + Environment.NewLine + puzzle.ToString());
 
-                var solver = new PuzzleSolver(puzzle);
+                var solver = new PuzzleSolver(puzzle, m_args.SolutionType);
                 var solution = solver.Solve();
 
                 sm_log.Debug($"Writing solution to \"{solutionFile}\"");

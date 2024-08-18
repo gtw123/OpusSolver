@@ -1,14 +1,17 @@
-﻿using OpusSolver.Solver.Standard;
-using OpusSolver.Solver.Standard.Input;
+﻿using OpusSolver.Solver.Standard.Input;
 using OpusSolver.Solver.Standard.Output;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solver
+namespace OpusSolver.Solver.Standard
 {
-    public class SolutionBuilder
+    public class SolutionBuilder : ISolutionBuilder
     {
         private ProgramWriter m_writer;
+
+        public Func<Molecule, MoleculeDisassemblyStrategy> CreateDisassemblyStrategy { get; private set; } = DisassemblyStrategyFactory.CreateDisassemblyStrategy;
+        public Func<IEnumerable<Molecule>, MoleculeAssemblyStrategy> CreateAssemblyStrategy { get; private set; } = AssemblyStrategyFactory.CreateAssemblyStrategy;
 
         public SolutionBuilder(ProgramWriter writer)
         {
