@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpusSolver.Solver.ElementGenerators;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,13 +10,6 @@ namespace OpusSolver.Solver.AtomGenerators
     /// </summary>
     public class MetalPurifier : AtomGenerator
     {
-        public class PurificationSequence
-        {
-            public int ID;
-            public Element TargetMetal;
-            public Element LowestMetalUsed;
-        };
-
         private class Purifier
         {
             public Arm BigArm;
@@ -25,10 +19,10 @@ namespace OpusSolver.Solver.AtomGenerators
 
         private List<Purifier> m_purifiers = new List<Purifier>();
 
-        private IReadOnlyList<PurificationSequence> m_sequences;
+        private IReadOnlyList<MetalPurifierGenerator.PurificationSequence> m_sequences;
         private readonly int m_size;
 
-        public MetalPurifier(ProgramWriter writer, IReadOnlyList<PurificationSequence> sequences)
+        public MetalPurifier(ProgramWriter writer, IReadOnlyList<MetalPurifierGenerator.PurificationSequence> sequences)
             : base(writer)
         {
             m_sequences = sequences;

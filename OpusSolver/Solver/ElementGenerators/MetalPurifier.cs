@@ -8,9 +8,16 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class MetalPurifierGenerator : MetalGenerator
     {
-        private List<AtomGenerators.MetalPurifier.PurificationSequence> m_sequences = new();
+        public class PurificationSequence
+        {
+            public int ID;
+            public Element TargetMetal;
+            public Element LowestMetalUsed;
+        };
 
-        public IReadOnlyList<AtomGenerators.MetalPurifier.PurificationSequence> Sequences => m_sequences;
+        private List<PurificationSequence> m_sequences = new();
+
+        public IReadOnlyList<PurificationSequence> Sequences => m_sequences;
 
         public MetalPurifierGenerator(CommandSequence commandSequence, Recipe recipe)
             : base(commandSequence, recipe)
@@ -21,7 +28,7 @@ namespace OpusSolver.Solver.ElementGenerators
 
         protected override void GenerateMetal(Element sourceMetal, Element targetMetal)
         {
-            var sequence = new AtomGenerators.MetalPurifier.PurificationSequence
+            var sequence = new PurificationSequence
             {
                 ID = m_sequences.Count,
                 TargetMetal = targetMetal,
