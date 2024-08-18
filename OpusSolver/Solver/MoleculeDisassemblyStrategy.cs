@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solver.AtomGenerators.Input
+namespace OpusSolver.Solver
 {
-    public class DisassemblyStrategy
+    public class MoleculeDisassemblyStrategy
     {
         public Molecule Molecule { get; private set; }
 
@@ -12,7 +12,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
 
         public IEnumerable<Element> ElementInputOrder { get; private set; }
 
-        public DisassemblyStrategy(Molecule molecule, CreateDisassemblerDelegate createDisassembler, IEnumerable<Element> elementInputOrder = null)
+        public MoleculeDisassemblyStrategy(Molecule molecule, CreateDisassemblerDelegate createDisassembler, IEnumerable<Element> elementInputOrder = null)
         {
             Molecule = molecule;
             CreateDisassembler = createDisassembler;

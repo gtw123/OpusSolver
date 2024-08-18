@@ -1,5 +1,4 @@
-﻿using OpusSolver.Solver.AtomGenerators.Input;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
@@ -13,7 +12,7 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         private List<ElementInput> m_inputs;
 
-        public IEnumerable<DisassemblyStrategy> DisassemblyStrategies => m_inputs.Select(input => input.Strategy);
+        public IEnumerable<MoleculeDisassemblyStrategy> DisassemblyStrategies => m_inputs.Select(input => input.Strategy);
 
         public InputGenerator(CommandSequence commandSequence, SolutionPlan plan)
             : base(commandSequence, plan)

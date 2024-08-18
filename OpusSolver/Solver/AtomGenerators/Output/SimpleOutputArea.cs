@@ -9,7 +9,7 @@
 
         private MoleculeAssembler m_assembler;
 
-        public SimpleOutputArea(ProgramWriter writer, AssemblyStrategy assemblyStrategy)
+        public SimpleOutputArea(ProgramWriter writer, MoleculeAssemblyStrategy assemblyStrategy)
             : base(writer)
         {
             m_assembler = assemblyStrategy.CreateAssembler(this, Writer);

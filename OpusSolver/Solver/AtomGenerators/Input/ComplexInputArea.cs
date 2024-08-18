@@ -13,7 +13,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
 
         public override Vector2 OutputPosition => m_conveyor?.OutputPosition ?? new Vector2();
 
-        public ComplexInputArea(ProgramWriter writer, IEnumerable<DisassemblyStrategy> disassemblyStrategies)
+        public ComplexInputArea(ProgramWriter writer, IEnumerable<MoleculeDisassemblyStrategy> disassemblyStrategies)
             : base(writer)
         {
             var multiAtomReagents = disassemblyStrategies.Where(d => d.Molecule.Atoms.Count() > 1);
@@ -37,7 +37,7 @@ namespace OpusSolver.Solver.AtomGenerators.Input
             }
         }
 
-        private void AddMultiAtomDisassemblers(IEnumerable<DisassemblyStrategy> disassemblyStrategies)
+        private void AddMultiAtomDisassemblers(IEnumerable<MoleculeDisassemblyStrategy> disassemblyStrategies)
         {
             foreach (var strategy in disassemblyStrategies)
             {

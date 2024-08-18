@@ -7,7 +7,7 @@ namespace OpusSolver.Solver.AtomGenerators.Output
 {
     public static class AssemblyStrategyFactory
     {
-        public static AssemblyStrategy CreateAssemblyStrategy(IEnumerable<Molecule> products)
+        public static MoleculeAssemblyStrategy CreateAssemblyStrategy(IEnumerable<Molecule> products)
         {
             if (!products.Any(p => p.HasTriplex))
             {
@@ -15,26 +15,26 @@ namespace OpusSolver.Solver.AtomGenerators.Output
                 {
                     if (products.Count() == 1)
                     {
-                        return new AssemblyStrategy(products, (parent, writer) => new SingleMonoatomicAssembler(parent, writer, products));
+                        return new MoleculeAssemblyStrategy(products, (parent, writer) => new SingleMonoatomicAssembler(parent, writer, products));
                     }
                     else
                     {
-                        return new AssemblyStrategy(products, (parent, writer) => new MonoatomicAssembler(parent, writer, products));
+                        return new MoleculeAssemblyStrategy(products, (parent, writer) => new MonoatomicAssembler(parent, writer, products));
                     }
                 }
                 else if (products.All(p => p.IsLinear)) // includes monoatomic products
                 {
-                    return new AssemblyStrategy(products, (parent, writer) => new LinearAssembler(parent, writer, products));
+                    return new MoleculeAssemblyStrategy(products, (parent, writer) => new LinearAssembler(parent, writer, products));
                 }
                 else if (products.All(p => Hex3Assembler.IsProductCompatible(p)))
                 {
                     var builders = Hex3Assembler.CreateMoleculeBuilders(products);
-                    return new AssemblyStrategy(products, (parent, writer) => new Hex3Assembler(parent, writer, builders),
+                    return new MoleculeAssemblyStrategy(products, (parent, writer) => new Hex3Assembler(parent, writer, builders),
                         p => builders.Single(b => b.Product.ID == p.ID).GetElementsInBuildOrder());
                 }
             }
 
-            return new AssemblyStrategy(products, (parent, writer) => new UniversalAssembler(parent, writer, products));
+            return new MoleculeAssemblyStrategy(products, (parent, writer) => new UniversalAssembler(parent, writer, products));
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using OpusSolver.Solver.AtomGenerators.Output;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,13 +11,13 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         private IEnumerable<Molecule> m_products;
 
-        public AssemblyStrategy AssemblyStrategy { get; private set; }
+        public MoleculeAssemblyStrategy AssemblyStrategy { get; private set; }
 
         public OutputGenerator(CommandSequence commandSequence, SolutionPlan plan)
             : base(commandSequence, plan)
         {
             m_products = plan.Puzzle.Products;
-            AssemblyStrategy = plan.AssemblyStrategy;
+            AssemblyStrategy = plan.MoleculeAssemblyStrategy;
         }
 
         protected override bool CanGenerateElement(Element element) => false;
