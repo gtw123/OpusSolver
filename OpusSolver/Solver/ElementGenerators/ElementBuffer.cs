@@ -47,8 +47,8 @@ namespace OpusSolver.Solver.ElementGenerators
             WastesAtoms = stack.Elements.Count > 0
         });
 
-        public ElementBuffer(CommandSequence commandSequence, Recipe recipe)
-            : base(commandSequence, recipe)
+        public ElementBuffer(CommandSequence commandSequence, SolutionPlan plan)
+            : base(commandSequence, plan)
         {
         }
 

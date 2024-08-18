@@ -19,8 +19,8 @@ namespace OpusSolver.Solver.ElementGenerators
 
         public IReadOnlyList<PurificationSequence> Sequences => m_sequences;
 
-        public MetalPurifierGenerator(CommandSequence commandSequence, Recipe recipe)
-            : base(commandSequence, recipe)
+        public MetalPurifierGenerator(CommandSequence commandSequence, SolutionPlan plan)
+            : base(commandSequence, plan)
         {
         }
 

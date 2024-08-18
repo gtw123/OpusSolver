@@ -1,4 +1,6 @@
-﻿using System;
+﻿using OpusSolver.Solver.AtomGenerators.Input;
+using OpusSolver.Solver.AtomGenerators.Output;
+using System;
 using System.Linq;
 
 namespace OpusSolver.Solver
@@ -25,7 +27,9 @@ namespace OpusSolver.Solver
 
         public Solution Generate()
         {
-            m_pipeline = new ElementPipeline(m_puzzle, m_recipe, m_commandSequence);
+            var plan = new SolutionPlan(m_puzzle, m_recipe, DisassemblyStrategyFactory.CreateDisassemblyStrategy, AssemblyStrategyFactory.CreateAssemblyStrategy);
+
+            m_pipeline = new ElementPipeline(plan, m_commandSequence);
             m_pipeline.GenerateCommandSequence();
 
             GenerateProgramFragments();

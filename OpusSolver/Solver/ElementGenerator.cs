@@ -16,7 +16,8 @@ namespace OpusSolver.Solver
 
         public bool HasPendingElements => m_pendingElements.Any();
 
-        public Recipe Recipe { get; private set; }
+        public SolutionPlan Plan { get; private set; }
+        public Recipe Recipe => Plan.Recipe;
         public int CurrentUsages { get; private set; } = 0;
 
         protected CommandSequence CommandSequence { get; private set; }
@@ -29,10 +30,10 @@ namespace OpusSolver.Solver
 
         private Queue<PendingElement> m_pendingElements = new Queue<PendingElement>();
 
-        protected ElementGenerator(CommandSequence commandSequence, Recipe recipe)
+        protected ElementGenerator(CommandSequence commandSequence, SolutionPlan plan)
         {
             CommandSequence = commandSequence;
-            Recipe = recipe;
+            Plan = plan;
         }
 
         /// <summary>

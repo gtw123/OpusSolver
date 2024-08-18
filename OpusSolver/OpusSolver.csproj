@@ -85,6 +85,7 @@
     <Compile Include="Solver\Recipe.cs" />
     <Compile Include="Solver\RecipeBuilder.cs" />
     <Compile Include="Solver\SolutionBuilder.cs" />
+    <Compile Include="Solver\SolutionPlan.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\HexRotationDictionary.cs" />
     <Compile Include="Utils\HexRotation.cs" />

@@ -23,62 +23,63 @@ namespace OpusSolver.Solver
         /// </summary>
         private OutputGenerator m_outputGenerator;
 
-        private Puzzle m_puzzle;
+        private SolutionPlan m_plan;
         private CommandSequence m_commandSequence;
 
         private List<ElementGenerator> m_generators = new List<ElementGenerator>();
 
-        public ElementPipeline(Puzzle puzzle, Recipe recipe, CommandSequence commandSequence)
+        public ElementPipeline(SolutionPlan plan, CommandSequence commandSequence)
         {
-            m_puzzle = puzzle;
+            m_plan = plan;
             m_commandSequence = commandSequence;
 
-            AddGenerators(recipe);
+            AddGenerators();
         }
 
-        private void AddGenerators(Recipe recipe)
+        private void AddGenerators()
         {
-            AddGenerator(new InputGenerator(m_commandSequence, m_puzzle.Reagents, recipe));
-            AddGenerator(new ElementBuffer(m_commandSequence, recipe));
+            AddGenerator(new InputGenerator(m_commandSequence, m_plan));
+            AddGenerator(new ElementBuffer(m_commandSequence, m_plan));
 
+            var recipe = m_plan.Recipe;
             if (recipe.HasAvailableReactions(ReactionType.Purification))
             {
-                AddGenerator(new MetalPurifierGenerator(m_commandSequence, recipe));
+                AddGenerator(new MetalPurifierGenerator(m_commandSequence, m_plan));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.Projection))
             {
-                AddGenerator(new MetalProjectorGenerator(m_commandSequence, recipe));
+                AddGenerator(new MetalProjectorGenerator(m_commandSequence, m_plan));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.Dispersion))
             {
-                AddGenerator(new QuintessenceDisperserGenerator(m_commandSequence, recipe));
-                AddGenerator(new ElementBuffer(m_commandSequence, recipe));
+                AddGenerator(new QuintessenceDisperserGenerator(m_commandSequence, m_plan));
+                AddGenerator(new ElementBuffer(m_commandSequence, m_plan));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.Calcification))
             {
-                AddGenerator(new SaltGenerator(m_commandSequence, recipe));
+                AddGenerator(new SaltGenerator(m_commandSequence, m_plan));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.VanBerlo))
             {
-                AddGenerator(new VanBerloGenerator(m_commandSequence, recipe));
+                AddGenerator(new VanBerloGenerator(m_commandSequence, m_plan));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.Animismus))
             {
-                AddGenerator(new MorsVitaeGenerator(m_commandSequence, recipe));
-                AddGenerator(new ElementBuffer(m_commandSequence, recipe));
+                AddGenerator(new MorsVitaeGenerator(m_commandSequence, m_plan));
+                AddGenerator(new ElementBuffer(m_commandSequence, m_plan));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.Unification))
             {
-                AddGenerator(new QuintessenceGenerator(m_commandSequence, recipe));
+                AddGenerator(new QuintessenceGenerator(m_commandSequence, m_plan));
             }
 
-            m_outputGenerator = new OutputGenerator(m_commandSequence, m_puzzle.Products, recipe);
+            m_outputGenerator = new OutputGenerator(m_commandSequence, m_plan);
             AddGenerator(m_outputGenerator);
         }
 

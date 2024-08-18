@@ -8,8 +8,8 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class QuintessenceGenerator : ElementGenerator
     {
-        public QuintessenceGenerator(CommandSequence commandSequence, Recipe recipe)
-            : base(commandSequence, recipe)
+        public QuintessenceGenerator(CommandSequence commandSequence, SolutionPlan plan)
+            : base(commandSequence, plan)
         {
         }
 

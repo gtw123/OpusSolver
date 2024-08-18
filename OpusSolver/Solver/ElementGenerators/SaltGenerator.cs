@@ -10,8 +10,8 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         public bool RequiresPassThrough => CommandSequence.Commands.Any(c => c.Type == CommandType.PassThrough && c.ElementGenerator == this);
 
-        public SaltGenerator(CommandSequence commandSequence, Recipe recipe)
-            : base(commandSequence, recipe)
+        public SaltGenerator(CommandSequence commandSequence, SolutionPlan plan)
+            : base(commandSequence, plan)
         {
         }
 

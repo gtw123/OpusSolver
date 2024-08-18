@@ -10,8 +10,8 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         private readonly Dictionary<Element, int> m_remainingUsages = new();
 
-        public VanBerloGenerator(CommandSequence commandSequence, Recipe recipe)
-            : base(commandSequence, recipe)
+        public VanBerloGenerator(CommandSequence commandSequence, SolutionPlan plan)
+            : base(commandSequence, plan)
         {
         }
 

@@ -9,8 +9,8 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public abstract class MetalGenerator : ElementGenerator
     {
-        protected MetalGenerator(CommandSequence commandSequence, Recipe recipe)
-            : base(commandSequence, recipe)
+        protected MetalGenerator(CommandSequence commandSequence, SolutionPlan plan)
+            : base(commandSequence, plan)
         {
         }
 

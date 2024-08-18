@@ -10,36 +10,34 @@ namespace OpusSolver.Solver.ElementGenerators
     public class ElementInput
     {
         public Molecule Molecule { get; private set; }
-        public Recipe Recipe { get; private set; }
+        public SolutionPlan Plan { get; private set; }
 
         public IEnumerable<Element> ElementSequence => m_elementSequence;
         public bool HasPendingElements => m_currentIndex > 0;
-        public bool IsUsed { get; private set; }
 
         public DisassemblyStrategy Strategy { get; private set; }
 
         private List<Element> m_elementSequence;
         private int m_currentIndex;
      
-        public ElementInput(Molecule molecule, Recipe recipe)
+        public ElementInput(Molecule molecule, SolutionPlan plan)
         {
             Molecule = molecule;
-            Recipe = recipe;
+            Plan = plan;
 
-            Strategy = DisassemblyStrategyFactory.CreateDisassemblyStrategy(molecule);
+            Strategy = plan.GetDisassemblyStrategy(molecule);
             m_elementSequence = Strategy.ElementInputOrder.ToList();
         }
 
         public Element GetNextElement()
         {
-            IsUsed = true;
             var element = m_elementSequence[m_currentIndex];
 
             m_currentIndex++;
             if (m_currentIndex >= m_elementSequence.Count)
             {
                 m_currentIndex = 0;
-                Recipe.RecordReactionUsage(ReactionType.Reagent, id: Molecule.ID);
+                Plan.Recipe.RecordReactionUsage(ReactionType.Reagent, id: Molecule.ID);
 
             }
 

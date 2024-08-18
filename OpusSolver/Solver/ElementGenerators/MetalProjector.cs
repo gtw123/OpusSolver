@@ -8,8 +8,8 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class MetalProjectorGenerator : MetalGenerator
     {
-        public MetalProjectorGenerator(CommandSequence commandSequence, Recipe recipe)
-            : base(commandSequence, recipe)
+        public MetalProjectorGenerator(CommandSequence commandSequence, SolutionPlan plan)
+            : base(commandSequence, plan)
         {
         }
 

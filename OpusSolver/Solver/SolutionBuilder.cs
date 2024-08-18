@@ -52,7 +52,7 @@ namespace OpusSolver.Solver
 
         private AtomGenerator CreateInputGenerator(ElementGenerators.InputGenerator generator)
         {
-            var strategies = generator.UsedDisassemblyStrategies;
+            var strategies = generator.DisassemblyStrategies;
             if (strategies.All(s => s.Molecule.Atoms.Count() == 1))
             {
                 if (strategies.Count() <= SimpleInputArea.MaxReagents)

@@ -14,11 +14,11 @@ namespace OpusSolver.Solver.ElementGenerators
 
         public AssemblyStrategy AssemblyStrategy { get; private set; }
 
-        public OutputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> products, Recipe recipe)
-            : base(commandSequence, recipe)
+        public OutputGenerator(CommandSequence commandSequence, SolutionPlan plan)
+            : base(commandSequence, plan)
         {
-            m_products = products;
-            AssemblyStrategy = AssemblyStrategyFactory.CreateAssemblyStrategy(products);
+            m_products = plan.Puzzle.Products;
+            AssemblyStrategy = plan.AssemblyStrategy;
         }
 
         protected override bool CanGenerateElement(Element element) => false;
