@@ -11,13 +11,14 @@ namespace OpusSolver.Solver.ElementGenerators
     public class OutputGenerator : ElementGenerator
     {
         private IEnumerable<Molecule> m_products;
-        private AssemblyStrategy m_assemblyStrategy;
+
+        public AssemblyStrategy AssemblyStrategy { get; private set; }
 
         public OutputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> products, Recipe recipe)
             : base(commandSequence, recipe)
         {
             m_products = products;
-            m_assemblyStrategy = AssemblyStrategyFactory.CreateAssemblyStrategy(products);
+            AssemblyStrategy = AssemblyStrategyFactory.CreateAssemblyStrategy(products);
         }
 
         protected override bool CanGenerateElement(Element element) => false;
@@ -26,7 +27,7 @@ namespace OpusSolver.Solver.ElementGenerators
         {
             foreach (var product in m_products)
             {
-                var elementOrder = m_assemblyStrategy.GetProductBuildOrder(product);
+                var elementOrder = AssemblyStrategy.GetProductBuildOrder(product);
                 int numCopies = Recipe.GetAvailableReactions(ReactionType.Product, id: product.ID).Single().MaxUsages;
                 for (int i = 0; i < numCopies; i++)
                 {
@@ -41,11 +42,6 @@ namespace OpusSolver.Solver.ElementGenerators
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {
             throw new InvalidOperationException("Can't call GenerateElement on an OutputGenerator.");
-        }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            return new SimpleOutputArea(writer, m_assemblyStrategy);
         }
     }
 }

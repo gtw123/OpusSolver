@@ -34,10 +34,5 @@ namespace OpusSolver.Solver.ElementGenerators
 
             return Element.Quintessence;
         }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            return new AtomGenerators.QuintessenceGenerator(writer);
-        }
     }
 }

@@ -34,10 +34,5 @@ namespace OpusSolver.Solver.ElementGenerators
 
             CommandSequence.Add(CommandType.Generate, targetMetal, this);
         }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            return new AtomGenerators.MetalProjector(writer);
-        }
     }
 }

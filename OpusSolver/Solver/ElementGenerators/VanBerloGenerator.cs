@@ -42,10 +42,5 @@ namespace OpusSolver.Solver.ElementGenerators
                 return generated;
             }
         }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            return new AtomGenerators.VanBerloGenerator(writer);
-        }
     }
 }

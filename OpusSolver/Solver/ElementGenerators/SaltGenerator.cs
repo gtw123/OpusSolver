@@ -8,6 +8,8 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class SaltGenerator : ElementGenerator
     {
+        public bool RequiresPassThrough => CommandSequence.Commands.Any(c => c.Type == CommandType.PassThrough && c.ElementGenerator == this);
+
         public SaltGenerator(CommandSequence commandSequence, Recipe recipe)
             : base(commandSequence, recipe)
         {
@@ -34,18 +36,6 @@ namespace OpusSolver.Solver.ElementGenerators
             }
 
             return Element.Salt;
-        }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            if (CommandSequence.Commands.Any(c => c.Type == CommandType.PassThrough && c.ElementGenerator == this))
-            {
-                return new AtomGenerators.SaltGenerator(writer);
-            }
-            else
-            {
-                return new AtomGenerators.SaltGeneratorNoPassThrough(writer);
-            }
         }
     }
 }

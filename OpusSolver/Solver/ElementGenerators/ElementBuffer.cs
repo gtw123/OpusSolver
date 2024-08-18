@@ -20,6 +20,12 @@ namespace OpusSolver.Solver.ElementGenerators
 
         private List<ElementStack> m_stacks = new List<ElementStack>();
 
+        public IEnumerable<AtomGenerators.AtomBuffer.StackInfo> StackInfo => m_stacks.Select(stack => new AtomGenerators.AtomBuffer.StackInfo {
+            MultiAtom = stack.MaxCount > 1,
+            UsesRestore = stack.UsedPop,
+            WastesAtoms = stack.Elements.Count > 0
+        });
+
         public ElementBuffer(CommandSequence commandSequence, Recipe recipe)
             : base(commandSequence, recipe)
         {
@@ -68,15 +74,6 @@ namespace OpusSolver.Solver.ElementGenerators
             {
                 StoreElement(Parent.RequestElement(PeriodicTable.AllElements));
             }
-        }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            return new AtomGenerators.AtomBuffer(writer, m_stacks.Select(stack => new AtomGenerators.AtomBuffer.StackInfo {
-                MultiAtom = stack.MaxCount > 1,
-                UsesRestore = stack.UsedPop,
-                WastesAtoms = stack.Elements.Count > 0
-            }));
         }
     }
 }

@@ -29,10 +29,5 @@ namespace OpusSolver.Solver.ElementGenerators
 
             return Element.Earth;
         }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            return new AtomGenerators.QuintessenceDisperser(writer);
-        }
     }
 }

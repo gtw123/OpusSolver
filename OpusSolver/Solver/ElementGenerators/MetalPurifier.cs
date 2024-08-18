@@ -10,6 +10,8 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         private List<AtomGenerators.MetalPurifier.PurificationSequence> m_sequences = new();
 
+        public IReadOnlyList<AtomGenerators.MetalPurifier.PurificationSequence> Sequences => m_sequences;
+
         public MetalPurifierGenerator(CommandSequence commandSequence, Recipe recipe)
             : base(commandSequence, recipe)
         {
@@ -56,11 +58,6 @@ namespace OpusSolver.Solver.ElementGenerators
             }
 
             CommandSequence.Add(CommandType.Generate, targetMetal, this, sequence.ID);
-        }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            return new AtomGenerators.MetalPurifier(writer, m_sequences);
         }
     }
 }

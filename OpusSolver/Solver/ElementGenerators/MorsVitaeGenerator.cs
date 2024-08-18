@@ -32,10 +32,5 @@ namespace OpusSolver.Solver.ElementGenerators
 
             return firstElement;
         }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            return new AtomGenerators.MorsVitaeGenerator(writer);
-        }
     }
 }

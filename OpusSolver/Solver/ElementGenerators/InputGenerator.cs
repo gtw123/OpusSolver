@@ -13,6 +13,8 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         private List<ElementInput> m_inputs;
 
+        public IEnumerable<DisassemblyStrategy> UsedDisassemblyStrategies => m_inputs.Where(input => input.IsUsed).Select(input => input.Strategy);
+
         public InputGenerator(CommandSequence commandSequence, IEnumerable<Molecule> reagents, Recipe recipe)
             : base(commandSequence, recipe)
         {
@@ -52,20 +54,6 @@ namespace OpusSolver.Solver.ElementGenerators
                     AddPendingElement(input.GetNextElement(), input.Molecule.ID);
                 }
             }
-        }
-
-        protected override AtomGenerator CreateAtomGenerator(ProgramWriter writer)
-        {
-            var usedInputs = m_inputs.Where(input => input.IsUsed);
-            if (usedInputs.All(input => input.Molecule.Atoms.Count() == 1))
-            {
-                if (usedInputs.Count() <= SimpleInputArea.MaxReagents)
-                {
-                    return new SimpleInputArea(writer, usedInputs.Select(input => input.Molecule));
-                }
-            }
-
-            return new ComplexInputArea(writer, usedInputs.Select(input => input.Strategy));
         }
     }
 }

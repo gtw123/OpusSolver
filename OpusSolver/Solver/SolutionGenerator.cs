@@ -25,17 +25,13 @@ namespace OpusSolver.Solver
 
         public Solution Generate()
         {
-            CreateElementPipeline();
+            m_pipeline = new ElementPipeline(m_puzzle, m_recipe, m_commandSequence);
             m_pipeline.GenerateCommandSequence();
+
             GenerateProgramFragments();
 
             var solution = CreateSolution();
             return OptimizeSolution(solution);
-        }
-
-        private void CreateElementPipeline()
-        {
-            m_pipeline = new ElementPipeline(m_puzzle, m_recipe, m_commandSequence);
         }
 
         /// <summary>
@@ -45,17 +41,15 @@ namespace OpusSolver.Solver
         {
             sm_log.Debug("Generating program fragments");
 
-            var generators = m_pipeline.ElementGenerators;
-            foreach (var generator in generators)
-            {
-                generator.SetupAtomGenerator(m_writer);
-            }
+            var builder = new SolutionBuilder(m_writer);
+            builder.CreateAtomGenerators(m_pipeline);
 
             foreach (var command in m_commandSequence.Commands)
             {
                 command.Execute();
             }
 
+            var generators = m_pipeline.ElementGenerators;
             foreach (var generator in generators)
             {
                 generator.AtomGenerator.EndSolution();

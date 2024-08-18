@@ -12,7 +12,8 @@ namespace OpusSolver.Solver
     public abstract class ElementGenerator
     {
         public ElementGenerator Parent { get; set; }
-        public AtomGenerator AtomGenerator { get; private set; }
+        public AtomGenerator AtomGenerator { get; set; }
+
         public bool HasPendingElements => m_pendingElements.Any();
 
         public Recipe Recipe { get; private set; }
@@ -121,18 +122,5 @@ namespace OpusSolver.Solver
         public virtual void EndSolution()
         {
         }
-
-        public void SetupAtomGenerator(ProgramWriter writer)
-        {
-            AtomGenerator = CreateAtomGenerator(writer);
-
-            if (Parent != null)
-            {
-                AtomGenerator.Parent = Parent.AtomGenerator;
-                AtomGenerator.Transform.Position = Parent.AtomGenerator.OutputPosition;
-            }
-        }
-
-        protected abstract AtomGenerator CreateAtomGenerator(ProgramWriter writer);
     }
 }
