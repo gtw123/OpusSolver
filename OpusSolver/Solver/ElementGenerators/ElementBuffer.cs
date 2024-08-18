@@ -10,6 +10,27 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class ElementBuffer : ElementGenerator
     {
+        /// <summary>
+        /// Specifies various properties of a stack; used for optimising the components needed by the stack.
+        /// </summary>
+        public class StackInfo
+        {
+            /// <summary>
+            /// Indicates whether the stack ever needs to store more than one atom at atime.
+            /// </summary>
+            public bool MultiAtom { get; set; }
+
+            /// <summary>
+            /// Indicates whether atoms are ever restored from the stack.
+            /// </summary>
+            public bool UsesRestore { get; set; }
+
+            /// <summary>
+            /// Indicates whether the stack has leftover atoms at the end of the solution.
+            /// </summary>
+            public bool WastesAtoms { get; set; }
+        }
+
         private class ElementStack
         {
             public int ID;
@@ -20,7 +41,7 @@ namespace OpusSolver.Solver.ElementGenerators
 
         private List<ElementStack> m_stacks = new List<ElementStack>();
 
-        public IEnumerable<AtomGenerators.AtomBuffer.StackInfo> StackInfo => m_stacks.Select(stack => new AtomGenerators.AtomBuffer.StackInfo {
+        public IEnumerable<StackInfo> StackInfos => m_stacks.Select(stack => new StackInfo {
             MultiAtom = stack.MaxCount > 1,
             UsesRestore = stack.UsedPop,
             WastesAtoms = stack.Elements.Count > 0

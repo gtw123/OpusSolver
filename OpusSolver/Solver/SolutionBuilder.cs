@@ -38,7 +38,7 @@ namespace OpusSolver.Solver
             {
                 ElementGenerators.InputGenerator inputGenerator => CreateInputGenerator(inputGenerator),
                 ElementGenerators.OutputGenerator outputGenerator => new SimpleOutputArea(m_writer, outputGenerator.AssemblyStrategy),
-                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, elementBuffer.StackInfo),
+                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, elementBuffer.StackInfos),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => new MetalPurifier(m_writer, metalPurifier.Sequences),
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer),

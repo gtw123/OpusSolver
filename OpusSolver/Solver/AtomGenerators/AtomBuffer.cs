@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using OpusSolver.Solver.ElementGenerators;
+using System.Collections.Generic;
 
 namespace OpusSolver.Solver.AtomGenerators
 {
@@ -7,30 +8,9 @@ namespace OpusSolver.Solver.AtomGenerators
     /// </summary>
     public class AtomBuffer : AtomGenerator
     {
-        /// <summary>
-        /// Specified various properties of a stack, used for optimising the components needed by the stack.
-        /// </summary>
-        public class StackInfo
-        {
-            /// <summary>
-            /// Indicates whether the stack ever needs to store more than one atom at atime.
-            /// </summary>
-            public bool MultiAtom { get; set; }
-
-            /// <summary>
-            /// Indicates whether atoms are ever restored from the stack.
-            /// </summary>
-            public bool UsesRestore { get; set; }
-
-            /// <summary>
-            /// Indicates whether the stack has leftover atoms at the end of the solution.
-            /// </summary>
-            public bool WastesAtoms { get; set; }
-        }
-
         private class AtomStack
         {
-            public StackInfo Info;
+            public ElementBuffer.StackInfo Info;
             public int Index;
             public Arm PushArm;
             public Arm PopArm;
@@ -40,7 +20,7 @@ namespace OpusSolver.Solver.AtomGenerators
 
         private List<AtomStack> m_stacks = new List<AtomStack>();
 
-        public AtomBuffer(ProgramWriter writer, IEnumerable<StackInfo> stackInfo)
+        public AtomBuffer(ProgramWriter writer, IEnumerable<ElementBuffer.StackInfo> stackInfo)
             : base(writer)
         {
             int i = 0;
@@ -52,7 +32,7 @@ namespace OpusSolver.Solver.AtomGenerators
             OutputArm = new Arm(this, new Vector2(m_stacks.Count * 2 + 3, 0), HexRotation.R180, ArmType.Arm1, extension: 3);
         }
 
-        private void AddStack(int index, StackInfo info)
+        private void AddStack(int index, ElementBuffer.StackInfo info)
         {              
             var stack = new AtomStack { Info = info, Index = index };
             var pos = new Vector2(index * 2, 0);
