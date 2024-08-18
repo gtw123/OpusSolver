@@ -15,6 +15,7 @@ namespace OpusSolver.Solver.Standard
         private MoleculeDisassemblerFactory m_disassemblerFactory;
         private MoleculeAssemblerFactory m_assemblerFactory;
 
+        private AtomGenerator m_rootAtomGenerator;
 
         public SolutionBuilder(Puzzle puzzle, Recipe recipe, ProgramWriter writer)
         {
@@ -45,6 +46,10 @@ namespace OpusSolver.Solver.Standard
                 {
                     atomGenerator.Parent = parentGenerator.AtomGenerator;
                     atomGenerator.Transform.Position = parentGenerator.AtomGenerator.OutputPosition;
+                }
+                else
+                {
+                    m_rootAtomGenerator = atomGenerator;
                 }
             }
         }
@@ -79,6 +84,11 @@ namespace OpusSolver.Solver.Standard
             }
 
             return new ComplexInputArea(m_writer, reagents, m_disassemblerFactory);
+        }
+
+        public IEnumerable<GameObject> GetAllObjects()
+        {
+            return m_rootAtomGenerator.GetAllObjects();
         }
     }
 }

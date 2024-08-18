@@ -3,5 +3,6 @@
     public enum SolutionType
     {
         Standard,
+        LowCost,
     }
 }

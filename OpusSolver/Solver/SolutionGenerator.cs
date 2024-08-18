@@ -29,6 +29,7 @@ namespace OpusSolver.Solver
         private ISolutionBuilder CreateSolutionBuilder() => m_solutionType switch
         {
             SolutionType.Standard => new Standard.SolutionBuilder(m_puzzle, m_recipe, m_writer),
+            SolutionType.LowCost => new LowCost.SolutionBuilder(m_puzzle, m_recipe, m_writer),
             _ => throw new ArgumentException($"Invalid solution type {m_solutionType}.")
         };
 
@@ -81,8 +82,8 @@ namespace OpusSolver.Solver
         {
             sm_log.Debug("Creating solution");
 
-            var objects = m_pipeline.ElementGenerators.First().AtomGenerator.GetAllObjects();
             string name = $"Generated solution ({m_solutionType})";
+            var objects = m_solutionBuilder.GetAllObjects();
             var program = new ProgramBuilder(m_writer.Fragments).Build();
             return new Solution(m_puzzle, name, objects, program);
         }

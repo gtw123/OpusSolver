@@ -7,5 +7,7 @@ namespace OpusSolver.Solver
         SolutionPlan CreatePlan();
 
         void CreateAtomGenerators(ElementPipeline pipeline);
+
+        IEnumerable<GameObject> GetAllObjects();
     }
 }
