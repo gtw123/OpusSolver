@@ -12,7 +12,6 @@ namespace OpusSolver.Solver.Standard.Input
     {
         public const int MaxReagents = 4;
 
-        public override Vector2 OutputPosition => new Vector2();
         private List<MoleculeDisassembler> m_disassemblers = new List<MoleculeDisassembler>();
 
         public SimpleInputArea(ProgramWriter writer, IEnumerable<Molecule> reagents)

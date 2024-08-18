@@ -11,7 +11,12 @@
         {
             get
             {
-                // Assume W, SW, SE rotates CCW and NW, NE, E rotates CW.
+                if (OutputArm == null)
+                {
+                    return new Vector2();
+                }
+
+                // Assume 180, 240, 300 rotates CCW and 120, 60, 0 rotates CW.
                 var rot = OutputArm.Transform.Rotation;
                 var dir = (rot == HexRotation.R180 || rot == HexRotation.R240 || rot == HexRotation.R300) ? rot.Rotate60Counterclockwise()
                     : rot.Rotate60Clockwise();

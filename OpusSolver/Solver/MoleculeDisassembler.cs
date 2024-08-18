@@ -5,8 +5,6 @@
     /// </summary>
     public abstract class MoleculeDisassembler : SolverComponent
     {
-        public override Vector2 OutputPosition => new Vector2(0, 0);
-
         public Molecule Molecule { get; set; }
 
         public abstract int Height { get; }

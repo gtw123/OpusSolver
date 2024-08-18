@@ -6,7 +6,6 @@ namespace OpusSolver.Solver.Standard.Output.Universal
 {
     public class AssemblyArea : SolverComponent
     {
-        public override Vector2 OutputPosition => new Vector2();
 
         public int Width { get; private set; }
 

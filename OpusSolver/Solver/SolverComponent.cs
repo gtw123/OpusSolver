@@ -5,7 +5,7 @@
     /// </summary>
     public abstract class SolverComponent : GameObject
     {
-        public abstract Vector2 OutputPosition { get; }
+        public virtual Vector2 OutputPosition { get; } = new Vector2();
 
         protected ProgramWriter Writer { get; private set; }
 

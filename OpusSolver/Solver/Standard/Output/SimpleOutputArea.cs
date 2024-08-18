@@ -5,7 +5,6 @@
     /// </summary>
     public class SimpleOutputArea : AtomGenerator
     {
-        public override Vector2 OutputPosition => new Vector2();
 
         private MoleculeAssembler m_assembler;
 

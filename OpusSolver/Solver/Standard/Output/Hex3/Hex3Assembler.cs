@@ -14,7 +14,6 @@ namespace OpusSolver.Solver.Standard.Output.Hex3
     /// </summary>
     public class Hex3Assembler : MoleculeAssembler
     {
-        public override Vector2 OutputPosition => new Vector2();
 
         private AssemblyArea m_assemblyArea;
         private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines;

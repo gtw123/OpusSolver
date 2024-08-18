@@ -10,7 +10,6 @@ namespace OpusSolver.Solver.Standard.Output
     /// </summary>
     public class MonoatomicAssembler : MoleculeAssembler
     {
-        public override Vector2 OutputPosition => new Vector2();
 
         public const int MaxProducts = 4;
 

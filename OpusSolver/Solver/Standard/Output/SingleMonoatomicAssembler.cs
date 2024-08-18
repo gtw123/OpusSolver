@@ -8,7 +8,6 @@ namespace OpusSolver.Solver.Standard.Output
     /// </summary>
     public class SingleMonoatomicAssembler : MoleculeAssembler
     {
-        public override Vector2 OutputPosition => new Vector2();
 
         public SingleMonoatomicAssembler(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer)

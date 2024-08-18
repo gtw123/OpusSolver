@@ -19,7 +19,6 @@ namespace OpusSolver.Solver.Standard.Output
 
         private IEnumerable<Molecule> m_products;
 
-        public override Vector2 OutputPosition => new Vector2();
 
         public ProductConveyor(SolverComponent parent, ProgramWriter writer, IEnumerable<Molecule> products)
             : base(parent, writer, parent.OutputPosition)

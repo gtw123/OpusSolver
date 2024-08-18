@@ -2,7 +2,6 @@
 {
     public class AssemblyArea : SolverComponent
     {
-        public override Vector2 OutputPosition => new Vector2();
 
         public Arm HorizontalArm { get; private set; }
         public Arm AssemblyArm { get; private set; }
