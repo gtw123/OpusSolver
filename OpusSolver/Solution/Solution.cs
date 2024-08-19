@@ -15,10 +15,10 @@ namespace OpusSolver
 
         public Metrics Metrics { get; set; }
 
-        public Solution(Puzzle puzzle, IEnumerable<GameObject> objects, Program program)
+        public Solution(Puzzle puzzle, string name, IEnumerable<GameObject> objects, Program program)
         {
             Puzzle = puzzle;
-            Name = "Generated solution";
+            Name = name;
             Objects = objects.ToList();
             Program = program;
         }

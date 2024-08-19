@@ -63,7 +63,7 @@ namespace OpusSolver
             var generatedSolutions = new List<GeneratedSolution>();
             foreach (var puzzleFile in m_args.PuzzleFiles)
             {
-                string solutionFile = Path.Combine(m_args.OutputDir, Path.GetFileNameWithoutExtension(puzzleFile) + ".solution");
+                string solutionFile = Path.Combine(m_args.OutputDir, Path.GetFileNameWithoutExtension(puzzleFile) + $"_{m_args.SolutionType}.solution");
                 var generatedSolution = GenerateSolution(puzzleFile, solutionFile);
                 if (generatedSolution != null)
                 {

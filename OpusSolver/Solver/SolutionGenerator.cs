@@ -84,8 +84,9 @@ namespace OpusSolver.Solver
             sm_log.Debug("Creating solution");
 
             var objects = m_pipeline.ElementGenerators.First().AtomGenerator.GetAllObjects();
+            string name = $"Generated solution ({m_solutionType})";
             var program = new ProgramBuilder(m_writer.Fragments).Build();
-            return new Solution(m_puzzle, objects, program);
+            return new Solution(m_puzzle, name, objects, program);
         }
 
         private Solution OptimizeSolution(Solution solution)
