@@ -88,6 +88,7 @@
     <Compile Include="Solver\SolutionPlan.cs" />
     <Compile Include="Solver\SolutionType.cs" />
     <Compile Include="Solver\Standard\SolutionBuilder.cs" />
+    <Compile Include="Solver\VanBerloController.cs" />
     <Compile Include="Utils\MathUtils.cs" />
     <Compile Include="Utils\HexRotationDictionary.cs" />
     <Compile Include="Utils\HexRotation.cs" />
