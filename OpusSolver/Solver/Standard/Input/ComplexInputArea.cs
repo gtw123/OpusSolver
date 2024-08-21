@@ -13,13 +13,13 @@ namespace OpusSolver.Solver.Standard.Input
 
         public override Vector2 OutputPosition => m_conveyor?.OutputPosition ?? new Vector2();
 
-        public ComplexInputArea(ProgramWriter writer, IEnumerable<MoleculeDisassemblyStrategy> disassemblyStrategies)
+        public ComplexInputArea(ProgramWriter writer, IEnumerable<Molecule> products, MoleculeDisassemblerFactory disassemblerFactory)
             : base(writer)
         {
-            var multiAtomReagents = disassemblyStrategies.Where(d => d.Molecule.Atoms.Count() > 1);
-            AddMultiAtomDisassemblers(multiAtomReagents);
+            var multiAtomReagents = products.Where(p => p.Atoms.Count() > 1);
+            AddMultiAtomDisassemblers(multiAtomReagents, disassemblerFactory);
 
-            var singleAtomReagents = disassemblyStrategies.Where(d => d.Molecule.Atoms.Count() == 1).Select(d => d.Molecule);
+            var singleAtomReagents = products.Where(p => p.Atoms.Count() == 1);
             if (multiAtomReagents.Count() == 1 && singleAtomReagents.Count() == 1)
             {
                 // As an optimization, we don't bother creating an arm in this case
@@ -37,11 +37,11 @@ namespace OpusSolver.Solver.Standard.Input
             }
         }
 
-        private void AddMultiAtomDisassemblers(IEnumerable<MoleculeDisassemblyStrategy> disassemblyStrategies)
+        private void AddMultiAtomDisassemblers(IEnumerable<Molecule> products, MoleculeDisassemblerFactory disassemblerFactory)
         {
-            foreach (var strategy in disassemblyStrategies)
+            foreach (var product in products)
             {
-                var disassembler = strategy.CreateDisassembler(this, Writer, new Vector2(0, 0));
+                var disassembler = disassemblerFactory.CreateDisassembler(product, this, Writer, new Vector2(0, 0));
                 if (m_disassemblers.Count > 0)
                 {
                     // Position this disassembler just above the previous one

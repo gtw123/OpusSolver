@@ -11,13 +11,10 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         private IEnumerable<Molecule> m_products;
 
-        public MoleculeAssemblyStrategy AssemblyStrategy { get; private set; }
-
         public OutputGenerator(CommandSequence commandSequence, SolutionPlan plan)
             : base(commandSequence, plan)
         {
             m_products = plan.Puzzle.Products;
-            AssemblyStrategy = plan.MoleculeAssemblyStrategy;
         }
 
         protected override bool CanGenerateElement(Element element) => false;
@@ -26,7 +23,7 @@ namespace OpusSolver.Solver.ElementGenerators
         {
             foreach (var product in m_products)
             {
-                var elementOrder = AssemblyStrategy.GetProductBuildOrder(product);
+                var elementOrder = Plan.GetProductElementOrder(product);
                 int numCopies = Recipe.GetAvailableReactions(ReactionType.Product, id: product.ID).Single().MaxUsages;
                 for (int i = 0; i < numCopies; i++)
                 {

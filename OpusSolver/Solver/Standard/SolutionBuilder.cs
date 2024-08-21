@@ -8,14 +8,29 @@ namespace OpusSolver.Solver.Standard
 {
     public class SolutionBuilder : ISolutionBuilder
     {
-        private ProgramWriter m_writer;
+        private readonly Puzzle m_puzzle;
+        private readonly Recipe m_recipe;
+        private readonly ProgramWriter m_writer;
 
-        public Func<Molecule, MoleculeDisassemblyStrategy> CreateDisassemblyStrategy { get; private set; } = DisassemblyStrategyFactory.CreateDisassemblyStrategy;
-        public Func<IEnumerable<Molecule>, MoleculeAssemblyStrategy> CreateAssemblyStrategy { get; private set; } = AssemblyStrategyFactory.CreateAssemblyStrategy;
+        private MoleculeDisassemblerFactory m_disassemblerFactory;
+        private MoleculeAssemblerFactory m_assemblerFactory;
 
-        public SolutionBuilder(ProgramWriter writer)
+
+        public SolutionBuilder(Puzzle puzzle, Recipe recipe, ProgramWriter writer)
         {
+            m_puzzle = puzzle;
+            m_recipe = recipe;
             m_writer = writer;
+
+            m_disassemblerFactory = new MoleculeDisassemblerFactory(puzzle.Reagents);
+            m_assemblerFactory = new MoleculeAssemblerFactory(puzzle.Products);
+        }
+
+        public SolutionPlan CreatePlan()
+        {
+            return new SolutionPlan(m_puzzle, m_recipe,
+                m_puzzle.Reagents.ToDictionary(p => p.ID, p => m_disassemblerFactory.GetReagentElementOrder(p)),
+                m_puzzle.Products.ToDictionary(p => p.ID, p => m_assemblerFactory.GetProductElementOrder(p)));
         }
 
         public void CreateAtomGenerators(ElementPipeline pipeline)
@@ -38,8 +53,8 @@ namespace OpusSolver.Solver.Standard
         {
             return elementGenerator switch
             {
-                ElementGenerators.InputGenerator inputGenerator => CreateInputGenerator(inputGenerator),
-                ElementGenerators.OutputGenerator outputGenerator => new SimpleOutputArea(m_writer, outputGenerator.AssemblyStrategy),
+                ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
+                ElementGenerators.OutputGenerator => new SimpleOutputArea(m_writer, m_assemblerFactory),
                 ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, elementBuffer.StackInfos),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => new MetalPurifier(m_writer, metalPurifier.Sequences),
@@ -52,18 +67,18 @@ namespace OpusSolver.Solver.Standard
             };
         }
 
-        private AtomGenerator CreateInputGenerator(ElementGenerators.InputGenerator generator)
+        private AtomGenerator CreateInputArea(ElementGenerators.InputGenerator generator)
         {
-            var strategies = generator.DisassemblyStrategies;
-            if (strategies.All(s => s.Molecule.Atoms.Count() == 1))
+            var reagents = generator.Inputs.Select(i => i.Molecule);
+            if (reagents.All(r => r.Atoms.Count() == 1))
             {
-                if (strategies.Count() <= SimpleInputArea.MaxReagents)
+                if (reagents.Count() <= SimpleInputArea.MaxReagents)
                 {
-                    return new SimpleInputArea(m_writer, strategies.Select(s => s.Molecule));
+                    return new SimpleInputArea(m_writer, reagents);
                 }
             }
 
-            return new ComplexInputArea(m_writer, strategies);
+            return new ComplexInputArea(m_writer, reagents, m_disassemblerFactory);
         }
     }
 }

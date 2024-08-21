@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace OpusSolver.Solver
 {
     public interface ISolutionBuilder
     {
-        Func<Molecule, MoleculeDisassemblyStrategy> CreateDisassemblyStrategy { get; }
-        Func<IEnumerable<Molecule>, MoleculeAssemblyStrategy> CreateAssemblyStrategy { get; }
+        SolutionPlan CreatePlan();
 
         void CreateAtomGenerators(ElementPipeline pipeline);
     }

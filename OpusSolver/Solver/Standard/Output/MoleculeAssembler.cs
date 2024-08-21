@@ -1,4 +1,4 @@
-﻿namespace OpusSolver.Solver
+﻿namespace OpusSolver.Solver.Standard.Output
 {
     /// <summary>
     /// Assembles molecules from their component atoms.

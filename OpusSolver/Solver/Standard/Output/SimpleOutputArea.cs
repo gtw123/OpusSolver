@@ -8,10 +8,10 @@
 
         private MoleculeAssembler m_assembler;
 
-        public SimpleOutputArea(ProgramWriter writer, MoleculeAssemblyStrategy assemblyStrategy)
+        public SimpleOutputArea(ProgramWriter writer, MoleculeAssemblerFactory assemblerFactory)
             : base(writer)
         {
-            m_assembler = assemblyStrategy.CreateAssembler(this, Writer);
+            m_assembler = assemblerFactory.CreateAssembler(this, Writer);
         }
 
         public override void Consume(Element element, int id)

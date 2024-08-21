@@ -12,12 +12,13 @@ namespace OpusSolver.Solver.ElementGenerators
     {
         private List<ElementInput> m_inputs;
 
-        public IEnumerable<MoleculeDisassemblyStrategy> DisassemblyStrategies => m_inputs.Select(input => input.Strategy);
+        public IEnumerable<ElementInput> Inputs => m_inputs;
 
         public InputGenerator(CommandSequence commandSequence, SolutionPlan plan)
             : base(commandSequence, plan)
         {
-            m_inputs = plan.RequiredReagents.Select(reagent => new ElementInput(reagent, plan)).ToList();
+            var requiredReagents = plan.Puzzle.Reagents.Where(r => Recipe.HasAvailableReactions(ReactionType.Reagent, id: r.ID));
+            m_inputs = requiredReagents.Select(reagent => new ElementInput(reagent, plan)).ToList();
         }
 
         protected override bool CanGenerateElement(Element element) => true;

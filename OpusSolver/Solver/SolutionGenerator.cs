@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace OpusSolver.Solver
 {
@@ -25,19 +24,18 @@ namespace OpusSolver.Solver
             m_puzzle = puzzle;
             m_solutionType = solutionType;
             m_recipe = recipe;
-
-            m_solutionBuilder = CreateSolutionBuilder();
         }
 
         private ISolutionBuilder CreateSolutionBuilder() => m_solutionType switch
         {
-            SolutionType.Standard => new Standard.SolutionBuilder(m_writer),
+            SolutionType.Standard => new Standard.SolutionBuilder(m_puzzle, m_recipe, m_writer),
             _ => throw new ArgumentException($"Invalid solution type {m_solutionType}.")
         };
 
         public Solution Generate()
         {
-            var plan = new SolutionPlan(m_puzzle, m_recipe, m_solutionBuilder.CreateDisassemblyStrategy, m_solutionBuilder.CreateAssemblyStrategy);
+            m_solutionBuilder = CreateSolutionBuilder();
+            var plan = m_solutionBuilder.CreatePlan();
 
             m_pipeline = new ElementPipeline(plan, m_commandSequence);
             m_pipeline.GenerateCommandSequence();

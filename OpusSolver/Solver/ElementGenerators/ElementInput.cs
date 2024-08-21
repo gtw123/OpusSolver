@@ -14,8 +14,6 @@ namespace OpusSolver.Solver.ElementGenerators
         public IEnumerable<Element> ElementSequence => m_elementSequence;
         public bool HasPendingElements => m_currentIndex > 0;
 
-        public MoleculeDisassemblyStrategy Strategy { get; private set; }
-
         private List<Element> m_elementSequence;
         private int m_currentIndex;
      
@@ -24,8 +22,7 @@ namespace OpusSolver.Solver.ElementGenerators
             Molecule = molecule;
             Plan = plan;
 
-            Strategy = plan.GetMoleculeDisassemblyStrategy(molecule);
-            m_elementSequence = Strategy.ElementInputOrder.ToList();
+            m_elementSequence = plan.GetReagentElementOrder(molecule).ToList();
         }
 
         public Element GetNextElement()
@@ -37,7 +34,6 @@ namespace OpusSolver.Solver.ElementGenerators
             {
                 m_currentIndex = 0;
                 Plan.Recipe.RecordReactionUsage(ReactionType.Reagent, id: Molecule.ID);
-
             }
 
             return element;
