@@ -273,15 +273,15 @@ namespace LPSolve
         public static extern void print_str(IntPtr lp, [MarshalAs(UnmanagedType.LPStr)] string str);
         [DllImport("lpsolve55.dll", SetLastError = true)]
         public static extern void print_tableau(IntPtr lp);
-        public delegate byte ctrlcfunc(IntPtr lp, int userhandle);
+        public delegate byte ctrlc_func(IntPtr lp, int userhandle);
         [DllImport("lpsolve55.dll", CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true, SetLastError = true)]
-        public static extern void put_abortfunc(IntPtr lp, ctrlcfunc newctrlc, int ctrlchandle);
-        public delegate void logfunc(IntPtr lp, int userhandle, [MarshalAs(UnmanagedType.LPStr)] string buf);
+        public static extern void put_abortfunc(IntPtr lp, ctrlc_func newctrlc, int ctrlchandle);
+        public delegate void log_func(IntPtr lp, int userhandle, [MarshalAs(UnmanagedType.LPStr)] string buf);
         [DllImport("lpsolve55.dll", SetLastError = true)]
-        public static extern void put_logfunc(IntPtr lp, logfunc newlog, int loghandle);
-        public delegate void msgfunc(IntPtr lp, int userhandle, MessageType message);
+        public static extern void put_logfunc(IntPtr lp, log_func newlog, int loghandle);
+        public delegate void msg_func(IntPtr lp, int userhandle, MessageType message);
         [DllImport("lpsolve55.dll", SetLastError = true)]
-        public static extern void put_msgfunc(IntPtr lp, msgfunc newmsg, int msghandle, int mask);
+        public static extern void put_msgfunc(IntPtr lp, msg_func newmsg, int msghandle, int mask);
         [DllImport("lpsolve55.dll", CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true, SetLastError = true)]
         public static extern byte read_basis(IntPtr lp, [MarshalAs(UnmanagedType.LPStr)] string filename, [MarshalAs(UnmanagedType.LPStr)] string info);
         [DllImport("lpsolve55.dll", CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true, SetLastError = true)]
