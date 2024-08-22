@@ -1,16 +1,16 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpusSolver", "OpusSolver\OpusSolver.csproj", "{193959C5-6207-403E-8CD7-F2D3E12283F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpusSolver", "OpusSolver\OpusSolver.csproj", "{193959C5-6207-403E-8CD7-F2D3E12283F3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{FAC8CCFA-3787-43CC-9FCE-86A6F64B0223} = {FAC8CCFA-3787-43CC-9FCE-86A6F64B0223}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolutionVerifier", "SolutionVerifier\SolutionVerifier.csproj", "{FAC8CCFA-3787-43CC-9FCE-86A6F64B0223}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SolutionVerifier", "SolutionVerifier\SolutionVerifier.csproj", "{FAC8CCFA-3787-43CC-9FCE-86A6F64B0223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LPSolve", "LPSolve\LPSolve.csproj", "{7B992AA0-AD3B-49AC-B944-324BFA1203C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LPSolve", "LPSolve\LPSolve.csproj", "{7B992AA0-AD3B-49AC-B944-324BFA1203C5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

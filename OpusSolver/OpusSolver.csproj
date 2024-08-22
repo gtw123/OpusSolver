@@ -1,192 +1,34 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{193959C5-6207-403E-8CD7-F2D3E12283F3}</ProjectGuid>
+    <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <RootNamespace>OpusSolver</RootNamespace>
-    <AssemblyName>OpusSolver</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
     <OutputPath>..\bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
     <OutputPath>..\bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
-  <PropertyGroup />
-  <PropertyGroup />
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net">
-      <HintPath>..\ThirdParty\log4net-2.0.8\bin\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
+    <ProjectReference Include="..\LPSolve\LPSolve.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="CommandLineArguments.cs" />
-    <Compile Include="GeneratedSolution.cs" />
-    <Compile Include="PuzzleAnalyzer.cs" />
-    <Compile Include="Runner.cs" />
-    <Compile Include="Solution\MoleculeInputOutput.cs" />
-    <Compile Include="Solver\LowCost\ArmArea.cs" />
-    <Compile Include="Solver\LowCost\AtomBuffer.cs" />
-    <Compile Include="Solver\LowCost\Input\MoleculeDisassembler.cs" />
-    <Compile Include="Solver\LowCost\Input\MoleculeDisassemblerFactory.cs" />
-    <Compile Include="Solver\LowCost\Input\SimpleInputArea.cs" />
-    <Compile Include="Solver\LowCost\Input\SingleMonoatomicDisassembler.cs" />
-    <Compile Include="Solver\LowCost\Output\MoleculeAssembler.cs" />
-    <Compile Include="Solver\LowCost\Output\MoleculeAssemblerFactory.cs" />
-    <Compile Include="Solver\LowCost\Output\MonoatomicAssembler.cs" />
-    <Compile Include="Solver\LowCost\Output\OutputArea.cs" />
-    <Compile Include="Solver\LowCost\SolutionBuilder.cs" />
-    <Compile Include="Solver\LowCost\LowCostAtomGenerator.cs" />
-    <Compile Include="Solver\LowCost\VanBerloGenerator.cs" />
-    <Compile Include="Solver\Standard\Input\MoleculeDisassemblerFactory.cs" />
-    <Compile Include="Solver\Standard\Input\LinearDisassembler.cs" />
-    <Compile Include="Solver\Standard\Input\MoleculeDisassembler.cs" />
-    <Compile Include="Solver\Standard\Input\MonoatomicDisassembler.cs" />
-    <Compile Include="Solver\Standard\Input\NonLinear3BentDisassembler.cs" />
-    <Compile Include="Solver\Standard\Input\NonLinear3TriangleDisassembler.cs" />
-    <Compile Include="Solver\Standard\Input\SingleMonoatomicDisassembler.cs" />
-    <Compile Include="Solver\Standard\Input\UniversalDisassembler.cs" />
-    <Compile Include="Solver\Standard\Output\MoleculeAssemblerFactory.cs" />
-    <Compile Include="Solver\Standard\Output\Hex3\AssemblyArea.cs" />
-    <Compile Include="Solver\Standard\Output\Hex3\CenterAtomMoleculeBuilder.cs" />
-    <Compile Include="Solver\Standard\Output\Hex3\Hex3Assembler.cs" />
-    <Compile Include="Solver\Standard\Output\Hex3\MissingCenterAtomMoleculeBuilder.cs" />
-    <Compile Include="Solver\Standard\Output\Hex3\MoleculeBuilder.cs" />
-    <Compile Include="Solver\Standard\Output\Hex3\OutputLocation.cs" />
-    <Compile Include="Solver\Standard\Output\LinearAssembler.cs" />
-    <Compile Include="Solver\Standard\Output\MoleculeAssembler.cs" />
-    <Compile Include="Solver\Standard\Output\MonoatomicAssembler.cs" />
-    <Compile Include="Solver\Standard\Output\SingleMonoatomicAssembler.cs" />
-    <Compile Include="Solver\Standard\Output\Universal\AssemblyArea.cs" />
-    <Compile Include="Solver\Standard\Output\Universal\BondProgrammer.cs" />
-    <Compile Include="Solver\Standard\Output\Universal\UniversalAssembler.cs" />
-    <Compile Include="Solver\RecipeGenerator.cs" />
-    <Compile Include="Solver\Reaction.cs" />
-    <Compile Include="Solver\Recipe.cs" />
-    <Compile Include="Solver\RecipeBuilder.cs" />
-    <Compile Include="Solver\ISolutionBuilder.cs" />
-    <Compile Include="Solver\SolutionPlan.cs" />
-    <Compile Include="Solver\SolutionType.cs" />
-    <Compile Include="Solver\Standard\SolutionBuilder.cs" />
-    <Compile Include="Solver\VanBerloController.cs" />
-    <Compile Include="Utils\MathUtils.cs" />
-    <Compile Include="Utils\HexRotationDictionary.cs" />
-    <Compile Include="Utils\HexRotation.cs" />
-    <Compile Include="Puzzle\PeriodicTable.cs" />
-    <Compile Include="IO\SolutionWriter.cs" />
-    <Compile Include="IO\PuzzleReader.cs" />
-    <Compile Include="IO\ParseException.cs" />
-    <Compile Include="Solution\Metrics.cs" />
-    <Compile Include="Solver\AtomGenerator.cs" />
-    <Compile Include="Solver\Standard\Input\SimpleInputArea.cs" />
-    <Compile Include="Solver\Standard\SaltGeneratorNoPassThrough.cs" />
-    <Compile Include="Solver\CostOptimizer.cs" />
-    <Compile Include="Solver\ElementGenerators\OutputGenerator.cs" />
-    <Compile Include="Solver\Standard\AtomBuffer.cs" />
-    <Compile Include="Solver\Standard\Output\SimpleOutputArea.cs" />
-    <Compile Include="Solver\Standard\Input\ComplexInputArea.cs" />
-    <Compile Include="Solver\Standard\MetalProjector.cs" />
-    <Compile Include="Solver\Standard\MetalPurifier.cs" />
-    <Compile Include="Solver\Standard\MorsVitaeGenerator.cs" />
-    <Compile Include="Solver\Standard\QuintessenceDisperser.cs" />
-    <Compile Include="Solver\Standard\QuintessenceGenerator.cs" />
-    <Compile Include="Solver\Standard\SaltGenerator.cs" />
-    <Compile Include="Solver\Standard\VanBerloGenerator.cs" />
-    <Compile Include="Solver\ElementPipeline.cs" />
-    <Compile Include="Solver\SolutionGenerator.cs" />
-    <Compile Include="Solver\ElementGenerators\InputGenerator.cs" />
-    <Compile Include="Solver\ElementGenerators\ElementBuffer.cs" />
-    <Compile Include="Solver\Command.cs" />
-    <Compile Include="Solver\CommandSequence.cs" />
-    <Compile Include="Solver\ElementGenerator.cs" />
-    <Compile Include="Solver\ElementGenerators\MetalProjector.cs" />
-    <Compile Include="Solver\ElementGenerators\MetalPurifier.cs" />
-    <Compile Include="Solver\ElementGenerators\MetalGenerator.cs" />
-    <Compile Include="Solver\ElementGenerators\MorsVitaeGenerator.cs" />
-    <Compile Include="Solver\ElementGenerators\ElementInput.cs" />
-    <Compile Include="Solver\ElementGenerators\QuintessenceDisperser.cs" />
-    <Compile Include="Solver\ElementGenerators\QuintessenceGenerator.cs" />
-    <Compile Include="Solver\ElementGenerators\SaltGenerator.cs" />
-    <Compile Include="Solver\ElementGenerators\VanBerloGenerator.cs" />
-    <Compile Include="Utils\DictionaryExtensions.cs" />
-    <Compile Include="Puzzle\Atom.cs" />
-    <Compile Include="Puzzle\Element.cs" />
-    <Compile Include="Puzzle\BondType.cs" />
-    <Compile Include="Puzzle\MoleculeType.cs" />
-    <Compile Include="Puzzle\Puzzle.cs" />
-    <Compile Include="Puzzle\Instruction.cs" />
-    <Compile Include="Solution\Program.cs" />
-    <Compile Include="Solver\ProgramBuilder.cs" />
-    <Compile Include="Solver\ProgramWriter.cs" />
-    <Compile Include="Solution\Solution.cs" />
-    <Compile Include="Solution\Track.cs" />
-    <Compile Include="Solution\GameObject.cs" />
-    <Compile Include="Solution\Arm.cs" />
-    <Compile Include="Solution\Glyph.cs" />
-    <Compile Include="Solution\Reagent.cs" />
-    <Compile Include="Solution\Product.cs" />
-    <Compile Include="Solver\SolverException.cs" />
-    <Compile Include="Solver\Standard\Input\AtomConveyor.cs" />
-    <Compile Include="Solver\SolverComponent.cs" />
-    <Compile Include="Solver\Standard\Output\ProductConveyor.cs" />
-    <Compile Include="Solver\PuzzleSolver.cs" />
-    <Compile Include="Utils\LoopingCoroutine.cs" />
-    <Compile Include="Puzzle\ArmType.cs" />
-    <Compile Include="Puzzle\GlyphType.cs" />
-    <Compile Include="Puzzle\Molecule.cs" />
-    <Compile Include="Utils\LinqExtensions.cs" />
-    <Compile Include="Utils\Bounds.cs" />
-    <Compile Include="Utils\Transform2D.cs" />
-    <Compile Include="Utils\Vector2.cs" />
-    <Compile Include="ProgramMain.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Verifier\SolutionVerifier.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\LPSolve\LPSolve.csproj">
-      <Project>{7b992aa0-ad3b-49ac-b944-324bfa1203c5}</Project>
-      <Name>LPSolve</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <AssemblyTitle>OpusSolver</AssemblyTitle>
+    <Product>OpusSolver</Product>
+    <Copyright>Copyright © 2024 gtw123</Copyright>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
 </Project>
