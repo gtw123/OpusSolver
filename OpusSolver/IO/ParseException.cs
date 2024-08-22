@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace OpusSolver.IO
 {
@@ -18,11 +17,6 @@ namespace OpusSolver.IO
 
         public ParseException(string message, Exception innerException)
             : base(message, innerException)
-        {
-        }
-
-        protected ParseException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
         {
         }
     }
