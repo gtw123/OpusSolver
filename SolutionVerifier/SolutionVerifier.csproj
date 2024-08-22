@@ -19,4 +19,9 @@
     <OutputPath>..\bin\Release\</OutputPath>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\ThirdParty\omsim\libverify.dll" Link="libverify.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
