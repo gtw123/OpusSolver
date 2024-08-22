@@ -14,10 +14,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <OutputPath>..\bin\Debug\</OutputPath>
     <LangVersion>latest</LangVersion>
+    <WarningLevel>9999</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>..\bin\Release\</OutputPath>
     <LangVersion>latest</LangVersion>
+    <WarningLevel>9999</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\ThirdParty\lp_solve-5.5.2.11\lpsolve55.dll">
