@@ -149,6 +149,8 @@ namespace OpusSolver
                 }
             }
 
+            commandArgs.PuzzleFiles.Sort(StringComparer.OrdinalIgnoreCase);
+
             return commandArgs;
         }
 
