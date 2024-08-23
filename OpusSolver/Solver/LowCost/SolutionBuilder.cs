@@ -69,7 +69,7 @@ namespace OpusSolver.Solver.LowCost
             {
                 ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
                 ElementGenerators.OutputGenerator => new OutputArea(m_writer, m_armArea, m_assemblerFactory),
-                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, elementBuffer.StackInfos),
+                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.StackInfos),
                 ElementGenerators.MetalProjectorGenerator => throw new NotImplementedException("MetalProjector"),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => throw new NotImplementedException("MetalPurifier"),
                 ElementGenerators.MorsVitaeGenerator => throw new NotImplementedException("MorsVitae"),

@@ -8,10 +8,10 @@ namespace OpusSolver.Solver.LowCost
     /// <summary>
     /// Temporarily stores atoms that aren't currently needed.
     /// </summary>
-    public class AtomBuffer : AtomGenerator
+    public class AtomBuffer : LowCostAtomGenerator
     {
-        public AtomBuffer(ProgramWriter writer, IEnumerable<ElementBuffer.StackInfo> stackInfo)
-            : base(writer)
+        public AtomBuffer(ProgramWriter writer, ArmArea armArea, IEnumerable<ElementBuffer.StackInfo> stackInfo)
+            : base(writer, armArea)
         {
             if (stackInfo.Any())
             {
