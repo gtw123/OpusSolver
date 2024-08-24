@@ -34,7 +34,7 @@ namespace OpusSolver.Solver.LowCost
             }
 
             CreateTrack(armPoints);
-            CreateMainArm();
+            CreateMainArm(GrabberTransformToArmTransform(requiredAccessPoints.First()));
         }
 
         private Transform2D GrabberTransformToArmTransform(Transform2D grabberTransform)
@@ -72,21 +72,32 @@ namespace OpusSolver.Solver.LowCost
             m_trackCellsToIndexes = m_track.GetAllPathCells().Select((pos, index) => (pos, index)).ToDictionary(pair => pair.pos, pair => pair.index);
         }
 
-        private void CreateMainArm()
+        private void CreateMainArm(Transform2D transform)
         {
-            // TODO: Set default rotation properly
             m_armTrackIndex = 0;
-            var position = m_track.GetAllPathCells().First();
-            ArmTransform = new Transform2D(position, HexRotation.R240);
+            ArmTransform = transform;
 
             m_mainArm = new Arm(this, ArmTransform.Position, ArmTransform.Rotation, ArmType.Arm1, extension: ArmLength);
         }
 
+        /// <summary>
+        /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated the
+        /// specified direction (in local coordinates of a specifed object).
+        /// </summary>
+        /// <param name="obj">The object whose local coordinate system the transform is specified in</param>
+        /// <param name="grabberWorldTransform">The target position and rotation, in world coordinates</param>
+        /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
         public void MoveGrabberTo(GameObject obj, Transform2D grabberlocalTransform, HexRotation? armRotationOffset = null)
         {
             MoveGrabberToWorldTransform(obj.GetWorldTransform().Apply(grabberlocalTransform), armRotationOffset);
         }
 
+        /// <summary>
+        /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated the
+        /// specified direction (in world coordinates).
+        /// </summary>
+        /// <param name="grabberWorldTransform">The target position and rotation, in world coordinates</param>
+        /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
         public void MoveGrabberToWorldTransform(Transform2D grabberWorldTransform, HexRotation? armRotationOffset = null)
         {
             var targetTransform = GrabberTransformToArmTransform(grabberWorldTransform);

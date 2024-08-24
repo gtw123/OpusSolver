@@ -42,50 +42,50 @@ namespace OpusSolver.Solver.LowCost
             var elementGenerators = pipeline.ElementGenerators;
 
             // We always leave the output area unrotated because repeating molecules can't be rotated
-            // TODO: Use a transform here?
-            var currentPosition = new Vector2(0, 0);
-            var currentRotation = HexRotation.R0;
+            var baseTransform = new Transform2D();
+            var offsetTransform = new Transform2D(new Vector2(m_armArea.ArmLength, 0), HexRotation.R0);
+
             var outputGenerator = elementGenerators.OfType<ElementGenerators.OutputGenerator>().Single();
-            CreateAtomGenerator(outputGenerator, currentPosition, currentRotation);
-            currentRotation = currentRotation.Rotate60Clockwise();
+            CreateAtomGenerator(outputGenerator, baseTransform.Apply(offsetTransform));
+            baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
 
             var metalProjector = elementGenerators.OfType<ElementGenerators.MetalProjectorGenerator>().SingleOrDefault();
             if (metalProjector != null)
             {
-                currentPosition += new Vector2(1, -1).RotateBy(currentRotation);
-                CreateAtomGenerator(metalProjector, currentPosition, currentRotation);
-                currentRotation = currentRotation.Rotate60Clockwise();
+                baseTransform.Position += new Vector2(1, -1).RotateBy(baseTransform.Rotation);
+                CreateAtomGenerator(metalProjector, baseTransform.Apply(offsetTransform));
+                baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
             }
 
             var vanBerlo = elementGenerators.OfType<ElementGenerators.VanBerloGenerator>().SingleOrDefault();
             if (vanBerlo != null)
             {
-                CreateAtomGenerator(vanBerlo, currentPosition, currentRotation);
-                currentRotation = currentRotation.Rotate60Clockwise();
+                CreateAtomGenerator(vanBerlo, baseTransform.Apply(offsetTransform));
+                baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
             }
 
             var saltGenerator = elementGenerators.OfType<ElementGenerators.SaltGenerator>().SingleOrDefault();
             if (saltGenerator != null)
             {
-                currentPosition += new Vector2(1, -1).RotateBy(currentRotation);
-                CreateAtomGenerator(saltGenerator, currentPosition, currentRotation);
-                currentRotation = currentRotation.Rotate60Clockwise();
+                baseTransform.Position += new Vector2(1, -1).RotateBy(baseTransform.Rotation);
+                CreateAtomGenerator(saltGenerator, baseTransform.Apply(offsetTransform));
+                baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
             }
 
             var inputGenerator = elementGenerators.OfType<ElementGenerators.InputGenerator>().Single();
-            CreateAtomGenerator(inputGenerator, currentPosition, currentRotation);
-            currentRotation = currentRotation.Rotate60Clockwise();
+            CreateAtomGenerator(inputGenerator, baseTransform.Apply(offsetTransform));
+            baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
 
             foreach (var elementBuffer in elementGenerators.OfType<ElementGenerators.ElementBuffer>())
             {
-                CreateAtomGenerator(elementBuffer, currentPosition, HexRotation.R0);
+                CreateAtomGenerator(elementBuffer, baseTransform.Apply(offsetTransform));
             }
 
-            var requiredAccessPoints = m_atomGenerators.SelectMany(g => g.RequiredAccessPoints.Select(p => g.Transform.Apply(p)));
+            var requiredAccessPoints = Enumerable.Reverse(m_atomGenerators).SelectMany(g => g.RequiredAccessPoints.Select(p => g.GetWorldTransform().Apply(p)));
             m_armArea.CreateComponents(requiredAccessPoints);
         }
 
-        private AtomGenerator CreateAtomGenerator(ElementGenerator elementGenerator, Vector2 position, HexRotation rotation)
+        private AtomGenerator CreateAtomGenerator(ElementGenerator elementGenerator, Transform2D transform)
         {
             LowCostAtomGenerator atomGenerator = elementGenerator switch
             {
@@ -104,8 +104,9 @@ namespace OpusSolver.Solver.LowCost
 
             elementGenerator.AtomGenerator = atomGenerator;
             atomGenerator.Parent = m_armArea;
-            atomGenerator.Transform.Position = position + new Vector2(m_armArea.ArmLength, 0).RotateBy(rotation);
-            atomGenerator.Transform.Rotation = rotation;
+
+            atomGenerator.Transform.Position = transform.Position;
+            atomGenerator.Transform.Rotation = transform.Rotation;
 
             m_atomGenerators.Add(atomGenerator);
 

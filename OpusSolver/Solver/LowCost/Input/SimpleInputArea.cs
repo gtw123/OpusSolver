@@ -14,7 +14,7 @@ namespace OpusSolver.Solver.LowCost.Input
 
         public const int MaxReagents = 2;
 
-        public override IEnumerable<Transform2D> RequiredAccessPoints => m_disassemblers.SelectMany(d => d.RequiredAccessPoints.Select(p => d.Transform.Apply(p)));
+        public override IEnumerable<Transform2D> RequiredAccessPoints => Enumerable.Reverse(m_disassemblers).SelectMany(d => d.RequiredAccessPoints.Select(p => d.Transform.Apply(p)));
 
         public SimpleInputArea(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
             : base(writer, armArea)
