@@ -14,9 +14,11 @@ namespace OpusSolver.Solver.LowCost.Input
         private static readonly Transform2D InputTransform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         public override IEnumerable<Transform2D> RequiredAccessPoints => [InputTransform];
 
-        public SingleMonoatomicDisassembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, Vector2 position, Molecule molecule)
-            : base(parent, writer, armArea, position, molecule)
+        public SingleMonoatomicDisassembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, Transform2D transform, Molecule molecule)
+            : base(parent, writer, armArea, transform.Position, molecule)
         {
+            Transform.Rotation = transform.Rotation;
+
             if (molecule.Atoms.Count() > 1)
             {
                 throw new ArgumentException($"{nameof(SingleMonoatomicDisassembler)} can't handle molecules with multiple atoms.");
@@ -31,6 +33,9 @@ namespace OpusSolver.Solver.LowCost.Input
             Writer.NewFragment();
             ArmArea.MoveGrabberTo(this, InputTransform);
             ArmArea.GrabAtom();
+
+            // Rotate if necessary to avoid hitting the other reagents
+            ArmArea.MoveGrabberTo(this, InputTransform, armRotationOffset: -Transform.Rotation);
         }
     }
 }

@@ -49,6 +49,14 @@ namespace OpusSolver.Solver.LowCost
             CreateAtomGenerator(outputGenerator, currentPosition, currentRotation);
             currentRotation = currentRotation.Rotate60Clockwise();
 
+            var metalProjector = elementGenerators.OfType<ElementGenerators.MetalProjectorGenerator>().SingleOrDefault();
+            if (metalProjector != null)
+            {
+                currentPosition += new Vector2(1, -1).RotateBy(currentRotation);
+                CreateAtomGenerator(metalProjector, currentPosition, currentRotation);
+                currentRotation = currentRotation.Rotate60Clockwise();
+            }
+
             var vanBerlo = elementGenerators.OfType<ElementGenerators.VanBerloGenerator>().SingleOrDefault();
             if (vanBerlo != null)
             {
@@ -84,7 +92,7 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
                 ElementGenerators.OutputGenerator => new OutputArea(m_writer, m_armArea, m_assemblerFactory),
                 ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.StackInfos),
-                ElementGenerators.MetalProjectorGenerator => throw new NotImplementedException("MetalProjector"),
+                ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer, m_armArea),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => throw new NotImplementedException("MetalPurifier"),
                 ElementGenerators.MorsVitaeGenerator => throw new NotImplementedException("MorsVitae"),
                 ElementGenerators.QuintessenceDisperserGenerator => throw new NotImplementedException("QuintessenceDisperser"),
