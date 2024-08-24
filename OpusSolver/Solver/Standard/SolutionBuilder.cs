@@ -66,7 +66,7 @@ namespace OpusSolver.Solver.Standard
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer),
                 ElementGenerators.QuintessenceDisperserGenerator => new QuintessenceDisperser(m_writer),
                 ElementGenerators.QuintessenceGenerator => new QuintessenceGenerator(m_writer),
-                ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresPassThrough ? new SaltGenerator(m_writer) : new SaltGeneratorNoPassThrough(m_writer),
+                ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresCardinalPassThrough ? new SaltGenerator(m_writer) : new SaltGeneratorNoCardinalPassThrough(m_writer),
                 ElementGenerators.VanBerloGenerator => new VanBerloGenerator(m_writer),
                 _ => throw new ArgumentException($"Unknown element generator type {elementGenerator.GetType()}")
             };

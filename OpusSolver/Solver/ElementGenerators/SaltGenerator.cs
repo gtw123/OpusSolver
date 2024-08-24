@@ -8,7 +8,8 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class SaltGenerator : ElementGenerator
     {
-        public bool RequiresPassThrough => CommandSequence.Commands.Any(c => c.Type == CommandType.PassThrough && c.ElementGenerator == this);
+        public bool RequiresCardinalPassThrough => CommandSequence.Commands.Any(c => c.ElementGenerator == this
+            && c.Type == CommandType.PassThrough && PeriodicTable.Cardinals.Contains(c.Element));
 
         public SaltGenerator(CommandSequence commandSequence, SolutionPlan plan)
             : base(commandSequence, plan)

@@ -1,14 +1,13 @@
-﻿using System;
-
-namespace OpusSolver.Solver.Standard
+﻿namespace OpusSolver.Solver.Standard
 {
     /// <summary>
     /// Generates an atom of salt from an atom of a cardinal element.
-    /// Optimized version for the case were passthrough isn't required.
+    /// Optimized version for the case where no cardinal atoms need to be passed through without
+    /// being calcified - i.e. every atom can move straight onto the calcification glyph.
     /// </summary>
-    public class SaltGeneratorNoPassThrough : AtomGenerator
+    public class SaltGeneratorNoCardinalPassThrough : AtomGenerator
     {
-        public SaltGeneratorNoPassThrough(ProgramWriter writer)
+        public SaltGeneratorNoCardinalPassThrough(ProgramWriter writer)
             : base(writer)
         {
             new Glyph(this, new Vector2(0, 0), HexRotation.R0, GlyphType.Calcification);
@@ -22,7 +21,7 @@ namespace OpusSolver.Solver.Standard
 
         public override void PassThrough(Element element)
         {
-            throw new InvalidOperationException($"{nameof(SaltGeneratorNoPassThrough)} doesn't allow pass through");
+            Writer.WriteGrabResetAction(OutputArm, Instruction.RotateCounterclockwise);
         }
     }
 }
