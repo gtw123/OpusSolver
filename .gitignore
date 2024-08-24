@@ -5,3 +5,4 @@ Bin/
 Obj/
 /test/solutions
 *.csproj.user
+**/launchSettings.json
