@@ -1,4 +1,6 @@
-﻿namespace OpusSolver.Solver.LowCost.Input
+﻿using System.Collections.Generic;
+
+namespace OpusSolver.Solver.LowCost.Input
 {
     /// <summary>
     /// Generates atoms from a reagent molecule by disassembling it (if necessary) into individual atoms.
@@ -7,6 +9,8 @@
     {
         public ArmArea ArmArea { get; private set; }
         public Molecule Molecule { get; protected set; }
+
+        public abstract IEnumerable<Transform2D> RequiredAccessPoints { get; }
 
         protected MoleculeDisassembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, Vector2 position, Molecule molecule)
             : base(parent, writer, position)

@@ -14,6 +14,8 @@ namespace OpusSolver.Solver.LowCost.Output
 
         private Dictionary<int, Product> m_outputs = new();
 
+        public override IEnumerable<Transform2D> RequiredAccessPoints => m_outputs.Values.Select(v => v.Transform);
+
         public MonoatomicAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> products)
             : base(parent, writer, armArea)
         {
@@ -44,9 +46,8 @@ namespace OpusSolver.Solver.LowCost.Output
         public override void AddAtom(Element element, int productID)
         {
             var output = m_outputs[productID];
-            var targetRotation = output.Transform.Rotation;
-            ArmArea.RotateArmTo(GetWorldTransform().Rotation + targetRotation);
-            Writer.Write(ArmArea.MainArm, Instruction.Drop);
+            ArmArea.MoveGrabberTo(this, output.Transform);
+            ArmArea.DropAtom();
         }
     }
 }

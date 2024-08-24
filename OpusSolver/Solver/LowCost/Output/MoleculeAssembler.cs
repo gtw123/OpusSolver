@@ -1,4 +1,6 @@
-﻿namespace OpusSolver.Solver.LowCost.Output
+﻿using System.Collections.Generic;
+
+namespace OpusSolver.Solver.LowCost.Output
 {
     /// <summary>
     /// Assembles molecules from their component atoms.
@@ -6,6 +8,8 @@
     public abstract class MoleculeAssembler : SolverComponent
     {
         public ArmArea ArmArea { get; private set; }
+
+        public virtual IEnumerable<Transform2D> RequiredAccessPoints { get; }
 
         public MoleculeAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea)
             : base(parent, writer, parent.OutputPosition)

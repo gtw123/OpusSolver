@@ -87,7 +87,7 @@ namespace OpusSolver
 
         public override string ToString()
         {
-            return m_angle.ToString(CultureInfo.InvariantCulture);
+            return (m_angle * 60).ToString(CultureInfo.InvariantCulture);
         }
 
         public int CompareTo(HexRotation other)

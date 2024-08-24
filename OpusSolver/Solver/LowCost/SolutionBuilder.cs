@@ -16,6 +16,7 @@ namespace OpusSolver.Solver.LowCost
         private MoleculeAssemblerFactory m_assemblerFactory;
 
         private ArmArea m_armArea;
+        private List<LowCostAtomGenerator> m_atomGenerators = [];
 
         public SolutionBuilder(Puzzle puzzle, Recipe recipe, ProgramWriter writer)
         {
@@ -41,31 +42,44 @@ namespace OpusSolver.Solver.LowCost
             var elementGenerators = pipeline.ElementGenerators;
 
             // We always leave the output area unrotated because repeating molecules can't be rotated
+            // TODO: Use a transform here?
+            var currentPosition = new Vector2(0, 0);
             var currentRotation = HexRotation.R0;
             var outputGenerator = elementGenerators.OfType<ElementGenerators.OutputGenerator>().Single();
-            CreateAtomGenerator(outputGenerator, currentRotation);
+            CreateAtomGenerator(outputGenerator, currentPosition, currentRotation);
             currentRotation = currentRotation.Rotate60Clockwise();
 
             var vanBerlo = elementGenerators.OfType<ElementGenerators.VanBerloGenerator>().SingleOrDefault();
             if (vanBerlo != null)
             {
-                CreateAtomGenerator(vanBerlo, currentRotation);
+                CreateAtomGenerator(vanBerlo, currentPosition, currentRotation);
+                currentRotation = currentRotation.Rotate60Clockwise();
+            }
+
+            var saltGenerator = elementGenerators.OfType<ElementGenerators.SaltGenerator>().SingleOrDefault();
+            if (saltGenerator != null)
+            {
+                currentPosition += new Vector2(1, -1).RotateBy(currentRotation);
+                CreateAtomGenerator(saltGenerator, currentPosition, currentRotation);
                 currentRotation = currentRotation.Rotate60Clockwise();
             }
 
             var inputGenerator = elementGenerators.OfType<ElementGenerators.InputGenerator>().Single();
-            CreateAtomGenerator(inputGenerator, currentRotation);
+            CreateAtomGenerator(inputGenerator, currentPosition, currentRotation);
             currentRotation = currentRotation.Rotate60Clockwise();
 
             foreach (var elementBuffer in elementGenerators.OfType<ElementGenerators.ElementBuffer>())
             {
-                CreateAtomGenerator(elementBuffer, HexRotation.R0);
+                CreateAtomGenerator(elementBuffer, currentPosition, HexRotation.R0);
             }
+
+            var requiredAccessPoints = m_atomGenerators.SelectMany(g => g.RequiredAccessPoints.Select(p => g.Transform.Apply(p)));
+            m_armArea.CreateComponents(requiredAccessPoints);
         }
 
-        private AtomGenerator CreateAtomGenerator(ElementGenerator elementGenerator, HexRotation rotation)
+        private AtomGenerator CreateAtomGenerator(ElementGenerator elementGenerator, Vector2 position, HexRotation rotation)
         {
-            var atomGenerator = elementGenerator switch
+            LowCostAtomGenerator atomGenerator = elementGenerator switch
             {
                 ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
                 ElementGenerators.OutputGenerator => new OutputArea(m_writer, m_armArea, m_assemblerFactory),
@@ -75,20 +89,22 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.MorsVitaeGenerator => throw new NotImplementedException("MorsVitae"),
                 ElementGenerators.QuintessenceDisperserGenerator => throw new NotImplementedException("QuintessenceDisperser"),
                 ElementGenerators.QuintessenceGenerator => throw new NotImplementedException("QuintessenceGenerator"),
-                ElementGenerators.SaltGenerator saltGenerator => throw new NotImplementedException("SaltGenerator"),
+                ElementGenerators.SaltGenerator saltGenerator => new SaltGenerator(m_writer, m_armArea), // TODO: Support non-passthrough version too?
                 ElementGenerators.VanBerloGenerator => new VanBerloGenerator(m_writer, m_armArea),
                 _ => throw new ArgumentException($"Unknown element generator type {elementGenerator.GetType()}")
             };
 
             elementGenerator.AtomGenerator = atomGenerator;
             atomGenerator.Parent = m_armArea;
-            atomGenerator.Transform.Position = new Vector2(m_armArea.ArmLength, 0).RotateBy(rotation);
+            atomGenerator.Transform.Position = position + new Vector2(m_armArea.ArmLength, 0).RotateBy(rotation);
             atomGenerator.Transform.Rotation = rotation;
+
+            m_atomGenerators.Add(atomGenerator);
 
             return atomGenerator;
         }
 
-        private AtomGenerator CreateInputArea(ElementGenerators.InputGenerator generator)
+        private LowCostAtomGenerator CreateInputArea(ElementGenerators.InputGenerator generator)
         {
             var reagents = generator.Inputs.Select(i => i.Molecule);
             if (reagents.All(r => r.Atoms.Count() == 1))

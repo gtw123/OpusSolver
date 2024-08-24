@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver.LowCost.Input
@@ -10,6 +11,9 @@ namespace OpusSolver.Solver.LowCost.Input
     {
         public Element Element { get; private set; }
 
+        private static readonly Transform2D InputTransform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
+        public override IEnumerable<Transform2D> RequiredAccessPoints => [InputTransform];
+
         public SingleMonoatomicDisassembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, Vector2 position, Molecule molecule)
             : base(parent, writer, armArea, position, molecule)
         {
@@ -19,14 +23,14 @@ namespace OpusSolver.Solver.LowCost.Input
             }
 
             Element = molecule.Atoms.First().Element;
-            new Reagent(this, new Vector2(0, 0), HexRotation.R0, molecule);
+            new Reagent(this, InputTransform.Position, InputTransform.Rotation, molecule);
         }
 
         public override void GenerateNextAtom()
         {
             Writer.NewFragment();
-            ArmArea.RotateArmTo(GetWorldTransform().Rotation);
-            Writer.Write(ArmArea.MainArm, Instruction.Grab);
+            ArmArea.MoveGrabberTo(this, InputTransform);
+            ArmArea.GrabAtom();
         }
     }
 }

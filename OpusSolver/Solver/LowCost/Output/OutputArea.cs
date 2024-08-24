@@ -1,4 +1,6 @@
-﻿namespace OpusSolver.Solver.LowCost.Output
+﻿using System.Collections.Generic;
+
+namespace OpusSolver.Solver.LowCost.Output
 {
     /// <summary>
     /// An output area which assembles products using a single assembler.
@@ -6,6 +8,8 @@
     public class OutputArea : LowCostAtomGenerator
     {
         private MoleculeAssembler m_assembler;
+
+        public override IEnumerable<Transform2D> RequiredAccessPoints => m_assembler.RequiredAccessPoints;
 
         public OutputArea(ProgramWriter writer, ArmArea armArea, MoleculeAssemblerFactory assemblerFactory)
             : base(writer, armArea)

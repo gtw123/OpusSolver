@@ -155,11 +155,15 @@ namespace OpusSolver
             }
         }
 
-        public float DistanceToSquared(Vector2 other)
+        /// <summary>
+        /// Returns the hexagonal Manhattan distance between this vector and another vector.
+        /// </summary>
+        public int DistanceBetween(Vector2 other)
         {
-            float dx = X - other.X;
-            float dy = Y - other.Y;
-            return dx * dx + dy * dy;
+            var diff = other - this;
+            int dx = Math.Abs(diff.X);
+            int dy = Math.Abs(diff.Y);
+            return Math.Max(Math.Max(dx, dy), Math.Abs(dx - dy));
         }
 
         public override string ToString()

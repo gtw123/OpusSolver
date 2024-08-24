@@ -1,4 +1,6 @@
-﻿namespace OpusSolver
+﻿using static System.FormattableString;
+
+namespace OpusSolver
 {
     public class Transform2D
     {
@@ -28,6 +30,11 @@
         public Transform2D Apply(Transform2D transform)
         {
             return new Transform2D(Apply(transform.Position), Apply(transform.Rotation));
+        }
+
+        public override string ToString()
+        {
+            return Invariant($"({Position}, {Rotation})");
         }
     }
 }
