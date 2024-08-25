@@ -12,7 +12,10 @@ namespace OpusSolver.Solver.LowCost
         private static readonly Transform2D QuicksilverTransform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D MetalTransform = new Transform2D(new Vector2(-1, 1), HexRotation.R0);
 
+        public override int RequiredWidth => 2;
+
         public override IEnumerable<Transform2D> RequiredAccessPoints => [QuicksilverTransform, MetalTransform];
+
 
         public MetalProjector(ProgramWriter writer, ArmArea armArea)
             : base(writer, armArea)

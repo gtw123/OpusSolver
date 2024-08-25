@@ -7,6 +7,11 @@ namespace OpusSolver.Solver.LowCost
         public ArmArea ArmArea { get; private set; }
 
         /// <summary>
+        /// The number of cells required on the main arm track to fit this generator in.
+        /// </summary>
+        public virtual int RequiredWidth => 1;
+
+        /// <summary>
         /// The points where an atom needs to pass over this glyph, plus the required rotation of the arm
         /// when its grabber is over each of these points. These points are in the local coordinate space
         /// of this atom generator.

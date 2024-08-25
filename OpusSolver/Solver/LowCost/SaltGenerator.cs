@@ -10,6 +10,8 @@ namespace OpusSolver.Solver.LowCost
         private static readonly Transform2D CalcifierTransform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D PassThroughTransform = new Transform2D(new Vector2(-1, 1), HexRotation.R0);
 
+        public override int RequiredWidth => 2;
+
         public override IEnumerable<Transform2D> RequiredAccessPoints => [CalcifierTransform, PassThroughTransform];
 
         public SaltGenerator(ProgramWriter writer, ArmArea armArea)

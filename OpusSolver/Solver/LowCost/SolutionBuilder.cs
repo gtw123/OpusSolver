@@ -39,43 +39,23 @@ namespace OpusSolver.Solver.LowCost
         {
             m_armArea = new ArmArea(null, m_writer);
 
-            var elementGenerators = pipeline.ElementGenerators;
-
-            // We always leave the output area unrotated because repeating molecules can't be rotated
             var baseTransform = new Transform2D();
             var offsetTransform = new Transform2D(new Vector2(m_armArea.ArmLength, 0), HexRotation.R0);
 
-            var outputGenerator = elementGenerators.OfType<ElementGenerators.OutputGenerator>().Single();
-            CreateAtomGenerator(outputGenerator, baseTransform.Apply(offsetTransform));
-            baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
-
-            var metalProjector = elementGenerators.OfType<ElementGenerators.MetalProjectorGenerator>().SingleOrDefault();
-            if (metalProjector != null)
+            // Process the generators in reverse so that we start with the output generator. This is important
+            // because we can't rotate the output generator (because repeating products can't be rotated).
+            var elementGenerators = pipeline.ElementGenerators;
+            foreach (var elementGenerator in Enumerable.Reverse(elementGenerators).Where(e => e is not ElementGenerators.ElementBuffer))
             {
-                baseTransform.Position += new Vector2(1, -1).RotateBy(baseTransform.Rotation);
-                CreateAtomGenerator(metalProjector, baseTransform.Apply(offsetTransform));
+                var atomGenerator = CreateAtomGenerator(elementGenerator, baseTransform.Apply(offsetTransform));
+                m_atomGenerators.Add(atomGenerator);
+
+                var positionOffset = (atomGenerator.RequiredWidth - 1) * new Vector2(1, -1).RotateBy(baseTransform.Rotation);
+                atomGenerator.Transform.Position += positionOffset;
+                baseTransform.Position += positionOffset;
                 baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
             }
-
-            var vanBerlo = elementGenerators.OfType<ElementGenerators.VanBerloGenerator>().SingleOrDefault();
-            if (vanBerlo != null)
-            {
-                CreateAtomGenerator(vanBerlo, baseTransform.Apply(offsetTransform));
-                baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
-            }
-
-            var saltGenerator = elementGenerators.OfType<ElementGenerators.SaltGenerator>().SingleOrDefault();
-            if (saltGenerator != null)
-            {
-                baseTransform.Position += new Vector2(1, -1).RotateBy(baseTransform.Rotation);
-                CreateAtomGenerator(saltGenerator, baseTransform.Apply(offsetTransform));
-                baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
-            }
-
-            var inputGenerator = elementGenerators.OfType<ElementGenerators.InputGenerator>().Single();
-            CreateAtomGenerator(inputGenerator, baseTransform.Apply(offsetTransform));
-            baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
-
+            
             foreach (var elementBuffer in elementGenerators.OfType<ElementGenerators.ElementBuffer>())
             {
                 CreateAtomGenerator(elementBuffer, baseTransform.Apply(offsetTransform));
@@ -85,7 +65,7 @@ namespace OpusSolver.Solver.LowCost
             m_armArea.CreateComponents(requiredAccessPoints);
         }
 
-        private AtomGenerator CreateAtomGenerator(ElementGenerator elementGenerator, Transform2D transform)
+        private LowCostAtomGenerator CreateAtomGenerator(ElementGenerator elementGenerator, Transform2D transform)
         {
             LowCostAtomGenerator atomGenerator = elementGenerator switch
             {
@@ -107,8 +87,6 @@ namespace OpusSolver.Solver.LowCost
 
             atomGenerator.Transform.Position = transform.Position;
             atomGenerator.Transform.Rotation = transform.Rotation;
-
-            m_atomGenerators.Add(atomGenerator);
 
             return atomGenerator;
         }
