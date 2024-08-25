@@ -9,6 +9,11 @@ namespace OpusSolver.Solver.LowCost.Output
     {
         public ArmArea ArmArea { get; private set; }
 
+        /// <summary>
+        /// The number of cells required on the main arm track to fit this generator in.
+        /// </summary>
+        public virtual int RequiredWidth => 1;
+
         public virtual IEnumerable<Transform2D> RequiredAccessPoints { get; }
 
         public MoleculeAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea)

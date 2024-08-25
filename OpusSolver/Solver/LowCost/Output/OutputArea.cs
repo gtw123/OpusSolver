@@ -9,6 +9,8 @@ namespace OpusSolver.Solver.LowCost.Output
     {
         private MoleculeAssembler m_assembler;
 
+        public override int RequiredWidth => m_assembler.RequiredWidth;
+
         public override IEnumerable<Transform2D> RequiredAccessPoints => m_assembler.RequiredAccessPoints;
 
         public OutputArea(ProgramWriter writer, ArmArea armArea, MoleculeAssemblerFactory assemblerFactory)

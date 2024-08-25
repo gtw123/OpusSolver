@@ -106,6 +106,11 @@ namespace OpusSolver
             };
         }
 
+        public Vector2 RotateAbout(Vector2 point, HexRotation rotation)
+        {
+            return (this - point).RotateBy(rotation) + point;
+        }
+
         public Vector2 Rotate60Counterclockwise()
         {
             return new Vector2(-Y, X + Y);
