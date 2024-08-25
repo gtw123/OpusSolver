@@ -25,17 +25,16 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            m_controller.RotateToElement(element);
-
             ArmArea.MoveGrabberTo(this, DuplicatorTransform);
+            m_controller.RotateToElement(element);
         }
 
         public override void PassThrough(Element element)
         {
             if (element == Element.Salt)
             {
-                m_controller.RotateToElement(element);
                 ArmArea.MoveGrabberTo(this, DuplicatorTransform);
+                m_controller.RotateToElement(element);
             }
             else
             {
