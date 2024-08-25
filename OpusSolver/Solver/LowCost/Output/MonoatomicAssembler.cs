@@ -10,11 +10,14 @@ namespace OpusSolver.Solver.LowCost.Output
     /// </summary>
     public class MonoatomicAssembler : MoleculeAssembler
     {
-        public const int MaxProducts = 2;
+        public const int MaxProducts = 4;
 
         private Dictionary<int, Product> m_outputs = new();
 
-        public override IEnumerable<Transform2D> RequiredAccessPoints => m_outputs.Values.Select(v => v.Transform);
+        // We need to manually specify the order in which to add the access points because the logic in ArmArea
+        // for building the track is currently a bit simplistic.
+        private List<int> m_outputAccessPointOrder = new();
+        public override IEnumerable<Transform2D> RequiredAccessPoints => m_outputAccessPointOrder.Select(o => m_outputs[o]).Select(p => p.Transform);
 
         public MonoatomicAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> products)
             : base(parent, writer, armArea)
@@ -29,17 +32,39 @@ namespace OpusSolver.Solver.LowCost.Output
                 throw new ArgumentException(Invariant($"{nameof(MonoatomicAssembler)} can't handle more than {MaxProducts} products."));
             }
 
-            // We position one product directly at (0, 0). To minimise cycles, this should be the product
-            // that's built last, so we reverse the order of the products here.
-            products = products.Reverse();
-            var product = products.First();
-            m_outputs[product.ID] = new Product(this, new Vector2(0, 0), HexRotation.R0, product);
+            var productList = products.Reverse().ToList();
+            AddProductOutput(productList[0], new Vector2(0, 0), HexRotation.R0);
 
-            product = products.Skip(1).SingleOrDefault();
-            if (product != null)
+            if (productList.Count > 1)
             {
                 var pos = new Vector2(ArmArea.ArmLength, 0).RotateBy(HexRotation.R120);
-                m_outputs[product.ID] = new Product(this, pos, HexRotation.R60, product);
+                AddProductOutput(productList[1], pos, HexRotation.R60);
+            }
+
+            if (productList.Count > 2)
+            {
+                AddProductOutput(productList[2], new Vector2(-1, 0), HexRotation.R0, addAccessPointAtStart: true);
+            }
+
+            if (productList.Count > 3)
+            {
+                var pos = new Vector2(ArmArea.ArmLength, 0).RotateBy(HexRotation.R120);
+                AddProductOutput(productList[3], pos + new Vector2(-1, 0), HexRotation.R60);
+            }
+        }
+
+        private void AddProductOutput(Molecule product, Vector2 position, HexRotation rotation, bool addAccessPointAtStart = false)
+        {
+            var output = new Product(this, position, rotation, product);
+            m_outputs[product.ID] = output;
+
+            if (addAccessPointAtStart)
+            {
+                m_outputAccessPointOrder.Insert(0, product.ID);
+            }
+            else
+            {
+                m_outputAccessPointOrder.Add(product.ID);
             }
         }
 
