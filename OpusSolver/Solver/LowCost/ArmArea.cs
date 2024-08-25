@@ -140,7 +140,8 @@ namespace OpusSolver.Solver.LowCost
         public void ResetArm()
         {
             Writer.Write(m_mainArm, Instruction.Reset);
-            m_armTransform.Rotation = m_mainArm.Transform.Rotation;
+            m_armTrackIndex = 0;
+            m_armTransform = m_mainArm.Transform;
         }
     }
 }
