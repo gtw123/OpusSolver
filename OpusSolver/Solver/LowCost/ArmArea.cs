@@ -137,6 +137,16 @@ namespace OpusSolver.Solver.LowCost
             Writer.Write(m_mainArm, Instruction.Drop);
         }
 
+        public void PivotClockwise()
+        {
+            Writer.Write(m_mainArm, Instruction.PivotClockwise);
+        }
+
+        public void PivotCounterClockwise()
+        {
+            Writer.Write(m_mainArm, Instruction.PivotCounterclockwise);
+        }
+
         public void ResetArm()
         {
             Writer.Write(m_mainArm, Instruction.Reset);

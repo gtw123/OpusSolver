@@ -24,7 +24,7 @@ namespace OpusSolver.Solver.LowCost.Output
 
         public override IEnumerable<Transform2D> RequiredAccessPoints => [LowerBonderPosition, UpperBonderPosition];
 
-        private static readonly HexRotation OutputRotationOffset = HexRotation.R120;
+        private static readonly HexRotation OutputRotationOffset = HexRotation.R60;
 
         public LinearAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> products)
             : base(parent, writer, armArea)
@@ -83,6 +83,9 @@ namespace OpusSolver.Solver.LowCost.Output
 
                 if (x == 0)
                 {
+                    // Do an extra pivot to help avoid hitting reagents in a counterclockwise direction
+                    ArmArea.PivotClockwise();
+
                     var transform = m_outputs[m_currentProduct.ID].Transform;
                     ArmArea.MoveGrabberTo(this, new Transform2D(transform.Position, transform.Rotation - OutputRotationOffset));
                 }
