@@ -2,14 +2,10 @@
 
 namespace OpusSolver
 {
-    public class Transform2D
+    public struct Transform2D
     {
-        public Vector2 Position { get; set; }
-        public HexRotation Rotation { get; set; }
-
-        public Transform2D()
-        {
-        }
+        public Vector2 Position;
+        public HexRotation Rotation;
 
         public Transform2D(Vector2 translation, HexRotation rotation)
         {

@@ -8,7 +8,7 @@ namespace OpusSolver
     /// </summary>
     public class GameObject
     {
-        public Transform2D Transform { get; set; }
+        public Transform2D Transform;
 
         private GameObject m_parent;
 

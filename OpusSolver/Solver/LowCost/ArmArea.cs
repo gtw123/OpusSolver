@@ -9,7 +9,9 @@ namespace OpusSolver.Solver.LowCost
         private Arm m_mainArm { get; set; }
         private Track m_track { get; set; }
 
-        public Transform2D ArmTransform { get; private set; }
+        private Transform2D m_armTransform;
+        public Transform2D ArmTransform => m_armTransform;
+
         public int ArmLength => 2;
 
         private int m_armTrackIndex;
@@ -75,9 +77,9 @@ namespace OpusSolver.Solver.LowCost
         private void CreateMainArm(Transform2D transform)
         {
             m_armTrackIndex = 0;
-            ArmTransform = transform;
+            m_armTransform = transform;
 
-            m_mainArm = new Arm(this, ArmTransform.Position, ArmTransform.Rotation, ArmType.Arm1, extension: ArmLength);
+            m_mainArm = new Arm(this, m_armTransform.Position, m_armTransform.Rotation, ArmType.Arm1, extension: ArmLength);
         }
 
         /// <summary>
@@ -114,14 +116,14 @@ namespace OpusSolver.Solver.LowCost
             int cellDelta = targetCellIndex - m_armTrackIndex;
             var instruction = cellDelta > 0 ? Instruction.MovePositive : Instruction.MoveNegative;
             Writer.Write(m_mainArm, Enumerable.Repeat(instruction, Math.Abs(cellDelta)));
-            ArmTransform.Position = targetTransform.Position;
+            m_armTransform.Position = targetTransform.Position;
             m_armTrackIndex = targetCellIndex;
 
-            foreach (var rot in ArmTransform.Rotation.CalculateRotationsTo(targetTransform.Rotation))
+            foreach (var rot in m_armTransform.Rotation.CalculateRotationsTo(targetTransform.Rotation))
             {
-                instruction = ((rot - ArmTransform.Rotation) == HexRotation.R60) ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise;
+                instruction = ((rot - m_armTransform.Rotation) == HexRotation.R60) ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise;
                 Writer.Write(m_mainArm, instruction);
-                ArmTransform.Rotation = rot;
+                m_armTransform.Rotation = rot;
             }
         }
 
@@ -138,7 +140,7 @@ namespace OpusSolver.Solver.LowCost
         public void ResetArm()
         {
             Writer.Write(m_mainArm, Instruction.Reset);
-            ArmTransform.Rotation = m_mainArm.Transform.Rotation;
+            m_armTransform.Rotation = m_mainArm.Transform.Rotation;
         }
     }
 }

@@ -84,9 +84,7 @@ namespace OpusSolver.Solver.LowCost
 
             elementGenerator.AtomGenerator = atomGenerator;
             atomGenerator.Parent = m_armArea;
-
-            atomGenerator.Transform.Position = transform.Position;
-            atomGenerator.Transform.Rotation = transform.Rotation;
+            atomGenerator.Transform = transform;
 
             return atomGenerator;
         }

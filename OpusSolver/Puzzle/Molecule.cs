@@ -22,7 +22,9 @@ namespace OpusSolver
         /// Transform from the original positions/rotations of the atoms to their current positions/rotations.
         /// This is not important for generating a solution, but is important when placing a product/reagent glyph.
         /// </summary>
-        public Transform2D GlyphTransform { get; private set; } = new Transform2D();
+        private Transform2D m_glyphTransform;
+
+        public Transform2D GlyphTransform => m_glyphTransform;
 
         public int Height { get; private set; }
         public int Width { get; private set; }
@@ -71,7 +73,7 @@ namespace OpusSolver
                 atom.Position = atom.Position.Subtract(offset);
             }
 
-            GlyphTransform.Position -= offset;
+            m_glyphTransform.Position -= offset;
         }
 
         /// <summary>
@@ -160,7 +162,7 @@ namespace OpusSolver
                 }
             }
 
-            GlyphTransform = new Transform2D(new Vector2(), rotation).Apply(GlyphTransform);
+            m_glyphTransform = new Transform2D(new Vector2(), rotation).Apply(GlyphTransform);
             AdjustBounds();
         }
 
