@@ -12,11 +12,11 @@ namespace OpusSolver.Solver.LowCost.Output
     {
         public const int MaxProducts = 4;
 
-        private Dictionary<int, Product> m_outputs = new();
+        private readonly Dictionary<int, Product> m_outputs = new();
 
         // We need to manually specify the order in which to add the access points because the logic in ArmArea
         // for building the track is currently a bit simplistic.
-        private List<int> m_outputAccessPointOrder = new();
+        private readonly List<int> m_outputAccessPointOrder = new();
         public override IEnumerable<Transform2D> RequiredAccessPoints => m_outputAccessPointOrder.Select(o => m_outputs[o]).Select(p => p.Transform);
 
         public MonoatomicAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> products)

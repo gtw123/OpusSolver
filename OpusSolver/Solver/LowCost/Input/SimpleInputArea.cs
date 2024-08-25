@@ -10,13 +10,13 @@ namespace OpusSolver.Solver.LowCost.Input
     /// </summary>
     public class SimpleInputArea : LowCostAtomGenerator
     {
-        private Dictionary<int, MoleculeDisassembler> m_disassemblers = new();
+        private readonly Dictionary<int, MoleculeDisassembler> m_disassemblers = new();
 
         public const int MaxReagents = 4;
 
         // We need to manually specify the order in which to add the access points because the logic in ArmArea
         // for building the track is currently a bit simplistic.
-        private List<int> m_disassemblerAccessPointOrder = new();
+        private readonly List<int> m_disassemblerAccessPointOrder = new();
         public override IEnumerable<Transform2D> RequiredAccessPoints =>
             m_disassemblerAccessPointOrder.Select(o => m_disassemblers[o]).SelectMany(d => d.RequiredAccessPoints.Select(p => d.Transform.Apply(p)));
 
