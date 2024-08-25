@@ -12,9 +12,9 @@ namespace OpusSolver.Solver.LowCost.Input
     {
         private List<MoleculeDisassembler> m_disassemblers = new List<MoleculeDisassembler>();
 
-        public const int MaxReagents = 2;
+        public const int MaxReagents = 3;
 
-        public override IEnumerable<Transform2D> RequiredAccessPoints => Enumerable.Reverse(m_disassemblers).SelectMany(d => d.RequiredAccessPoints.Select(p => d.Transform.Apply(p)));
+        public override IEnumerable<Transform2D> RequiredAccessPoints => m_disassemblers.SelectMany(d => d.RequiredAccessPoints.Select(p => d.Transform.Apply(p)));
 
         public SimpleInputArea(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
             : base(writer, armArea)
@@ -42,13 +42,23 @@ namespace OpusSolver.Solver.LowCost.Input
             }
 
             var pos = new Vector2(ArmArea.ArmLength, 0).RotateBy(HexRotation.R240);
-            var transform = new Transform2D(pos, HexRotation.R300);
-            m_disassemblers.Add(new SingleMonoatomicDisassembler(this, Writer, ArmArea, transform, reagentsList[0]));
+
+            if (reagentsList.Count > 0)
+            {
+                var transform = new Transform2D(pos + new Vector2(1, -1), HexRotation.R300);
+                m_disassemblers.Add(new SingleMonoatomicDisassembler(this, Writer, ArmArea, transform, reagentsList[0]));
+            }
 
             if (reagentsList.Count > 1)
             {
-                transform.Position += new Vector2(1, -1);
+                var transform = new Transform2D(pos, HexRotation.R300);
                 m_disassemblers.Add(new SingleMonoatomicDisassembler(this, Writer, ArmArea, transform, reagentsList[1]));
+            }
+
+            if (reagentsList.Count > 2)
+            {
+                var transform = new Transform2D(new Vector2(-1, 0), HexRotation.R0);
+                m_disassemblers.Add(new SingleMonoatomicDisassembler(this, Writer, ArmArea, transform, reagentsList[2]));
             }
         }
 

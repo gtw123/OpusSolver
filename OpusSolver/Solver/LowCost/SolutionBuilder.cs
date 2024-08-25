@@ -98,6 +98,8 @@ namespace OpusSolver.Solver.LowCost
                 {
                     return new SimpleInputArea(m_writer, m_armArea, reagents);
                 }
+
+                throw new SolverException($"LowCost solver can't currently handle more than {SimpleInputArea.MaxReagents} monoatomic reagents.");
             }
 
             throw new SolverException("LowCost solver can't currently handle reagents with more than one atom.");
