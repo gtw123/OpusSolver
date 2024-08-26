@@ -77,7 +77,7 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.MorsVitaeGenerator => throw new NotImplementedException("MorsVitae"),
                 ElementGenerators.QuintessenceDisperserGenerator => throw new NotImplementedException("QuintessenceDisperser"),
                 ElementGenerators.QuintessenceGenerator => throw new NotImplementedException("QuintessenceGenerator"),
-                ElementGenerators.SaltGenerator saltGenerator => new SaltGenerator(m_writer, m_armArea), // TODO: Support non-passthrough version too?
+                ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresCardinalPassThrough ? new SaltGenerator(m_writer, m_armArea) : new SaltGeneratorNoCardinalPassThrough(m_writer, m_armArea),
                 ElementGenerators.VanBerloGenerator => new VanBerloGenerator(m_writer, m_armArea),
                 _ => throw new ArgumentException($"Unknown element generator type {elementGenerator.GetType()}")
             };
