@@ -137,8 +137,9 @@ namespace OpusSolver
             verifier.Verify(generatedSolutions);
 
             var metricSums = new Metrics();
+            var verifiedSolutions = generatedSolutions.Where(s => s.Verified);
 
-            foreach (var generatedSolution in generatedSolutions.Where(s => s.Verified))
+            foreach (var generatedSolution in verifiedSolutions)
             {
                 var solution = generatedSolution.Solution;
                 var metrics = solution.Metrics;
@@ -147,7 +148,7 @@ namespace OpusSolver
                 metricSums.Add(metrics);
             }
 
-            double total = generatedSolutions.Count;
+            double total = verifiedSolutions.Count();
             m_reportWriter?.WriteLine($"Average,,{metricSums.Cost / total:.00},{metricSums.Cycles / total:.00},{metricSums.Area / total:.00},{metricSums.Instructions / total:.00}");
 
         }
