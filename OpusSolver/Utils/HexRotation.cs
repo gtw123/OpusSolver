@@ -96,6 +96,15 @@ namespace OpusSolver
         }
 
         /// <summary>
+        /// Returns the smallest number of rotations required to get from this rotation to another one.
+        /// This will be either 0, 1, 2 or 3 depending on the difference between the two rotations.
+        /// </summary>
+        public int DistanceTo(HexRotation other)
+        {
+            return 3 - Math.Abs((other - this).IntValue - 3);
+        }
+
+        /// <summary>
         /// Calculates the shortest sequence of rotations to get from the current rotation to targetRot.
         /// </summary>
         /// <param name="targetRot">The target rotation</param>

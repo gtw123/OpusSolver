@@ -11,11 +11,9 @@ namespace OpusSolver.Solver.LowCost
 
         private Transform2D m_armTransform;
         public Transform2D ArmTransform => m_armTransform;
+        private ArmPathFinder m_armPathFinder;
 
         public int ArmLength => 2;
-
-        private int m_armTrackIndex;
-        private Dictionary<Vector2, int> m_trackCellsToIndexes;
 
         public ArmArea(SolverComponent parent, ProgramWriter writer)
             : base(parent, writer, new Vector2())
@@ -37,6 +35,7 @@ namespace OpusSolver.Solver.LowCost
 
             CreateTrack(armPoints);
             CreateMainArm(GrabberTransformToArmTransform(requiredAccessPoints.First()));
+            m_armPathFinder = new ArmPathFinder(ArmLength, m_track.GetAllPathCells());
         }
 
         private Transform2D GrabberTransformToArmTransform(Transform2D grabberTransform)
@@ -71,12 +70,10 @@ namespace OpusSolver.Solver.LowCost
             // Having the track always created simplifies things, and the degenerate track will get
             // optimized away eventually anyway.
             m_track = new Track(this, armPoints.First(), segments);
-            m_trackCellsToIndexes = m_track.GetAllPathCells().Select((pos, index) => (pos, index)).ToDictionary(pair => pair.pos, pair => pair.index);
         }
 
         private void CreateMainArm(Transform2D transform)
         {
-            m_armTrackIndex = 0;
             m_armTransform = transform;
 
             m_mainArm = new Arm(this, m_armTransform.Position, m_armTransform.Rotation, ArmType.Arm1, extension: ArmLength);
@@ -108,23 +105,10 @@ namespace OpusSolver.Solver.LowCost
                 targetTransform.Rotation += armRotationOffset.Value;
             }
 
-            if (!m_trackCellsToIndexes.TryGetValue(targetTransform.Position, out var targetCellIndex))
-            {
-                throw new InvalidOperationException($"Can't move arm to {targetTransform.Position} because the track does not pass through that position.");
-            }
+            var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform);
+            Writer.Write(m_mainArm, instructions);
 
-            int cellDelta = targetCellIndex - m_armTrackIndex;
-            var instruction = cellDelta > 0 ? Instruction.MovePositive : Instruction.MoveNegative;
-            Writer.Write(m_mainArm, Enumerable.Repeat(instruction, Math.Abs(cellDelta)));
-            m_armTransform.Position = targetTransform.Position;
-            m_armTrackIndex = targetCellIndex;
-
-            foreach (var rot in m_armTransform.Rotation.CalculateRotationsTo(targetTransform.Rotation))
-            {
-                instruction = ((rot - m_armTransform.Rotation) == HexRotation.R60) ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise;
-                Writer.Write(m_mainArm, instruction);
-                m_armTransform.Rotation = rot;
-            }
+            m_armTransform = targetTransform;
         }
 
         public void GrabAtom()
@@ -168,7 +152,6 @@ namespace OpusSolver.Solver.LowCost
         public void ResetArm()
         {
             Writer.Write(m_mainArm, Instruction.Reset);
-            m_armTrackIndex = 0;
             m_armTransform = m_mainArm.Transform;
         }
     }
