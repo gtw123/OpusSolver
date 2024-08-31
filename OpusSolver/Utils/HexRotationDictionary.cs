@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace OpusSolver
 {
-    public class HexRotationDictionary<T>
+    public class HexRotationDictionary<T> : IEnumerable<KeyValuePair<HexRotation, T>>
     {
         private SortedDictionary<HexRotation, T> m_data;
 
@@ -58,6 +59,11 @@ namespace OpusSolver
         public IEnumerator<KeyValuePair<HexRotation, T>> GetEnumerator()
         {
             return m_data.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         /// <summary>

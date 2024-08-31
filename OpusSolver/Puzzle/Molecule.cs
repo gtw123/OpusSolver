@@ -123,6 +123,17 @@ namespace OpusSolver
             return result;
         }
 
+        public HexRotationDictionary<Atom> GetAdjacentBondedAtoms(Vector2 position)
+        {
+            var centerAtom = GetAtom(position);
+            if (centerAtom == null)
+            {
+                return new HexRotationDictionary<Atom>();
+            }
+
+            return GetAdjacentAtoms(position, (dir, _) => centerAtom.Bonds[dir] != BondType.None);
+        }
+
         /// <summary>
         /// Returns whether atom1 is next to atom2 on the hex grid, ignoring bonds.
         /// </summary>

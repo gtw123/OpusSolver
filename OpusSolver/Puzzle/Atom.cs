@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using static System.FormattableString;
 
 namespace OpusSolver
@@ -16,6 +17,8 @@ namespace OpusSolver
         /// The bonds of this atom in each of the 6 directions around it.
         /// </summary>
         public HexRotationDictionary<BondType> Bonds { get; private set; }
+
+        public int BondCount => Bonds.Values.Count(b => b != BondType.None);
 
         public Atom(Element element, HexRotationDictionary<BondType> bonds, Vector2 position)
         {
