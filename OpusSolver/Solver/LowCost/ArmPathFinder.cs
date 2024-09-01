@@ -63,14 +63,7 @@ namespace OpusSolver.Solver.LowCost
                 int newCost = costs[currentPosition] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    bool isMovementAllowed = true;
-                    if (grabbedElement != null)
-                    {
-                        var gripperPos = ArmPositionToGrabberPosition(neighbor);
-                        isMovementAllowed = m_gridState.GetAtom(gripperPos) == null;
-                    }
-
-                    if (isMovementAllowed)
+                    if (grabbedElement == null || IsMovementAllowed(currentPosition, neighbor))
                     {
                         costs[neighbor] = newCost;
                         int heuristic = Math.Abs(endPosition.TrackIndex - neighbor.TrackIndex) + endPosition.Rotation.DistanceTo(neighbor.Rotation);
@@ -114,6 +107,63 @@ namespace OpusSolver.Solver.LowCost
             }
 
             return Enumerable.Reverse(path);
+        }
+
+        private bool IsMovementAllowed(ArmPosition currentPosition, ArmPosition targetPosition)
+        {
+            var targetGripperPosition = ArmPositionToGrabberPosition(targetPosition);
+            if (m_gridState.GetAtom(targetGripperPosition) != null)
+            {
+                return false;
+            }
+
+            if (m_armLength == 1)
+            {
+                // Nothing to do here: length-1 arms don't collide with anything while rotating
+                return false;
+            }
+
+            var deltaRot = targetPosition.Rotation - currentPosition.Rotation;
+            if (deltaRot != HexRotation.R0)
+            {
+                // These are the locations where atoms will cause a collision with the atom held by a
+                // gripper when the arm rotates CCW from R300 to R0 or CW from R60 to R0. These are
+                // offsets from the target position.
+                Vector2[] offsets;
+                if (m_armLength == 2)
+                {
+                    if (deltaRot == HexRotation.R60)
+                    {
+                        offsets = [new Vector2(0, -1), new Vector2(1, -1), new Vector2(1, -2)];
+                    }
+                    else
+                    {
+                        offsets = [new Vector2(0, 1), new Vector2(-1, 1), new Vector2(-1, 2)];
+                    }
+                }
+                else // length 3
+                {
+                    if (deltaRot == HexRotation.R60)
+                    {
+                        offsets = [new Vector2(0, -1), new Vector2(0, -2), new Vector2(1, -1), new Vector2(1, -2), new Vector2(1, -3)];
+                    }
+                    else
+                    {
+                        offsets = [new Vector2(-1, 1), new Vector2(-2, 2), new Vector2(0, 1), new Vector2(-1, 2), new Vector2(-2, 3)];
+                    }
+                }
+
+                foreach (var offset in offsets)
+                {
+                    var checkPos = targetGripperPosition + offset.RotateBy(targetPosition.Rotation);
+                    if (m_gridState.GetAtom(checkPos) != null)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         private static IEnumerable<Instruction> GetInstructionsForPath(ArmPosition startPosition, IEnumerable<ArmPosition> path)
