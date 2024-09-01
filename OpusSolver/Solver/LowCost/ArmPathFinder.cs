@@ -21,7 +21,7 @@ namespace OpusSolver.Solver.LowCost
 
         private record class ArmPosition(int TrackIndex, HexRotation Rotation);
 
-        public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform, Element? grabbedElement)
+        public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform, Element? grabbedElement, HashSet<GlyphType> disallowedGlyphs)
         {
             if (!m_trackCellsToIndexes.TryGetValue(startTransform.Position, out var startTrackIndex))
             {
@@ -35,7 +35,7 @@ namespace OpusSolver.Solver.LowCost
 
             var startPosition = new ArmPosition(startTrackIndex, startTransform.Rotation);
             var endPosition = new ArmPosition(endTrackIndex, endTransform.Rotation);
-            var path = FindShortestPath(startPosition, endPosition, grabbedElement);
+            var path = FindShortestPath(startPosition, endPosition, grabbedElement, disallowedGlyphs);
 
             return GetInstructionsForPath(startPosition, path);
         }
@@ -50,7 +50,7 @@ namespace OpusSolver.Solver.LowCost
         /// Finds the shortest "path" to move/rotate an arm from one position to another.
         /// Uses the Uniform Cost Search algorithm.
         /// </summary>
-        private IEnumerable<ArmPosition> FindShortestPath(ArmPosition startPosition, ArmPosition endPosition, Element? grabbedElement)
+        private IEnumerable<ArmPosition> FindShortestPath(ArmPosition startPosition, ArmPosition endPosition, Element? grabbedElement, HashSet<GlyphType> disallowedGlyphs)
         {
             var previousPosition = new Dictionary<ArmPosition, ArmPosition> { { startPosition, null } };
             var costs = new Dictionary<ArmPosition, int> { { startPosition, 0 } };
@@ -63,7 +63,7 @@ namespace OpusSolver.Solver.LowCost
                 int newCost = costs[currentPosition] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    if (grabbedElement == null || IsMovementAllowed(currentPosition, neighbor))
+                    if (grabbedElement == null || IsMovementAllowed(currentPosition, neighbor, disallowedGlyphs))
                     {
                         costs[neighbor] = newCost;
                         int heuristic = Math.Abs(endPosition.TrackIndex - neighbor.TrackIndex) + endPosition.Rotation.DistanceTo(neighbor.Rotation);
@@ -109,10 +109,17 @@ namespace OpusSolver.Solver.LowCost
             return Enumerable.Reverse(path);
         }
 
-        private bool IsMovementAllowed(ArmPosition currentPosition, ArmPosition targetPosition)
+        private bool IsMovementAllowed(ArmPosition currentPosition, ArmPosition targetPosition, HashSet<GlyphType> disallowedGlyphs)
         {
             var targetGripperPosition = ArmPositionToGrabberPosition(targetPosition);
             if (m_gridState.GetAtom(targetGripperPosition) != null)
+            {
+                return false;
+            }
+
+            // Disallow movement over certain glyphs (e.g. calcification)
+            var glyph = m_gridState.GetGlyph(targetGripperPosition);
+            if (glyph != null && disallowedGlyphs.Contains(glyph.Value))
             {
                 return false;
             }

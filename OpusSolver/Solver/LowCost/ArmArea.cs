@@ -90,9 +90,10 @@ namespace OpusSolver.Solver.LowCost
         /// <param name="obj">The object whose local coordinate system the transform is specified in</param>
         /// <param name="grabberWorldTransform">The target position and rotation, in world coordinates</param>
         /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
-        public void MoveGrabberTo(GameObject obj, Transform2D grabberlocalTransform, HexRotation? armRotationOffset = null)
+        /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change the grabbed atom</param>
+        public void MoveGrabberTo(GameObject obj, Transform2D grabberlocalTransform, HexRotation? armRotationOffset = null, bool allowCalcification = false)
         {
-            MoveGrabberToWorldTransform(obj.GetWorldTransform().Apply(grabberlocalTransform), armRotationOffset);
+            MoveGrabberToWorldTransform(obj.GetWorldTransform().Apply(grabberlocalTransform), armRotationOffset, allowCalcification);
         }
 
         /// <summary>
@@ -101,7 +102,8 @@ namespace OpusSolver.Solver.LowCost
         /// </summary>
         /// <param name="grabberWorldTransform">The target position and rotation, in world coordinates</param>
         /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
-        public void MoveGrabberToWorldTransform(Transform2D grabberWorldTransform, HexRotation? armRotationOffset = null)
+        /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change the grabbed atom</param>
+        public void MoveGrabberToWorldTransform(Transform2D grabberWorldTransform, HexRotation? armRotationOffset = null, bool allowCalcification = false)
         {
             var targetTransform = GrabberTransformToArmTransform(grabberWorldTransform);
             if (armRotationOffset != null)
@@ -109,7 +111,13 @@ namespace OpusSolver.Solver.LowCost
                 targetTransform.Rotation += armRotationOffset.Value;
             }
 
-            var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform, m_grabbedElement);
+            var disallowedGlyphs = new HashSet<GlyphType>();
+            if (m_grabbedElement.HasValue && !allowCalcification && PeriodicTable.Cardinals.Contains(m_grabbedElement.Value))
+            {
+                disallowedGlyphs.Add(GlyphType.Calcification);
+            }
+
+            var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform, m_grabbedElement, disallowedGlyphs);
             Writer.Write(m_mainArm, instructions);
 
             m_armTransform = targetTransform;
@@ -125,6 +133,11 @@ namespace OpusSolver.Solver.LowCost
         {
             Writer.Write(m_mainArm, Instruction.Drop);
             m_grabbedElement = null;
+        }
+
+        public void SetGrabbedElement(Element element)
+        {
+            m_grabbedElement = element;
         }
 
         public void PivotClockwise()
