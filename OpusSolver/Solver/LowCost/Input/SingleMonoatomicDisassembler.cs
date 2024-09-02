@@ -37,10 +37,7 @@ namespace OpusSolver.Solver.LowCost.Input
         {
             Writer.NewFragment();
             ArmArea.MoveGrabberTo(this, InputTransform);
-            ArmArea.GrabAtom();
-
-            // Rotate if necessary to avoid hitting the other reagents
-            ArmArea.MoveGrabberTo(this, InputTransform, armRotationOffset: -Transform.Rotation);
+            ArmArea.GrabAtom(Element);
         }
     }
 }

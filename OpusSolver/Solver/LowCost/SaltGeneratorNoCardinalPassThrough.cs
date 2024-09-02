@@ -28,10 +28,5 @@ namespace OpusSolver.Solver.LowCost
         {
             ArmArea.MoveGrabberTo(this, CalcifierTransform);
         }
-
-        public override void PassThrough(Element element)
-        {
-            ArmArea.MoveGrabberTo(this, CalcifierTransform);
-        }
     }
 }

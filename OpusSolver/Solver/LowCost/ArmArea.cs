@@ -13,6 +13,8 @@ namespace OpusSolver.Solver.LowCost
         public Transform2D ArmTransform => m_armTransform;
         private ArmPathFinder m_armPathFinder;
 
+        private Element? m_grabbedElement;
+
         public GridState GridState { get; private set; } = new GridState();
 
         public int ArmLength => 2;
@@ -37,7 +39,7 @@ namespace OpusSolver.Solver.LowCost
 
             CreateTrack(armPoints);
             CreateMainArm(GrabberTransformToArmTransform(requiredAccessPoints.First()));
-            m_armPathFinder = new ArmPathFinder(ArmLength, m_track.GetAllPathCells());
+            m_armPathFinder = new ArmPathFinder(ArmLength, m_track.GetAllPathCells(), GridState);
         }
 
         private Transform2D GrabberTransformToArmTransform(Transform2D grabberTransform)
@@ -94,7 +96,7 @@ namespace OpusSolver.Solver.LowCost
         }
 
         /// <summary>
-        /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated the
+        /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated in the
         /// specified direction (in world coordinates).
         /// </summary>
         /// <param name="grabberWorldTransform">The target position and rotation, in world coordinates</param>
@@ -107,20 +109,22 @@ namespace OpusSolver.Solver.LowCost
                 targetTransform.Rotation += armRotationOffset.Value;
             }
 
-            var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform);
+            var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform, m_grabbedElement);
             Writer.Write(m_mainArm, instructions);
 
             m_armTransform = targetTransform;
         }
 
-        public void GrabAtom()
+        public void GrabAtom(Element element)
         {
+            m_grabbedElement = element;
             Writer.Write(m_mainArm, Instruction.Grab);
         }
 
         public void DropAtom()
         {
             Writer.Write(m_mainArm, Instruction.Drop);
+            m_grabbedElement = null;
         }
 
         public void PivotClockwise()
@@ -155,6 +159,7 @@ namespace OpusSolver.Solver.LowCost
         {
             Writer.Write(m_mainArm, Instruction.Reset);
             m_armTransform = m_mainArm.Transform;
+            m_grabbedElement = null;
         }
     }
 }

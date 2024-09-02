@@ -28,13 +28,6 @@ namespace OpusSolver.Solver.LowCost
         public override void Generate(Element element, int id)
         {
             ArmArea.MoveGrabberTo(this, CalcifierTransform);
-            ArmArea.MoveGrabberTo(this, PassThroughTransform);
-        }
-
-        public override void PassThrough(Element element)
-        {
-            ArmArea.MoveGrabberTo(this, PassThroughTransform, armRotationOffset: HexRotation.R300);
-            ArmArea.MoveGrabberTo(this, PassThroughTransform);
         }
     }
 }

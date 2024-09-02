@@ -7,7 +7,7 @@ namespace OpusSolver.Solver.LowCost
     /// </summary>
     public class MetalProjector : LowCostAtomGenerator
     {
-        private bool m_hasMetal;
+        private Element? m_currentMetal;
 
         private static readonly Transform2D QuicksilverTransform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D MetalTransform = new Transform2D(new Vector2(-1, 1), HexRotation.R0);
@@ -25,31 +25,28 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            if (!m_hasMetal)
+            if (m_currentMetal == null)
             {
-                ArmArea.MoveGrabberTo(this, QuicksilverTransform);
                 ArmArea.MoveGrabberTo(this, MetalTransform);
                 ArmArea.DropAtom();
-                m_hasMetal = true;
+                GridState.RegisterAtom(MetalTransform.Position, element, this);
+                m_currentMetal = element;
             }
             else
             {
                 ArmArea.MoveGrabberTo(this, QuicksilverTransform);
                 ArmArea.DropAtom();
+                GridState.RegisterAtom(MetalTransform.Position, element, this);
+                m_currentMetal++;
             }
         }
 
         public override void Generate(Element element, int id)
         {
             ArmArea.MoveGrabberTo(this, MetalTransform);
-            ArmArea.GrabAtom();
-            m_hasMetal = false;
-        }
-
-        public override void PassThrough(Element element)
-        {
-            ArmArea.MoveGrabberTo(this, QuicksilverTransform);
-            ArmArea.MoveGrabberTo(this, MetalTransform);
+            ArmArea.GrabAtom(element);
+            GridState.RegisterAtom(MetalTransform.Position, null, this);
+            m_currentMetal = null;
         }
     }
 }

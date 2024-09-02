@@ -76,11 +76,25 @@ namespace OpusSolver.Solver.LowCost.Output
 
         private IEnumerable<object> Assemble()
         {
+            var placedAtoms = new List<Atom>();
+
             for (int x = m_currentProduct.Width - 1; x >= 0; x--)
             {
+                // Bond the atom to the other product atoms (if any)
                 ArmArea.MoveGrabberTo(this, LowerBonderPosition);
-                ArmArea.MoveGrabberTo(this, UpperBonderPosition);
 
+                if (placedAtoms.Any())
+                {
+                    var lastAtom = placedAtoms.Last();
+                    foreach (var atom in placedAtoms)
+                    {
+                        var pos = UpperBonderPosition.Position + (atom.Position - lastAtom.Position).RotateBy(HexRotation.R120);
+                        GridState.RegisterAtom(pos, null, this);
+                    }
+                }
+
+                ArmArea.MoveGrabberTo(this, UpperBonderPosition);
+    
                 if (x == 0)
                 {
                     // Do an extra pivot to help avoid hitting reagents in a counterclockwise direction
@@ -88,6 +102,17 @@ namespace OpusSolver.Solver.LowCost.Output
 
                     var transform = m_outputs[m_currentProduct.ID].Transform;
                     ArmArea.MoveGrabberTo(this, new Transform2D(transform.Position, transform.Rotation - OutputRotationOffset));
+                }
+                else
+                {
+                    placedAtoms.Add(m_currentProduct.GetAtom(new Vector2(x, 0)));
+
+                    var lastAtom = placedAtoms.Last();
+                    foreach (var atom in placedAtoms)
+                    {
+                        var pos = UpperBonderPosition.Position + (atom.Position - lastAtom.Position).RotateBy(HexRotation.R120);
+                        GridState.RegisterAtom(pos, atom.Element, this);
+                    }
                 }
 
                 ArmArea.DropAtom();

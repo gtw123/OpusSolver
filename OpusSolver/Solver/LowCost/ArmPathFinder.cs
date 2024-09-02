@@ -9,17 +9,19 @@ namespace OpusSolver.Solver.LowCost
         private readonly int m_armLength;
         private readonly List<Vector2> m_trackCells;
         private readonly Dictionary<Vector2, int> m_trackCellsToIndexes;
+        private readonly GridState m_gridState;
 
-        public ArmPathFinder(int armLength, IEnumerable<Vector2> trackCells)
+        public ArmPathFinder(int armLength, IEnumerable<Vector2> trackCells, GridState gridState)
         {
             m_armLength = armLength;
             m_trackCells = trackCells.ToList();
             m_trackCellsToIndexes = m_trackCells.Select((pos, index) => (pos, index)).ToDictionary(pair => pair.pos, pair => pair.index);
+            m_gridState = gridState;
         }
 
         private record class ArmPosition(int TrackIndex, HexRotation Rotation);
 
-        public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform)
+        public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform, Element? grabbedElement)
         {
             if (!m_trackCellsToIndexes.TryGetValue(startTransform.Position, out var startTrackIndex))
             {
@@ -33,16 +35,22 @@ namespace OpusSolver.Solver.LowCost
 
             var startPosition = new ArmPosition(startTrackIndex, startTransform.Rotation);
             var endPosition = new ArmPosition(endTrackIndex, endTransform.Rotation);
-            var path = FindShortestPath(startPosition, endPosition);
+            var path = FindShortestPath(startPosition, endPosition, grabbedElement);
 
             return GetInstructionsForPath(startPosition, path);
+        }
+
+        private Vector2 ArmPositionToGrabberPosition(ArmPosition armPos)
+        {
+            var armGridPos = m_trackCells[armPos.TrackIndex];
+            return armGridPos + new Vector2(m_armLength, 0).RotateBy(armPos.Rotation);
         }
 
         /// <summary>
         /// Finds the shortest "path" to move/rotate an arm from one position to another.
         /// Uses the Uniform Cost Search algorithm.
         /// </summary>
-        private IEnumerable<ArmPosition> FindShortestPath(ArmPosition startPosition, ArmPosition endPosition)
+        private IEnumerable<ArmPosition> FindShortestPath(ArmPosition startPosition, ArmPosition endPosition, Element? grabbedElement)
         {
             var previousPosition = new Dictionary<ArmPosition, ArmPosition> { { startPosition, null } };
             var costs = new Dictionary<ArmPosition, int> { { startPosition, 0 } };
@@ -55,10 +63,20 @@ namespace OpusSolver.Solver.LowCost
                 int newCost = costs[currentPosition] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    costs[neighbor] = newCost;
-                    int heuristic = Math.Abs(endPosition.TrackIndex - neighbor.TrackIndex) + endPosition.Rotation.DistanceTo(neighbor.Rotation);
-                    queue.Enqueue(neighbor, newCost + heuristic);
-                    previousPosition[neighbor] = currentPosition;
+                    bool isMovementAllowed = true;
+                    if (grabbedElement != null)
+                    {
+                        var gripperPos = ArmPositionToGrabberPosition(neighbor);
+                        isMovementAllowed = m_gridState.GetAtom(gripperPos) == null;
+                    }
+
+                    if (isMovementAllowed)
+                    {
+                        costs[neighbor] = newCost;
+                        int heuristic = Math.Abs(endPosition.TrackIndex - neighbor.TrackIndex) + endPosition.Rotation.DistanceTo(neighbor.Rotation);
+                        queue.Enqueue(neighbor, newCost + heuristic);
+                        previousPosition[neighbor] = currentPosition;
+                    }
                 }
             }
 

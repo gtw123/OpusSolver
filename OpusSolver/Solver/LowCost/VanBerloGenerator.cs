@@ -42,7 +42,6 @@ namespace OpusSolver.Solver.LowCost
         {
             if (element == Element.Salt)
             {
-                ArmArea.MoveGrabberTo(this, DuplicatorTransform);
                 m_controller.RotateToElement(element);
             }
             else
