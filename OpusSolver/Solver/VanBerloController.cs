@@ -55,8 +55,14 @@ namespace OpusSolver.Solver
             m_currentWheelRotation = destRotation;
         }
 
-        public void Reset()
+        public void Reset(bool asEarlyAsPossible = true)
         {
+            if (!asEarlyAsPossible)
+            {
+                m_writer.Write(m_wheelArm, Instruction.Reset);
+                return;
+            }
+
             // Add a reset instruction just after the last instruction written for the wheel arm.
             // Ideally we'd simply add a new fragment with a single instruction and let ProgramBuilder
             // automatically move it to the correct position but unfortunately it doesn't currently

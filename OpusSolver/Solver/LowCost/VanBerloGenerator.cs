@@ -53,7 +53,12 @@ namespace OpusSolver.Solver.LowCost
 
         public override void EndSolution()
         {
-            m_controller.Reset();
+            // If we reset as early as possible then we might end up doing it before an atom passes through
+            // this generator. This means it might not be rotated to Salt and so it'll inadvertently convert
+            // a cardinal element to Salt. So we instead do it as late as possible. The -1 is just to avoid
+            // adding an extra cycle per product.
+            Writer.AdjustTime(-1);
+            m_controller.Reset(asEarlyAsPossible: false);
         }
     }
 }
