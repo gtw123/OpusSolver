@@ -38,23 +38,22 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             var builder = builders.First();
             var product = builder.Product;
 
-            // Calculate the final rotation of the molecule taking into account the rotation of the bonder
+            // Calculate the final rotation of the molecule
             var finalOp = builder.Operations.Last();
-            var finalRotation = finalOp.MoleculeRotation + m_bonder.Transform.Rotation - HexRotation.R180;
+            var moleculeTransform = GetMoleculeTransform(finalOp.MoleculeRotation);
 
             if (m_doExtraPivot)
             {
                 // Do an extra pivot to help avoid hitting reagents in a counterclockwise direction
-                finalRotation -= HexRotation.R60;
+                moleculeTransform.Rotation -= HexRotation.R60;
             }
 
-            var pos = UpperBonderPosition.Position - finalOp.Atom.Position.RotateBy(finalRotation);
+            var outputPos = moleculeTransform.Apply(-finalOp.Atom.Position);
             var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
             var rotationFromBonderToOutput = HexRotation.R60;
-            pos = pos.RotateAbout(armPos, rotationFromBonderToOutput);
+            outputPos = outputPos.RotateAbout(armPos, rotationFromBonderToOutput);
 
-            var transform = new Transform2D(pos, finalRotation + rotationFromBonderToOutput);
-            var output = new Product(this, transform.Position, transform.Rotation, product);
+            var output = new Product(this, outputPos, moleculeTransform.Rotation + rotationFromBonderToOutput, product);
             m_outputs[product.ID] = output;
         }
 
@@ -63,14 +62,14 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             m_assembleCoroutines[productID].Next();
         }
 
+        private Transform2D GetMoleculeTransform(HexRotation moleculeRotation)
+        {
+            return new Transform2D(UpperBonderPosition.Position, moleculeRotation + m_bonder.Transform.Rotation - HexRotation.R180);
+        }
+
         private IEnumerable<object> Assemble(MoleculeBuilder builder)
         {
             var placedAtoms = new List<Atom>();
-
-            Vector2 CalculateAtomPosition(Atom atom, HexRotation moleculeRotation)
-            {
-                return UpperBonderPosition.Position + (atom.Position - placedAtoms.Last().Position).RotateBy(moleculeRotation + m_bonder.Transform.Rotation - HexRotation.R180);
-            }
 
             var operations = builder.Operations;
             for (int opIndex = 0; opIndex < operations.Count; opIndex++)
@@ -81,12 +80,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                 if (placedAtoms.Any())
                 {
-                    var productRot = op.MoleculeRotation;
-                    foreach (var atom in placedAtoms)
-                    {
-                        var pos = CalculateAtomPosition(atom, productRot);
-                        GridState.RegisterAtom(pos, null, this);
-                    }
+                    GridState.UnregisterMolecule(placedAtoms.Last().Position, GetMoleculeTransform(op.MoleculeRotation), placedAtoms, this);
                 }
 
                 ArmArea.MoveGrabberTo(UpperBonderPosition, this);
@@ -106,13 +100,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 {
                     ArmArea.Pivot(op.RotationToNext);
                     placedAtoms.Add(op.Atom);
-
-                    var productRot = op.MoleculeRotation + op.RotationToNext;
-                    foreach (var atom in placedAtoms)
-                    {
-                        var pos = CalculateAtomPosition(atom, productRot);
-                        GridState.RegisterAtom(pos, atom.Element, this);
-                    }
+                    GridState.RegisterMolecule(placedAtoms.Last().Position, GetMoleculeTransform(op.MoleculeRotation + op.RotationToNext), placedAtoms, this);
                 }
 
                 ArmArea.DropAtom();

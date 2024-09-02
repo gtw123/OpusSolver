@@ -74,6 +74,11 @@ namespace OpusSolver.Solver.LowCost.Output
             m_assembleCoroutine.Next();
         }
 
+        private Transform2D GetMoleculeTransform()
+        {
+            return new Transform2D(UpperBonderPosition.Position, HexRotation.R120);
+        }
+
         private IEnumerable<object> Assemble()
         {
             var placedAtoms = new List<Atom>();
@@ -85,12 +90,7 @@ namespace OpusSolver.Solver.LowCost.Output
 
                 if (placedAtoms.Any())
                 {
-                    var lastAtom = placedAtoms.Last();
-                    foreach (var atom in placedAtoms)
-                    {
-                        var pos = UpperBonderPosition.Position + (atom.Position - lastAtom.Position).RotateBy(HexRotation.R120);
-                        GridState.RegisterAtom(pos, null, this);
-                    }
+                    GridState.UnregisterMolecule(placedAtoms.Last().Position, GetMoleculeTransform(), placedAtoms, this);
                 }
 
                 ArmArea.MoveGrabberTo(UpperBonderPosition, this);
@@ -106,13 +106,7 @@ namespace OpusSolver.Solver.LowCost.Output
                 else
                 {
                     placedAtoms.Add(m_currentProduct.GetAtom(new Vector2(x, 0)));
-
-                    var lastAtom = placedAtoms.Last();
-                    foreach (var atom in placedAtoms)
-                    {
-                        var pos = UpperBonderPosition.Position + (atom.Position - lastAtom.Position).RotateBy(HexRotation.R120);
-                        GridState.RegisterAtom(pos, atom.Element, this);
-                    }
+                    GridState.RegisterMolecule(placedAtoms.Last().Position, GetMoleculeTransform(), placedAtoms, this);
                 }
 
                 ArmArea.DropAtom();
