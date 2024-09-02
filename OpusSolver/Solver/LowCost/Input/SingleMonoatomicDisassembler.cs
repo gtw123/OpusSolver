@@ -28,6 +28,11 @@ namespace OpusSolver.Solver.LowCost.Input
             new Reagent(this, InputTransform.Position, InputTransform.Rotation, molecule);
         }
 
+        public override void BeginSolution()
+        {
+            GridState.RegisterAtom(InputTransform.Position, Element, this);
+        }
+
         public override void GenerateNextAtom()
         {
             Writer.NewFragment();

@@ -19,6 +19,11 @@ namespace OpusSolver.Solver.LowCost
             new Glyph(this, CalcifierTransform.Position, CalcifierTransform.Rotation, GlyphType.Calcification);
         }
 
+        public override void BeginSolution()
+        {
+            GridState.RegisterGlyph(CalcifierTransform.Position, GlyphType.Calcification, this);
+        }
+
         public override void Generate(Element element, int id)
         {
             ArmArea.MoveGrabberTo(this, CalcifierTransform);

@@ -5,6 +5,7 @@ namespace OpusSolver.Solver.LowCost
     public abstract class LowCostAtomGenerator : AtomGenerator
     {
         public ArmArea ArmArea { get; private set; }
+        public GridState GridState => ArmArea.GridState;
 
         /// <summary>
         /// The number of cells required on the main arm track to fit this generator in.

@@ -8,6 +8,7 @@ namespace OpusSolver.Solver.LowCost.Input
     public abstract class MoleculeDisassembler : SolverComponent
     {
         public ArmArea ArmArea { get; private set; }
+        public GridState GridState => ArmArea.GridState;
         public Molecule Molecule { get; protected set; }
 
         public abstract IEnumerable<Transform2D> RequiredAccessPoints { get; }
@@ -18,6 +19,8 @@ namespace OpusSolver.Solver.LowCost.Input
             ArmArea = armArea;
             Molecule = molecule;
         }
+
+        public virtual void BeginSolution() { }
 
         public abstract void GenerateNextAtom();
     }

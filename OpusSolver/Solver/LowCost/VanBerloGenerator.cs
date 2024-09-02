@@ -23,6 +23,15 @@ namespace OpusSolver.Solver.LowCost
             m_controller = new VanBerloController(Writer, m_wheelArm);
         }
 
+        public override void BeginSolution()
+        {
+            foreach (var rot in HexRotation.All)
+            {
+                // Technically these aren't all salt elements, but that doesn't matter at the moment
+                GridState.RegisterAtom(m_wheelArm.Transform.Position + new Vector2(1, 0).RotateBy(rot), Element.Salt, this);
+            }
+        }
+
         public override void Generate(Element element, int id)
         {
             ArmArea.MoveGrabberTo(this, DuplicatorTransform);

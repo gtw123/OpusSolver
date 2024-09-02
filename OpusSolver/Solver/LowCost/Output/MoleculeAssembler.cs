@@ -8,6 +8,7 @@ namespace OpusSolver.Solver.LowCost.Output
     public abstract class MoleculeAssembler : SolverComponent
     {
         public ArmArea ArmArea { get; private set; }
+        public GridState GridState => ArmArea.GridState;
 
         /// <summary>
         /// The number of cells required on the main arm track to fit this generator in.

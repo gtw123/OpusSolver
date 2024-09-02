@@ -30,6 +30,13 @@
         }
 
         /// <summary>
+        /// Called before the solution geneation has begun, to allow for optional once-off setup.
+        /// </summary>
+        public virtual void BeginSolution()
+        {
+        }
+
+        /// <summary>
         /// Consumes an atom of the specified element. The exact meaning of "consume"
         /// depends on the generator, but it generally means that atom will be stored
         /// temporarily for conversion into another atom.

@@ -56,12 +56,17 @@ namespace OpusSolver.Solver
 
             m_solutionBuilder.CreateAtomGenerators(m_pipeline);
 
+            var generators = m_pipeline.ElementGenerators;
+            foreach (var generator in generators)
+            {
+                generator.AtomGenerator.BeginSolution();
+            }
+
             foreach (var command in m_commandSequence.Commands)
             {
                 command.Execute();
             }
 
-            var generators = m_pipeline.ElementGenerators;
             foreach (var generator in generators)
             {
                 generator.AtomGenerator.EndSolution();

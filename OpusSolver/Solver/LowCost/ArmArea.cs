@@ -13,6 +13,8 @@ namespace OpusSolver.Solver.LowCost
         public Transform2D ArmTransform => m_armTransform;
         private ArmPathFinder m_armPathFinder;
 
+        public GridState GridState { get; private set; } = new GridState();
+
         public int ArmLength => 2;
 
         public ArmArea(SolverComponent parent, ProgramWriter writer)
