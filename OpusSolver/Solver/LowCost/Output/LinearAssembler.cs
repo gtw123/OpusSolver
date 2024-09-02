@@ -81,7 +81,7 @@ namespace OpusSolver.Solver.LowCost.Output
             for (int x = m_currentProduct.Width - 1; x >= 0; x--)
             {
                 // Bond the atom to the other product atoms (if any)
-                ArmArea.MoveGrabberTo(this, LowerBonderPosition);
+                ArmArea.MoveGrabberTo(LowerBonderPosition, this);
 
                 if (placedAtoms.Any())
                 {
@@ -93,7 +93,7 @@ namespace OpusSolver.Solver.LowCost.Output
                     }
                 }
 
-                ArmArea.MoveGrabberTo(this, UpperBonderPosition);
+                ArmArea.MoveGrabberTo(UpperBonderPosition, this);
     
                 if (x == 0)
                 {
@@ -101,7 +101,7 @@ namespace OpusSolver.Solver.LowCost.Output
                     ArmArea.PivotClockwise();
 
                     var transform = m_outputs[m_currentProduct.ID].Transform;
-                    ArmArea.MoveGrabberTo(this, new Transform2D(transform.Position, transform.Rotation - OutputRotationOffset));
+                    ArmArea.MoveGrabberTo(new Transform2D(transform.Position, transform.Rotation - OutputRotationOffset), this);
                 }
                 else
                 {

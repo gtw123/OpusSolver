@@ -77,7 +77,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             {
                 var op = operations[opIndex];
 
-                ArmArea.MoveGrabberTo(this, LowerBonderPosition);
+                ArmArea.MoveGrabberTo(LowerBonderPosition, this);
 
                 if (placedAtoms.Any())
                 {
@@ -89,7 +89,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     }
                 }
 
-                ArmArea.MoveGrabberTo(this, UpperBonderPosition);
+                ArmArea.MoveGrabberTo(UpperBonderPosition, this);
 
                 if (opIndex == operations.Count - 1)
                 {
@@ -100,7 +100,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                     var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
                     var grabberPosition = UpperBonderPosition.Position.RotateAbout(armPos, HexRotation.R60);
-                    ArmArea.MoveGrabberTo(this, new Transform2D(grabberPosition, HexRotation.R60));
+                    ArmArea.MoveGrabberTo(new Transform2D(grabberPosition, HexRotation.R60), this);
                 }
                 else
                 {

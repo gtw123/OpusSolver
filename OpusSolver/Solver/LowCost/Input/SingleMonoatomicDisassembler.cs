@@ -36,7 +36,7 @@ namespace OpusSolver.Solver.LowCost.Input
         public override void GenerateNextAtom()
         {
             Writer.NewFragment();
-            ArmArea.MoveGrabberTo(this, InputTransform);
+            ArmArea.MoveGrabberTo(InputTransform, this);
             ArmArea.GrabAtom(Element);
         }
     }

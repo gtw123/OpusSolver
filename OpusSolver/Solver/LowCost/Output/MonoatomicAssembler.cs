@@ -71,7 +71,7 @@ namespace OpusSolver.Solver.LowCost.Output
         public override void AddAtom(Element element, int productID)
         {
             var output = m_outputs[productID];
-            ArmArea.MoveGrabberTo(this, output.Transform);
+            ArmArea.MoveGrabberTo(output.Transform, this);
             ArmArea.DropAtom();
         }
     }

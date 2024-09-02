@@ -27,7 +27,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(this, CalcifierTransform, allowCalcification: true);
+            ArmArea.MoveGrabberTo(CalcifierTransform, this, allowCalcification: true);
             ArmArea.SetGrabbedElement(Element.Salt);
         }
     }

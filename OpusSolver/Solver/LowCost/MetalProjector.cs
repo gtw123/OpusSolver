@@ -27,14 +27,14 @@ namespace OpusSolver.Solver.LowCost
         {
             if (m_currentMetal == null)
             {
-                ArmArea.MoveGrabberTo(this, MetalTransform);
+                ArmArea.MoveGrabberTo(MetalTransform, this);
                 ArmArea.DropAtom();
                 GridState.RegisterAtom(MetalTransform.Position, element, this);
                 m_currentMetal = element;
             }
             else
             {
-                ArmArea.MoveGrabberTo(this, QuicksilverTransform);
+                ArmArea.MoveGrabberTo(QuicksilverTransform, this);
                 ArmArea.DropAtom();
                 GridState.RegisterAtom(MetalTransform.Position, element, this);
                 m_currentMetal++;
@@ -43,7 +43,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(this, MetalTransform);
+            ArmArea.MoveGrabberTo(MetalTransform, this);
             ArmArea.GrabAtom(element);
             GridState.RegisterAtom(MetalTransform.Position, null, this);
             m_currentMetal = null;

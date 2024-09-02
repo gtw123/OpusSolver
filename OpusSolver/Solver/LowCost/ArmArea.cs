@@ -87,24 +87,14 @@ namespace OpusSolver.Solver.LowCost
         /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated the
         /// specified direction (in local coordinates of a specifed object).
         /// </summary>
-        /// <param name="obj">The object whose local coordinate system the transform is specified in</param>
         /// <param name="grabberWorldTransform">The target position and rotation, in world coordinates</param>
+        /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
         /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
         /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change the grabbed atom</param>
-        public void MoveGrabberTo(GameObject obj, Transform2D grabberlocalTransform, HexRotation? armRotationOffset = null, bool allowCalcification = false)
+        public void MoveGrabberTo(Transform2D grabberlocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null, bool allowCalcification = false)
         {
-            MoveGrabberToWorldTransform(obj.GetWorldTransform().Apply(grabberlocalTransform), armRotationOffset, allowCalcification);
-        }
+            var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberlocalTransform) ?? grabberlocalTransform;
 
-        /// <summary>
-        /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated in the
-        /// specified direction (in world coordinates).
-        /// </summary>
-        /// <param name="grabberWorldTransform">The target position and rotation, in world coordinates</param>
-        /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
-        /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change the grabbed atom</param>
-        public void MoveGrabberToWorldTransform(Transform2D grabberWorldTransform, HexRotation? armRotationOffset = null, bool allowCalcification = false)
-        {
             var targetTransform = GrabberTransformToArmTransform(grabberWorldTransform);
             if (armRotationOffset != null)
             {
