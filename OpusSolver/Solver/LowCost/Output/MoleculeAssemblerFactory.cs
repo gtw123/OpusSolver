@@ -34,10 +34,6 @@ namespace OpusSolver.Solver.LowCost.Output
                     throw new SolverException($"LowCost solver can't currently handle more than {MonoatomicAssembler.MaxProducts} monoatomic products.");
                 }
             }
-            else if (products.All(p => p.IsLinear)) // includes monoatomic products
-            {
-                m_createAssembler = (parent, writer, armArea) => new LinearAssembler(parent, writer, armArea, products);
-            }
             else if (products.All(p => ComplexAssembler.IsProductCompatible(p)))
             {
                 var builders = ComplexAssembler.CreateMoleculeBuilders(products);

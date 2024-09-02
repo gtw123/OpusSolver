@@ -11,6 +11,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         {
             public Product ProductGlyph;
             public Transform2D GrabberTransform;
+            public bool DoExtraPivot;
         }
 
         private readonly Dictionary<int, Output> m_outputs = new();
@@ -22,9 +23,6 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         private static readonly Transform2D UpperBonderPosition = new Transform2D(new Vector2(-1, 1), HexRotation.R0);
 
         public override IEnumerable<Transform2D> RequiredAccessPoints => [LowerBonderPosition, UpperBonderPosition];
-
-        // TODO: Remove this?
-        private bool m_doExtraPivot = false;
 
         public ComplexAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeBuilder> builders)
             : base(parent, writer, armArea)
@@ -51,7 +49,9 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 var finalOp = builder.Operations.Last();
                 var moleculeTransform = GetMoleculeTransform(finalOp.MoleculeRotation);
 
-                if (m_doExtraPivot)
+                // TODO: Use a better condition to decide whether to do this extra pivot
+                bool doExtraPivot = product.Height == 1;
+                if (doExtraPivot)
                 {
                     // Do an extra pivot to help avoid hitting reagents in a counterclockwise direction
                     moleculeTransform.Rotation -= HexRotation.R60;
@@ -65,7 +65,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 var grabberPosition = UpperBonderPosition.Position.RotateAbout(armPos, rotationFromBonderToOutput);
                 var grabberTransform = new Transform2D(grabberPosition, rotationFromBonderToOutput);
 
-                m_outputs[product.ID] = new Output { ProductGlyph = productGlyph, GrabberTransform = grabberTransform };
+                m_outputs[product.ID] = new Output { ProductGlyph = productGlyph, GrabberTransform = grabberTransform, DoExtraPivot = doExtraPivot };
 
                 rotationFromBonderToOutput = rotationFromBonderToOutput.Rotate60Counterclockwise();
             }
@@ -101,12 +101,13 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                 if (opIndex == operations.Count - 1)
                 {
-                    if (m_doExtraPivot)
+                    var output = m_outputs[builder.Product.ID];
+                    if (output.DoExtraPivot)
                     {
                         ArmArea.PivotClockwise();
                     }
 
-                    ArmArea.MoveGrabberTo(m_outputs[builder.Product.ID].GrabberTransform, this);
+                    ArmArea.MoveGrabberTo(output.GrabberTransform, this);
                 }
                 else
                 {
