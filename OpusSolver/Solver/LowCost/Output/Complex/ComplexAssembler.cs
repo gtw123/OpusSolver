@@ -6,7 +6,14 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
     public class ComplexAssembler : MoleculeAssembler
     {
         private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines;
-        private readonly Dictionary<int, Product> m_outputs = new();
+
+        private class Output
+        {
+            public Product ProductGlyph;
+            public Transform2D GrabberTransform;
+        }
+
+        private readonly Dictionary<int, Output> m_outputs = new();
         private Glyph m_bonder;
 
         public override int RequiredWidth => 2;
@@ -30,31 +37,38 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         private void AddOutputs(IEnumerable<MoleculeBuilder> builders)
         {
-            if (builders.Count() > 1)
+            if (builders.Count() > 2)
             {
-                throw new SolverException("ComplexAssembler currently only supports one product.");
+                throw new SolverException("ComplexAssembler currently only supports two products.");
             }
 
-            var builder = builders.First();
-            var product = builder.Product;
-
-            // Calculate the final rotation of the molecule
-            var finalOp = builder.Operations.Last();
-            var moleculeTransform = GetMoleculeTransform(finalOp.MoleculeRotation);
-
-            if (m_doExtraPivot)
-            {
-                // Do an extra pivot to help avoid hitting reagents in a counterclockwise direction
-                moleculeTransform.Rotation -= HexRotation.R60;
-            }
-
-            var outputPos = moleculeTransform.Apply(-finalOp.Atom.Position);
-            var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
             var rotationFromBonderToOutput = HexRotation.R60;
-            outputPos = outputPos.RotateAbout(armPos, rotationFromBonderToOutput);
+            foreach (var builder in builders)
+            {
+                var product = builder.Product;
 
-            var output = new Product(this, outputPos, moleculeTransform.Rotation + rotationFromBonderToOutput, product);
-            m_outputs[product.ID] = output;
+                // Calculate the final rotation of the molecule
+                var finalOp = builder.Operations.Last();
+                var moleculeTransform = GetMoleculeTransform(finalOp.MoleculeRotation);
+
+                if (m_doExtraPivot)
+                {
+                    // Do an extra pivot to help avoid hitting reagents in a counterclockwise direction
+                    moleculeTransform.Rotation -= HexRotation.R60;
+                }
+
+                var outputPos = moleculeTransform.Apply(-finalOp.Atom.Position);
+                var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
+                outputPos = outputPos.RotateAbout(armPos, rotationFromBonderToOutput);
+                var productGlyph = new Product(this, outputPos, moleculeTransform.Rotation + rotationFromBonderToOutput, product);
+
+                var grabberPosition = UpperBonderPosition.Position.RotateAbout(armPos, rotationFromBonderToOutput);
+                var grabberTransform = new Transform2D(grabberPosition, rotationFromBonderToOutput);
+
+                m_outputs[product.ID] = new Output { ProductGlyph = productGlyph, GrabberTransform = grabberTransform };
+
+                rotationFromBonderToOutput = rotationFromBonderToOutput.Rotate60Counterclockwise();
+            }
         }
 
         public override void AddAtom(Element element, int productID)
@@ -92,9 +106,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                         ArmArea.PivotClockwise();
                     }
 
-                    var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
-                    var grabberPosition = UpperBonderPosition.Position.RotateAbout(armPos, HexRotation.R60);
-                    ArmArea.MoveGrabberTo(new Transform2D(grabberPosition, HexRotation.R60), this);
+                    ArmArea.MoveGrabberTo(m_outputs[builder.Product.ID].GrabberTransform, this);
                 }
                 else
                 {
