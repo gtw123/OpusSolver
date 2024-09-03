@@ -85,6 +85,11 @@ namespace OpusSolver
             return new HexRotation((-rot.IntValue + Count) % Count);
         }
 
+        public static HexRotation operator *(HexRotation left, int right)
+        {
+            return new HexRotation((left.IntValue * right) % Count);
+        }
+
         public override string ToString()
         {
             return (m_angle * 60).ToString(CultureInfo.InvariantCulture);

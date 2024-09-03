@@ -40,8 +40,9 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 throw new SolverException("ComplexAssembler currently only supports two products.");
             }
 
-            var rotationFromBonderToOutput = HexRotation.R60;
-            foreach (var builder in builders)
+            var rotationFromBonderToOutput = HexRotation.R60 * builders.Count();
+            bool doExtraPivot = false;
+            foreach (var builder in builders.Reverse())
             {
                 var product = builder.Product;
 
@@ -49,8 +50,14 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 var finalOp = builder.Operations.Last();
                 var moleculeTransform = GetMoleculeTransform(finalOp.MoleculeRotation);
 
-                // TODO: Use a better condition to decide whether to do this extra pivot
-                bool doExtraPivot = product.Height == 1;
+                // If we're doing an extra pivot for one molecule then we need to do it for all subsequent ones too
+                // to avoid overlap
+                if (!doExtraPivot)
+                {
+                    // TODO: Use a better condition to decide whether to do this extra pivot
+                    doExtraPivot = product.Height == 1;
+                }
+
                 if (doExtraPivot)
                 {
                     // Do an extra pivot to help avoid hitting reagents in a counterclockwise direction
@@ -67,7 +74,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                 m_outputs[product.ID] = new Output { ProductGlyph = productGlyph, GrabberTransform = grabberTransform, DoExtraPivot = doExtraPivot };
 
-                rotationFromBonderToOutput = rotationFromBonderToOutput.Rotate60Counterclockwise();
+                rotationFromBonderToOutput = rotationFromBonderToOutput.Rotate60Clockwise();
             }
         }
 
