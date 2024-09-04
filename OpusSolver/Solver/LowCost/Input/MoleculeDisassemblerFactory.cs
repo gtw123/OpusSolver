@@ -38,7 +38,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 return new DisassemblerInfo(null, GetDefaultElementOrder(molecule));
             }
 
-            throw new SolverException("LowCost solver can't currently handle reagents with more than one atom.");
+            throw new UnsupportedException("LowCost solver can't currently handle reagents with more than one atom.");
         }
     }
 }

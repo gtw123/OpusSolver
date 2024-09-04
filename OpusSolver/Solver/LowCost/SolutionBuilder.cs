@@ -73,10 +73,10 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.OutputGenerator => new OutputArea(m_writer, m_armArea, m_assemblerFactory),
                 ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.StackInfos),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer, m_armArea),
-                ElementGenerators.MetalPurifierGenerator metalPurifier => throw new NotImplementedException("MetalPurifier"),
-                ElementGenerators.MorsVitaeGenerator => throw new NotImplementedException("MorsVitae"),
-                ElementGenerators.QuintessenceDisperserGenerator => throw new NotImplementedException("QuintessenceDisperser"),
-                ElementGenerators.QuintessenceGenerator => throw new NotImplementedException("QuintessenceGenerator"),
+                ElementGenerators.MetalPurifierGenerator metalPurifier => throw new UnsupportedException("LowCost solver doesn't currently support metal purification."),
+                ElementGenerators.MorsVitaeGenerator => throw new UnsupportedException("LowCost solver doesn't currently support generating mors/vitae from salt."),
+                ElementGenerators.QuintessenceDisperserGenerator => throw new UnsupportedException("LowCost solver doesn't currently support generating cardinals from quintessence."),
+                ElementGenerators.QuintessenceGenerator => throw new UnsupportedException("LowCost solver doesn't currently support generating quintessence from cardinals."),
                 ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresCardinalPassThrough ? new SaltGenerator(m_writer, m_armArea) : new SaltGeneratorNoCardinalPassThrough(m_writer, m_armArea),
                 ElementGenerators.VanBerloGenerator => new VanBerloGenerator(m_writer, m_armArea),
                 _ => throw new ArgumentException($"Unknown element generator type {elementGenerator.GetType()}")
@@ -99,10 +99,10 @@ namespace OpusSolver.Solver.LowCost
                     return new SimpleInputArea(m_writer, m_armArea, reagents);
                 }
 
-                throw new SolverException($"LowCost solver can't currently handle more than {SimpleInputArea.MaxReagents} monoatomic reagents.");
+                throw new UnsupportedException($"LowCost solver can't currently handle more than {SimpleInputArea.MaxReagents} monoatomic reagents.");
             }
 
-            throw new SolverException("LowCost solver can't currently handle reagents with more than one atom.");
+            throw new UnsupportedException("LowCost solver can't currently handle reagents with more than one atom.");
         }
 
         public IEnumerable<GameObject> GetAllObjects()

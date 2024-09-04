@@ -17,11 +17,11 @@ namespace OpusSolver.Solver.LowCost.Output
         {
             if (products.Any(p => p.HasTriplex))
             {
-                throw new SolverException("LowCost solver can't currently handle products with triplex bonds.");
+                throw new UnsupportedException("LowCost solver can't currently handle products with triplex bonds.");
             }
             else if (products.Any(p => p.HasRepeats))
             {
-                throw new SolverException("LowCost solver can't currently handle products with repeats.");
+                throw new UnsupportedException("LowCost solver can't currently handle products with repeats.");
             }
             else if (products.All(p => p.Size == 1))
             {
@@ -31,7 +31,7 @@ namespace OpusSolver.Solver.LowCost.Output
                 }
                 else
                 {
-                    throw new SolverException($"LowCost solver can't currently handle more than {MonoatomicAssembler.MaxProducts} monoatomic products.");
+                    throw new UnsupportedException($"LowCost solver can't currently handle more than {MonoatomicAssembler.MaxProducts} monoatomic products.");
                 }
             }
             else if (products.All(p => ComplexAssembler.IsProductCompatible(p)))
@@ -42,7 +42,7 @@ namespace OpusSolver.Solver.LowCost.Output
             }
             else
             {
-                throw new SolverException($"LowCost solver can't currently handle molecules with bond loops.");
+                throw new UnsupportedException($"LowCost solver can't currently handle molecules with bond loops.");
             }
 
             m_productElementOrders ??= products.ToDictionary(p => p.ID, p => p.GetAtomsInInputOrder().Select(a => a.Element));

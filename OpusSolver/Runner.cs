@@ -15,6 +15,10 @@ namespace OpusSolver
         private CommandLineArguments m_args;
         private StreamWriter m_reportWriter;
 
+        private List<GeneratedSolution> m_generatedSolutions = new();
+        private int m_totalErrors = 0;
+        private int m_totalUnsupported = 0;
+
         public Runner(CommandLineArguments args)
         {
             m_args = args;
@@ -33,21 +37,38 @@ namespace OpusSolver
 
         public void Run()
         {
-            var generatedSolutions = GenerateSolutions();
+            GenerateSolutions();
 
             int totalSuccessfulSolutions;
+            int totalFailedVerification = 0;
             if (!m_args.SkipVerification)
             {
-                VerifySolutions(generatedSolutions);
-                totalSuccessfulSolutions = generatedSolutions.Count(s => s.Verified);
+                VerifySolutions(m_generatedSolutions);
+                totalSuccessfulSolutions = m_generatedSolutions.Count(s => s.Verified);
+                totalFailedVerification = m_generatedSolutions.Count - totalSuccessfulSolutions;
             }
             else
             {
-                totalSuccessfulSolutions = generatedSolutions.Count();
+                totalSuccessfulSolutions = m_generatedSolutions.Count();
             }
 
             string verifyMessage = m_args.SkipVerification ? "" : "and verified ";
             sm_log.Info($"Successfully generated {verifyMessage}solutions for {totalSuccessfulSolutions}/{m_args.PuzzleFiles.Count} puzzles.");
+
+            if (totalFailedVerification > 0)
+            {
+                sm_log.Error($"{totalFailedVerification} solutions failed verification.");
+            }
+
+            if (m_totalErrors > 0)
+            {
+                sm_log.Error($"{m_totalErrors} puzzles had unexpected errors.");
+            }
+
+            if (m_totalUnsupported > 0)
+            {
+                sm_log.Warn($"{m_totalUnsupported} puzzles could not be solved due to solver limitations.");
+            }
 
             if (m_reportWriter != null)
             {
@@ -56,26 +77,23 @@ namespace OpusSolver
             }
         }
 
-        private List<GeneratedSolution> GenerateSolutions()
+        private void GenerateSolutions()
         {
             sm_log.Info($"Generating solutions to \"{m_args.OutputDir}\"");
 
-            var generatedSolutions = new List<GeneratedSolution>();
             foreach (var puzzleFile in m_args.PuzzleFiles)
             {
                 string solutionFile = Path.Combine(m_args.OutputDir, Path.GetFileNameWithoutExtension(puzzleFile) + $"_{m_args.SolutionType}.solution");
                 var generatedSolution = GenerateSolution(puzzleFile, solutionFile);
                 if (generatedSolution != null)
                 {
-                    generatedSolutions.Add(generatedSolution);
+                    m_generatedSolutions.Add(generatedSolution);
                 }
 
                 Console.Write(".");
             }
 
             Console.WriteLine();
-
-            return generatedSolutions;
         }
 
         private GeneratedSolution GenerateSolution(string puzzleFile, string solutionFile)
@@ -97,6 +115,12 @@ namespace OpusSolver
                 SolutionWriter.WriteSolution(solution, solutionFile);
 
                 return new GeneratedSolution { PuzzleFile = puzzleFile, SolutionFile = solutionFile, Solution = solution };
+            }
+            catch (UnsupportedException e)
+            {
+                sm_log.Debug(e.Message);
+                m_totalUnsupported++;
+                return null;
             }
             catch (Exception e)
             {
@@ -125,6 +149,8 @@ namespace OpusSolver
                 // Write a new line first because there may be progress dots on the current line
                 Console.WriteLine();
                 sm_log.Error(message);
+                m_totalErrors++;
+
                 return null;
             }
         }

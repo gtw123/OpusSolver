@@ -37,7 +37,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         {
             if (builders.Count() > 2)
             {
-                throw new SolverException("ComplexAssembler currently only supports two products.");
+                throw new UnsupportedException("ComplexAssembler currently only supports two products.");
             }
 
             var rotationFromBonderToOutput = HexRotation.R60 * builders.Count();

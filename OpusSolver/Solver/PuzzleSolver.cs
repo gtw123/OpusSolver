@@ -39,7 +39,7 @@ namespace OpusSolver.Solver
         {
             if (Puzzle.Products.Any(p => p.Atoms.Any(a => a.Bonds.Values.Any(b => b == BondType.Triplex) && a.Element != Element.Fire)))
             {
-                throw new SolverException("This puzzle has triplex bonds between non-fire atoms.");
+                throw new UnsupportedException("This puzzle has triplex bonds between non-fire atoms.");
             }
         }
 
@@ -60,17 +60,17 @@ namespace OpusSolver.Solver
 
             if (missingGlyphs.Contains(GlyphType.Bonding))
             {
-                throw new SolverException("This puzzle doesn't allow the glyph of bonding.");
+                throw new UnsupportedException("This puzzle doesn't allow the glyph of bonding.");
             }
 
             if (missingGlyphs.Contains(GlyphType.Unbonding))
             {
-                throw new SolverException("This puzzle doesn't allow the glyph of unbonding.");
+                throw new UnsupportedException("This puzzle doesn't allow the glyph of unbonding.");
             }
 
             if (missingGlyphs.Contains(GlyphType.TriplexBonding))
             {
-                throw new SolverException("One or more products contain triplex bonds but the puzzle doesn't allow the glyph of triplex bonding.");
+                throw new UnsupportedException("One or more products contain triplex bonds but the puzzle doesn't allow the glyph of triplex bonding.");
             }
         }
     }
