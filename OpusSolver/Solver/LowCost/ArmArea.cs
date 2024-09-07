@@ -140,18 +140,15 @@ namespace OpusSolver.Solver.LowCost
             Writer.Write(m_mainArm, Instruction.PivotCounterclockwise);
         }
 
-        public void Pivot(HexRotation deltaRot, bool rotateClockwiseIf180Degrees = false)
+        public void PivotBy(HexRotation deltaRot, bool rotateClockwiseIf180Degrees = false)
         {
-            if (deltaRot.IntValue < 3 || (deltaRot == HexRotation.R180 && !rotateClockwiseIf180Degrees))
+            foreach (var rot in HexRotation.R0.CalculateDeltaRotationsTo(deltaRot, rotateClockwiseIf180Degrees))
             {
-                for (int i = 0; i < deltaRot.IntValue; i++)
+                if (rot == HexRotation.R60)
                 {
                     PivotCounterClockwise();
                 }
-            }
-            else
-            {
-                for (int i = 0; i < HexRotation.Count - deltaRot.IntValue; i++)
+                else
                 {
                     PivotClockwise();
                 }

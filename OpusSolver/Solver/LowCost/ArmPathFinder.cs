@@ -187,8 +187,8 @@ namespace OpusSolver.Solver.LowCost
                 }
                 else
                 {
-                    var rotDelta = pos.Rotation - previousPos.Rotation;
-                    instructions.Add(rotDelta.IntValue <= 3 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise);
+                    var deltaRots = previousPos.Rotation.CalculateDeltaRotationsTo(pos.Rotation);
+                    instructions.AddRange(deltaRots.Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
                 }
 
                 previousPos = pos;

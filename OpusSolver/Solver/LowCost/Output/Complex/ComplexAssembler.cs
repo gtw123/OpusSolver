@@ -156,13 +156,13 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 if (opIndex == operations.Count - 1)
                 {
                     var output = m_outputs[builder.Product.ID];
-                    ArmArea.Pivot(output.Pivot, rotateClockwiseIf180Degrees: true);
+                    ArmArea.PivotBy(output.Pivot, rotateClockwiseIf180Degrees: true);
 
                     ArmArea.MoveGrabberTo(output.GrabberTransform, this);
                 }
                 else
                 {
-                    ArmArea.Pivot(op.RotationToNext);
+                    ArmArea.PivotBy(op.RotationToNext);
                     placedAtoms.Add(op.Atom);
                     GridState.RegisterMolecule(placedAtoms.Last().Position, GetMoleculeTransform(op.MoleculeRotation + op.RotationToNext), placedAtoms, this);
                 }

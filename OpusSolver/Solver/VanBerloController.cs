@@ -31,20 +31,12 @@ namespace OpusSolver.Solver
             }
             else
             {
-                var deltaRotation = (destRotation - m_currentWheelRotation).IntValue;
-                if (deltaRotation != 0)
+                var deltaRotations = m_currentWheelRotation.CalculateDeltaRotationsTo(destRotation);
+                if (deltaRotations.Any())
                 {
-                    int numRotations = deltaRotation;
-                    var instruction = Instruction.RotateCounterclockwise;
-                    if (deltaRotation >= 3)
-                    {
-                        numRotations = HexRotation.Count - deltaRotation;
-                        instruction = Instruction.RotateClockwise;
-                    }
-
                     // Rotate the wheel before the atom gets into position
-                    m_writer.AdjustTime(-numRotations);
-                    m_writer.Write(m_wheelArm, Enumerable.Repeat(instruction, numRotations));
+                    m_writer.AdjustTime(-deltaRotations.Count());
+                    m_writer.Write(m_wheelArm, deltaRotations.Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
                 }
 
                 // Force the wheel to not rotate again until the atom is moving away. Otherwise salt
