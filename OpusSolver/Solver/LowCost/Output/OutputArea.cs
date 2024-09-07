@@ -19,6 +19,11 @@ namespace OpusSolver.Solver.LowCost.Output
             m_assembler = assemblerFactory.CreateAssembler(this, Writer, armArea);
         }
 
+        public override void BeginSolution()
+        {
+            m_assembler.BeginSolution();
+        }
+
         public override void Consume(Element element, int id)
         {
             m_assembler.AddAtom(element, id);

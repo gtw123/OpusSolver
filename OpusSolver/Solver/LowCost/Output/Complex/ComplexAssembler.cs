@@ -1,17 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver.LowCost.Output.Complex
 {
     public class ComplexAssembler : MoleculeAssembler
     {
+        private IEnumerable<MoleculeBuilder> m_builders;
         private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines;
 
         private class Output
         {
-            public Product ProductGlyph;
+            public Molecule Product;
+            public Transform2D OutputTransform;
             public Transform2D GrabberTransform;
-            public bool DoExtraPivot;
+            public HexRotation Pivot;
         }
 
         private readonly Dictionary<int, Output> m_outputs = new();
@@ -27,55 +30,99 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         public ComplexAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeBuilder> builders)
             : base(parent, writer, armArea)
         {
+            m_builders = builders;
             m_assembleCoroutines = builders.ToDictionary(b => b.Product.ID, b => new LoopingCoroutine<object>(() => Assemble(b)));
             m_bonder = new Glyph(this, LowerBonderPosition.Position, HexRotation.R120, GlyphType.Bonding);
-
-            AddOutputs(builders);
         }
 
-        private void AddOutputs(IEnumerable<MoleculeBuilder> builders)
+        public override void BeginSolution()
         {
-            if (builders.Count() > 2)
+            // Create the outputs here so that everything else will be created first and we can place
+            // the outputs without overlapping other parts
+            AddOutputs();
+        }
+
+        private void AddOutputs()
+        {
+            if (m_builders.Count() > 2)
             {
                 throw new UnsupportedException("ComplexAssembler currently only supports two products.");
             }
 
-            var rotationFromBonderToOutput = HexRotation.R60 * builders.Count();
-            bool doExtraPivot = false;
-            foreach (var builder in builders.Reverse())
+            var possibleRotations = new[] { HexRotation.R60, HexRotation.R120 };
+            var possiblePivots = new[] { HexRotation.R0, -HexRotation.R60 };
+            var rotationCases = possibleRotations.SelectMany(r => possiblePivots, (rotation, pivot) => (rotation, pivot)).ToList();
+
+            var builder1 = m_builders.First();
+            foreach (var (rot1, pivot1) in rotationCases)
             {
-                var product = builder.Product;
+                var output1 = CalculateOutputTransform(builder1, rot1, pivot1);
 
-                // Calculate the final rotation of the molecule
-                var finalOp = builder.Operations.Last();
-                var moleculeTransform = GetMoleculeTransform(finalOp.MoleculeRotation);
-
-                // If we're doing an extra pivot for one molecule then we need to do it for all subsequent ones too
-                // to avoid overlap
-                if (!doExtraPivot)
+                // Check that none of the output atoms overlap any other atoms
+                var atomPositions = builder1.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output1.OutputTransform));
+                if (atomPositions.Any(p => GridState.GetAtom(p) != null))
                 {
-                    // TODO: Use a better condition to decide whether to do this extra pivot
-                    doExtraPivot = product.Height == 1;
+                    continue;
                 }
 
-                if (doExtraPivot)
+                if (m_builders.Count() == 1)
                 {
-                    // Do an extra pivot to help avoid hitting reagents in a counterclockwise direction
-                    moleculeTransform.Rotation -= HexRotation.R60;
+                    m_outputs[builder1.Product.ID] = output1;
+                    break;
                 }
 
-                var outputPos = moleculeTransform.Apply(-finalOp.Atom.Position);
-                var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
-                outputPos = outputPos.RotateAbout(armPos, rotationFromBonderToOutput);
-                var productGlyph = new Product(this, outputPos, moleculeTransform.Rotation + rotationFromBonderToOutput, product);
+                var builder2 = m_builders.Skip(1).Single();
+                foreach (var (rot2, pivot2) in rotationCases.Where(c => c.rotation != rot1))
+                {
+                    var output2 = CalculateOutputTransform(builder2, rot2, pivot2);
 
-                var grabberPosition = UpperBonderPosition.Position.RotateAbout(armPos, rotationFromBonderToOutput);
-                var grabberTransform = new Transform2D(grabberPosition, rotationFromBonderToOutput);
+                    // Check that none of the output atoms overlap any other atoms
+                    var atomPositions2 = builder2.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output2.OutputTransform));
+                    if (atomPositions2.Any(p => GridState.GetAtom(p) != null))
+                    {
+                        continue;
+                    }
 
-                m_outputs[product.ID] = new Output { ProductGlyph = productGlyph, GrabberTransform = grabberTransform, DoExtraPivot = doExtraPivot };
+                    // Check that the outputs don't overlap with each other
+                    if (atomPositions.Intersect(atomPositions2).Any())
+                    {
+                        continue;
+                    }
 
-                rotationFromBonderToOutput = rotationFromBonderToOutput.Rotate60Clockwise();
+                    m_outputs[builder1.Product.ID] = output1;
+                    m_outputs[builder2.Product.ID] = output2;
+                    break;
+                }
             }
+
+            var missingOutputs = m_outputs.Keys.Except(m_builders.Select(b => b.Product.ID));
+            if (missingOutputs.Any())
+            {
+                throw new InvalidOperationException($"Could not find valid output positions for products.");
+            }
+
+            foreach (var (id, output) in m_outputs)
+            {
+                new Product(this, output.OutputTransform.Position, output.OutputTransform.Rotation, output.Product);
+            }
+        }
+
+        private Output CalculateOutputTransform(MoleculeBuilder builder, HexRotation rotationFromBonderToOutput, HexRotation pivotToOutput)
+        {
+            var finalOp = builder.Operations.Last();
+            var moleculeTransform = GetMoleculeTransform(finalOp.MoleculeRotation);
+
+            moleculeTransform.Rotation += pivotToOutput;
+
+            var outputPos = moleculeTransform.Apply(-finalOp.Atom.Position);
+            var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
+            outputPos = outputPos.RotateAbout(armPos, rotationFromBonderToOutput);
+            var outputTransform = new Transform2D(outputPos, moleculeTransform.Rotation + rotationFromBonderToOutput);
+
+            var grabberPosition = UpperBonderPosition.Position.RotateAbout(armPos, rotationFromBonderToOutput);
+            var grabberTransform = new Transform2D(grabberPosition, rotationFromBonderToOutput);
+
+            return new Output { Product = builder.Product, OutputTransform = outputTransform, GrabberTransform = grabberTransform, Pivot = pivotToOutput };
         }
 
         public override void AddAtom(Element element, int productID)
@@ -109,10 +156,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 if (opIndex == operations.Count - 1)
                 {
                     var output = m_outputs[builder.Product.ID];
-                    if (output.DoExtraPivot)
-                    {
-                        ArmArea.PivotClockwise();
-                    }
+                    ArmArea.Pivot(output.Pivot, rotateClockwiseIf180Degrees: true);
 
                     ArmArea.MoveGrabberTo(output.GrabberTransform, this);
                 }

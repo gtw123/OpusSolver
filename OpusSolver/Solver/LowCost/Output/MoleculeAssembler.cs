@@ -23,6 +23,10 @@ namespace OpusSolver.Solver.LowCost.Output
             ArmArea = armArea;
         }
 
+        public virtual void BeginSolution()
+        {
+        }
+
         /// <summary>
         /// Adds an atom to the assembly area.
         /// </summary>

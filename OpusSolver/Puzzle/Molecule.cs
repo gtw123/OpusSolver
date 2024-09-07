@@ -1,4 +1,6 @@
-﻿using System;
+﻿using log4net.Util;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -158,6 +160,11 @@ namespace OpusSolver
         public IEnumerable<Atom> GetAtomsInInputOrder()
         {
             return Atoms.OrderByDescending(a => a.Position.Y).ThenByDescending(a => a.Position.X);
+        }
+
+        public IEnumerable<Vector2> GetTransformedAtomPositions(Transform2D transform)
+        {
+            return Atoms.Select(a => transform.Apply(a.Position));
         }
 
         public void RotateBy(HexRotation rotation)

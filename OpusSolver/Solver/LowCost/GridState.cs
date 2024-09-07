@@ -30,6 +30,7 @@ namespace OpusSolver.Solver.LowCost
 
             foreach (var atom in atoms)
             {
+                // TODO: Consolidate this with Molecule.GetTransformedAtomPositions?
                 var pos = transform.Apply(atom.Position - localOrigin);
                 m_atoms[pos] = register ? atom.Element : null;
             }
