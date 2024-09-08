@@ -28,6 +28,11 @@ namespace OpusSolver
             return new Transform2D(Apply(transform.Position), Apply(transform.Rotation));
         }
 
+        public Transform2D RotateAbout(Vector2 point, HexRotation rotation)
+        {
+            return new Transform2D(Position.RotateAbout(point, rotation), Rotation + rotation);
+        }
+
         public override string ToString()
         {
             return Invariant($"({Position}, {Rotation})");

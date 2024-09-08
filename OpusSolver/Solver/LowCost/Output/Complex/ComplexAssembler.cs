@@ -113,14 +113,12 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             var moleculeTransform = GetMoleculeTransform(finalOp.MoleculeRotation);
 
             moleculeTransform.Rotation += pivotToOutput;
+            var outputTransform = moleculeTransform.Apply(new Transform2D(-finalOp.Atom.Position, HexRotation.R0));
 
-            var outputPos = moleculeTransform.Apply(-finalOp.Atom.Position);
             var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
-            outputPos = outputPos.RotateAbout(armPos, rotationFromBonderToOutput);
-            var outputTransform = new Transform2D(outputPos, moleculeTransform.Rotation + rotationFromBonderToOutput);
+            outputTransform = outputTransform.RotateAbout(armPos, rotationFromBonderToOutput);
 
-            var grabberPosition = UpperBonderPosition.Position.RotateAbout(armPos, rotationFromBonderToOutput);
-            var grabberTransform = new Transform2D(grabberPosition, rotationFromBonderToOutput);
+            var grabberTransform = UpperBonderPosition.RotateAbout(armPos, rotationFromBonderToOutput);
 
             return new Output { Product = builder.Product, OutputTransform = outputTransform, GrabberTransform = grabberTransform, Pivot = pivotToOutput };
         }
