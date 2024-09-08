@@ -15,7 +15,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             /// The rotation of the molecule after bonding this atom to the previous one. Assumes the bonder
             /// is aligned with the X axis, the previous atom is at (0, 0) and this atom is at (1, 0).
             /// </summary>
-            public HexRotation MoleculeRotation { get; set; }
+            public HexRotation MoleculeRotationRelativeToBonder { get; set; }
 
             /// <summary>
             /// The delta rotation required to bond the next atom after this one.
@@ -82,12 +82,12 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 var prevAtom = orderedAtoms[i - 1];
                 var bondDir = (atom.Position - prevAtom.Position).ToRotation().Value;
 
-                ops[i].MoleculeRotation = -bondDir;
+                ops[i].MoleculeRotationRelativeToBonder = -bondDir;
             }
 
             for (int i = 1; i < orderedAtoms.Count - 1; i++)
             {
-                ops[i].RotationToNext = ops[i + 1].MoleculeRotation - ops[i].MoleculeRotation;
+                ops[i].RotationToNext = ops[i + 1].MoleculeRotationRelativeToBonder - ops[i].MoleculeRotationRelativeToBonder;
             }
 
             return ops;

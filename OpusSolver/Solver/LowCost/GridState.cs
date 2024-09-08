@@ -13,26 +13,24 @@ namespace OpusSolver.Solver.LowCost
             m_atoms[position] = element;
         }
 
-        public void RegisterMolecule(Vector2 localOrigin, Transform2D transform, IEnumerable<Atom> atoms, GameObject relativeToObj)
+        public void RegisterAtoms(AtomCollection atomCollection, GameObject relativeToObj)
         {
-            RegisterMoleculeElements(localOrigin, transform, atoms, relativeToObj, true);
+            RegisterMoleculeElements(atomCollection, relativeToObj, true);
         }
 
-        public void UnregisterMolecule(Vector2 localOrigin, Transform2D transform, IEnumerable<Atom> atoms, GameObject relativeToObj)
+        public void UnregisterAtoms(AtomCollection atomCollection, GameObject relativeToObj)
         {
-            RegisterMoleculeElements(localOrigin, transform, atoms, relativeToObj, false);
+            RegisterMoleculeElements(atomCollection, relativeToObj, false);
         }
 
-        private void RegisterMoleculeElements(Vector2 localOrigin, Transform2D transform, IEnumerable<Atom> atoms, GameObject relativeToObj, bool register)
+        private void RegisterMoleculeElements(AtomCollection atomCollection, GameObject relativeToObj, bool register)
         {
             var objTransform = relativeToObj?.GetWorldTransform() ?? new Transform2D();
-            transform = objTransform.Apply(transform);
 
-            foreach (var atom in atoms)
+            foreach (var (atom, pos) in atomCollection.GetTransformedAtomPositions())
             {
-                // TODO: Consolidate this with Molecule.GetTransformedAtomPositions?
-                var pos = transform.Apply(atom.Position - localOrigin);
-                m_atoms[pos] = register ? atom.Element : null;
+                var worldPos = objTransform.Apply(pos);
+                m_atoms[worldPos] = register ? atom.Element : null;
             }
         }
 
