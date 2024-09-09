@@ -79,8 +79,8 @@ namespace OpusSolver.Solver.LowCost
         private void CreateMainArm(Transform2D transform)
         {
             m_armTransform = transform;
-
             m_mainArm = new Arm(this, m_armTransform.Position, m_armTransform.Rotation, ArmType.Arm1, extension: ArmLength);
+            GridState.RegisterArm(m_armTransform.Position, m_mainArm, this);
         }
 
         /// <summary>
@@ -110,7 +110,9 @@ namespace OpusSolver.Solver.LowCost
             var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform, m_grabbedElement, disallowedGlyphs);
             Writer.Write(m_mainArm, instructions);
 
+            GridState.RegisterArm(m_armTransform.Position, null, this);
             m_armTransform = targetTransform;
+            GridState.RegisterArm(m_armTransform.Position, m_mainArm, this);
         }
 
         public void GrabAtom(Element element)
@@ -158,7 +160,11 @@ namespace OpusSolver.Solver.LowCost
         public void ResetArm()
         {
             Writer.Write(m_mainArm, Instruction.Reset);
+
+            GridState.RegisterArm(m_armTransform.Position, null, this);
             m_armTransform = m_mainArm.Transform;
+            GridState.RegisterArm(m_armTransform.Position, m_mainArm, this);
+
             m_grabbedElement = null;
         }
     }

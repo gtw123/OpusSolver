@@ -27,12 +27,17 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         public override IEnumerable<Transform2D> RequiredAccessPoints => [LowerBonderPosition, UpperBonderPosition];
 
+        /// <summary>
+        /// The direction in which this assembler's bonder creates bonds, from the previous atom to the new atom.
+        /// </summary>
+        public static HexRotation BondingDirection = HexRotation.R300;
+
         public ComplexAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeBuilder> builders)
             : base(parent, writer, armArea)
         {
             m_builders = builders;
             m_assembleCoroutines = builders.ToDictionary(b => b.Product.ID, b => new LoopingCoroutine<object>(() => Assemble(b)));
-            m_bonder = new Glyph(this, LowerBonderPosition.Position, HexRotation.R120, GlyphType.Bonding);
+            m_bonder = new Glyph(this, LowerBonderPosition.Position, BondingDirection - HexRotation.R180, GlyphType.Bonding);
         }
 
         public override void BeginSolution()
@@ -110,7 +115,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         private Output CalculateOutputTransform(MoleculeBuilder builder, HexRotation rotationFromBonderToOutput, HexRotation pivotToOutput)
         {
             var finalOp = builder.Operations.Last();
-            var moleculeTransform = GetMoleculeTransform(finalOp.MoleculeRotationRelativeToBonder + pivotToOutput);
+            var moleculeTransform = new Transform2D(UpperBonderPosition.Position, finalOp.MoleculeRotation + pivotToOutput);
             moleculeTransform = moleculeTransform.Apply(new Transform2D(-finalOp.Atom.Position, HexRotation.R0));
 
             var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
@@ -126,43 +131,112 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             m_assembleCoroutines[productID].Next();
         }
 
-        private Transform2D GetMoleculeTransform(HexRotation moleculeRotationRelativeToBonder)
-        {
-            return new Transform2D(UpperBonderPosition.Position, moleculeRotationRelativeToBonder + m_bonder.Transform.Rotation - HexRotation.R180);
-        }
-
         private IEnumerable<object> Assemble(MoleculeBuilder builder)
         {
             var assembledAtoms = new AtomCollection();
+            bool isBondingUpsideDown = false;
 
             var operations = builder.Operations;
             for (int opIndex = 0; opIndex < operations.Count; opIndex++)
             {
                 var op = operations[opIndex];
 
-                ArmArea.MoveGrabberTo(LowerBonderPosition, this);
-
-                if (assembledAtoms.Atoms.Any())
+                if (isBondingUpsideDown)
                 {
-                    GridState.UnregisterAtoms(assembledAtoms, this);
-                }
+                    ArmArea.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
+                    ArmArea.DropAtom();
 
-                ArmArea.MoveGrabberTo(UpperBonderPosition, this);
+                    // TODO: Register the dropped atom
+
+                    // Grab the previously dropped atoms
+                    ArmArea.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
+                    ArmArea.GrabAtom(assembledAtoms.Atoms.Last().Element);
+                    GridState.UnregisterAtoms(assembledAtoms, this);
+
+                    // Move them down to the lower bonder position
+                    ArmArea.MoveGrabberTo(UpperBonderPosition, this);
+                    // TODO: Use grabber position here?
+                    assembledAtoms.Transform = assembledAtoms.Transform.RotateAbout(UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), -HexRotation.R120);
+
+                    ArmArea.MoveGrabberTo(LowerBonderPosition, this);
+                    assembledAtoms.Transform.Position = LowerBonderPosition.Position;
+
+                    var targetRotation = op.MoleculeRotation + HexRotation.R180;
+                    var requiredPivot = targetRotation - assembledAtoms.Transform.Rotation;
+                    ArmArea.PivotBy(requiredPivot, rotateClockwiseIf180Degrees: true);
+                    assembledAtoms.Transform = assembledAtoms.Transform.RotateAbout(LowerBonderPosition.Position, requiredPivot);
+
+                    ArmArea.DropAtom();
+                    GridState.RegisterAtoms(assembledAtoms, this);
+
+                    // Grab the previously dropped atom and move it to the upper bonder position
+                    ArmArea.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
+                    ArmArea.GrabAtom(op.Atom.Element);
+                    ArmArea.MoveGrabberTo(UpperBonderPosition, this);
+                    GridState.UnregisterAtoms(assembledAtoms, this);
+                    assembledAtoms.Transform.Position = UpperBonderPosition.Position;
+                }
+                else
+                {
+                    ArmArea.MoveGrabberTo(LowerBonderPosition, this);
+                    GridState.UnregisterAtoms(assembledAtoms, this);
+                    ArmArea.MoveGrabberTo(UpperBonderPosition, this);
+                }
 
                 if (opIndex == operations.Count - 1)
                 {
                     var output = m_outputs[builder.Product.ID];
-                    ArmArea.PivotBy(output.Pivot, rotateClockwiseIf180Degrees: true);
 
+                    var targetRotation = op.MoleculeRotation + output.Pivot;
+                    var requiredPivot = targetRotation - assembledAtoms.Transform.Rotation;
+
+                    ArmArea.PivotBy(requiredPivot);
                     ArmArea.MoveGrabberTo(output.GrabberTransform, this);
                 }
                 else
                 {
-                    ArmArea.PivotBy(op.RotationToNext);
                     assembledAtoms.AddAtom(op.Atom);
                     assembledAtoms.LocalOrigin = op.Atom.Position;
-                    assembledAtoms.Transform = GetMoleculeTransform(op.MoleculeRotationRelativeToBonder + op.RotationToNext);
-                    GridState.RegisterAtoms(assembledAtoms, this);
+
+                    if (opIndex == 0)
+                    {
+                        assembledAtoms.Transform = new Transform2D(UpperBonderPosition.Position, op.MoleculeRotation);
+                    }
+
+                    var targetRotation = op.MoleculeRotation + op.RotationToNext;
+                    var requiredPivot = targetRotation - assembledAtoms.Transform.Rotation;
+
+                    bool willCollide = false;
+                    if (op.RotationToNext == HexRotation.R60 || op.RotationToNext == HexRotation.R120)
+                    {
+                        // TODO: Should we always do this CCW?
+                        var currentRot = assembledAtoms.Transform.Rotation;
+                        var rots = currentRot.CalculateRotationsTo(targetRotation);
+                        willCollide = rots.Any(rot => GridState.WillAtomsCollideWhileRotating(assembledAtoms, UpperBonderPosition.Position, rot - currentRot, this));
+                    }
+
+                    if (willCollide)
+                    {
+                        // Rotate/pivot the molecule so that we can move the next atom behind it
+                        var targetRotation2 = op.MoleculeRotation - HexRotation.R120;
+                        var requiredPivot2 = targetRotation2 - assembledAtoms.Transform.Rotation;
+
+                        ArmArea.PivotBy(requiredPivot2);
+                        assembledAtoms.Transform = assembledAtoms.Transform.RotateAbout(UpperBonderPosition.Position, requiredPivot2);
+                        ArmArea.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
+                        assembledAtoms.Transform = assembledAtoms.Transform.RotateAbout(UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), HexRotation.R120);
+                        GridState.RegisterAtoms(assembledAtoms, this);
+
+                        isBondingUpsideDown = true;
+                    }
+                    else
+                    {
+                        ArmArea.PivotBy(requiredPivot);
+                        assembledAtoms.Transform = assembledAtoms.Transform.RotateAbout(UpperBonderPosition.Position, requiredPivot);
+                        GridState.RegisterAtoms(assembledAtoms, this);
+
+                        isBondingUpsideDown = false;
+                    }
                 }
 
                 ArmArea.DropAtom();
