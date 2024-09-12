@@ -33,6 +33,11 @@ namespace OpusSolver
             return new Transform2D(Position.RotateAbout(point, rotation), Rotation + rotation);
         }
 
+        public Transform2D Inverse()
+        {
+            return new Transform2D(-Position.RotateBy(-Rotation), -Rotation);
+        }
+
         public override string ToString()
         {
             return Invariant($"({Position}, {Rotation})");
