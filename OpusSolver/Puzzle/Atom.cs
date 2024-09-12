@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
 
@@ -20,7 +21,7 @@ namespace OpusSolver
 
         public int BondCount => Bonds.Values.Count(b => b != BondType.None);
 
-        public Atom(Element element, HexRotationDictionary<BondType> bonds, Vector2 position)
+        public Atom(Element element, IDictionary<HexRotation, BondType> bonds, Vector2 position)
         {
             Element = element;
             Position = position;

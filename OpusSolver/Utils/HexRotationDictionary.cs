@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace OpusSolver
 {
-    public class HexRotationDictionary<T> : IEnumerable<KeyValuePair<HexRotation, T>>
+    public class HexRotationDictionary<T> : IDictionary<HexRotation, T>
     {
         private SortedDictionary<HexRotation, T> m_data;
 
@@ -13,9 +13,9 @@ namespace OpusSolver
             m_data = new();
         }
 
-        public HexRotationDictionary(HexRotationDictionary<T> other)
+        public HexRotationDictionary(IDictionary<HexRotation, T> other)
         {
-            m_data = new(other.m_data);
+            m_data = new(other);
         }
 
         public T this[HexRotation rot]
@@ -27,6 +27,8 @@ namespace OpusSolver
         public ICollection<HexRotation> Keys => m_data.Keys;
         public ICollection<T> Values => m_data.Values;
         public int Count => m_data.Count;
+
+        public bool IsReadOnly => false;
 
         public void Add(HexRotation key, T value)
         {
@@ -99,6 +101,26 @@ namespace OpusSolver
 
                 rot += step;
             }
+        }
+
+        public void Add(KeyValuePair<HexRotation, T> item)
+        {
+            this[item.Key] = item.Value;
+        }
+
+        public bool Contains(KeyValuePair<HexRotation, T> item)
+        {
+            return ((ICollection<KeyValuePair<HexRotation, T>>)m_data).Contains(item);
+        }
+
+        public void CopyTo(KeyValuePair<HexRotation, T>[] array, int arrayIndex)
+        {
+            m_data.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(KeyValuePair<HexRotation, T> item)
+        {
+            return ((ICollection<KeyValuePair<HexRotation, T>>)m_data).Remove(item);
         }
     }
 }
