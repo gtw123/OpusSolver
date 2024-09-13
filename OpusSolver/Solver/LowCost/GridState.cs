@@ -26,7 +26,7 @@ namespace OpusSolver.Solver.LowCost
 
         private void RegisterMoleculeElements(AtomCollection atomCollection, bool register)
         {
-            foreach (var (atom, pos) in atomCollection.GetTransformedAtomPositions())
+            foreach (var (atom, pos) in atomCollection.GetWorldAtomPositions())
             {
                 m_atoms[pos] = register ? atom.Element : null;
             }
@@ -42,7 +42,7 @@ namespace OpusSolver.Solver.LowCost
             var objTransform = relativeToObj?.GetWorldTransform() ?? new Transform2D();
             var transform = new Transform2D().RotateAbout(objTransform.Apply(rotationPoint), rotation);
 
-            foreach (var (_, pos) in atomCollection.GetTransformedAtomPositions())
+            foreach (var (_, pos) in atomCollection.GetWorldAtomPositions())
             {
                 var worldPos = transform.Apply(pos);
                 if (GetAtom(worldPos) != null || GetArm(worldPos) != null)

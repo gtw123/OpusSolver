@@ -126,7 +126,7 @@ namespace OpusSolver.Solver.LowCost
             }
             
             var grabberPosition = GetGrabberPosition();
-            if (!atoms.GetTransformedAtomPositions().Where(p => p.position == grabberPosition).Any())
+            if (!atoms.GetWorldAtomPositions().Where(p => p.position == grabberPosition).Any())
             {
                 throw new InvalidOperationException($"Cannot grab atoms as no atom is located at the current grabber position {grabberPosition}.");
             }
@@ -168,7 +168,7 @@ namespace OpusSolver.Solver.LowCost
             }
 
             GridState.UnregisterAtoms(bondToAtoms);
-            foreach (var (atom, pos) in m_grabbedAtoms.GetTransformedAtomPositions())
+            foreach (var (atom, pos) in m_grabbedAtoms.GetWorldAtomPositions())
             {
                 atom.Position = bondToAtoms.WorldTransform.Inverse().Apply(pos);
                 bondToAtoms.AddAtom(atom);

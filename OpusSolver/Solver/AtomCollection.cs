@@ -38,9 +38,14 @@ namespace OpusSolver.Solver
             m_atoms.Add(atom);
         }
 
-        public IEnumerable<(Atom atom, Vector2 position)> GetTransformedAtomPositions()
+        public IEnumerable<(Atom atom, Vector2 position)> GetWorldAtomPositions()
         {
-            return Atoms.Select(a => (a, WorldTransform.Apply(a.Position)));
+            return GetTransformedAtomPositions(WorldTransform);
+        }
+
+        public IEnumerable<(Atom atom, Vector2 position)> GetTransformedAtomPositions(Transform2D transform)
+        {
+            return Atoms.Select(a => (a, transform.Apply(a.Position)));
         }
 
         public Atom GetAtomAtTransformedPosition(Vector2 position, GameObject relativeToObj = null)

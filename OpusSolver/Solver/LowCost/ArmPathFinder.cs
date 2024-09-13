@@ -40,10 +40,10 @@ namespace OpusSolver.Solver.LowCost
             return GetInstructionsForPath(startPosition, path);
         }
 
-        private Vector2 ArmPositionToGrabberPosition(ArmPosition armPos)
+        private Transform2D ArmPositionToGrabberTransform(ArmPosition armPos)
         {
             var armGridPos = m_trackCells[armPos.TrackIndex];
-            return armGridPos + new Vector2(m_armLength, 0).RotateBy(armPos.Rotation);
+            return new Transform2D(armGridPos + new Vector2(m_armLength, 0).RotateBy(armPos.Rotation), armPos.Rotation);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace OpusSolver.Solver.LowCost
             var queue = new PriorityQueue<ArmPosition, int>();
             queue.Enqueue(startPosition, 0);
 
-            var originalGrabberTransform = new Transform2D(ArmPositionToGrabberPosition(startPosition), startPosition.Rotation);
+            var grabberToAtomsTransform = grabbedAtoms?.WorldTransform.Apply(ArmPositionToGrabberTransform(startPosition).Inverse()) ?? new Transform2D();
 
             ArmPosition currentPosition = null;
             void AddNeighbor(ArmPosition neighbor)
@@ -65,7 +65,7 @@ namespace OpusSolver.Solver.LowCost
                 int newCost = costs[currentPosition] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    if (grabbedAtoms == null || IsMovementAllowed(currentPosition, neighbor, grabbedAtoms, originalGrabberTransform, allowCalcification))
+                    if (grabbedAtoms == null || IsMovementAllowed(currentPosition, neighbor, grabbedAtoms, grabberToAtomsTransform, allowCalcification))
                     {
                         costs[neighbor] = newCost;
                         int heuristic = Math.Abs(endPosition.TrackIndex - neighbor.TrackIndex) + endPosition.Rotation.DistanceTo(neighbor.Rotation);
@@ -112,29 +112,21 @@ namespace OpusSolver.Solver.LowCost
         }
 
         private bool IsMovementAllowed(ArmPosition currentPosition, ArmPosition targetPosition, AtomCollection grabbedAtoms,
-            Transform2D originalGrabberTransform, bool allowCalcification)
+            Transform2D grabberToAtomsTransform, bool allowCalcification)
         {
-            var targetGripperPosition = ArmPositionToGrabberPosition(targetPosition);
-            if (m_gridState.GetAtom(targetGripperPosition) != null)
-            {
-                return false;
-            }
+            var targetGrabberTransform = ArmPositionToGrabberTransform(targetPosition);
+            var atomsTransform = targetGrabberTransform.Apply(grabberToAtomsTransform);
 
-            if (!allowCalcification)
+            foreach (var (atom, pos) in grabbedAtoms.GetTransformedAtomPositions(atomsTransform))
             {
-                var targetTransform = new Transform2D(targetGripperPosition, targetPosition.Rotation);
-                var relativeTransform = targetTransform.Apply(originalGrabberTransform.Inverse());
-                
-                foreach (var (atom, pos) in grabbedAtoms.GetTransformedAtomPositions())
+                if (m_gridState.GetAtom(pos) != null)
                 {
-                    if (PeriodicTable.Cardinals.Contains(atom.Element))
-                    {
-                        var newPos = relativeTransform.Apply(pos);
-                        if (m_gridState.GetGlyph(newPos) == GlyphType.Calcification)
-                        {
-                            return false;
-                        }
-                    }
+                    return false;
+                }
+
+                if (!allowCalcification && PeriodicTable.Cardinals.Contains(atom.Element) && m_gridState.GetGlyph(pos) == GlyphType.Calcification)
+                {
+                    return false;
                 }
             }
 
@@ -178,7 +170,7 @@ namespace OpusSolver.Solver.LowCost
 
                 foreach (var offset in offsets)
                 {
-                    var checkPos = targetGripperPosition + offset.RotateBy(targetPosition.Rotation);
+                    var checkPos = targetGrabberTransform.Position + offset.RotateBy(targetPosition.Rotation);
                     if (m_gridState.GetAtom(checkPos) != null)
                     {
                         return false;
