@@ -8,7 +8,7 @@ namespace OpusSolver.Solver
         private List<Atom> m_atoms;
 
         public IEnumerable<Atom> Atoms => m_atoms;
-        public Transform2D Transform;
+        public Transform2D WorldTransform;
         public Vector2 LocalOrigin;
 
         public AtomCollection()
@@ -21,7 +21,7 @@ namespace OpusSolver.Solver
             var atom = new Atom(element, HexRotation.All.ToDictionary(r => r, r => BondType.None), new Vector2());
             m_atoms = [atom];
 
-            Transform = relativeToObj?.GetWorldTransform().Apply(transform) ?? transform;
+            WorldTransform = relativeToObj?.GetWorldTransform().Apply(transform) ?? transform;
         }
 
         public AtomCollection(IEnumerable<Atom> atoms)
@@ -41,13 +41,13 @@ namespace OpusSolver.Solver
 
         public IEnumerable<(Atom atom, Vector2 position)> GetTransformedAtomPositions()
         {
-            return Atoms.Select(a => (a, Transform.Apply(a.Position - LocalOrigin)));
+            return Atoms.Select(a => (a, WorldTransform.Apply(a.Position - LocalOrigin)));
         }
 
         public Atom GetAtomAtTransformedPosition(Vector2 position, GameObject relativeToObj = null)
         {
             var worldPos = relativeToObj?.GetWorldTransform().Apply(position) ?? position;
-            return GetAtom(Transform.Inverse().Apply(worldPos) + LocalOrigin);
+            return GetAtom(WorldTransform.Inverse().Apply(worldPos) + LocalOrigin);
         }
     }
 }

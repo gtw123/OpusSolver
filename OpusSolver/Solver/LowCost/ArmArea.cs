@@ -111,7 +111,7 @@ namespace OpusSolver.Solver.LowCost
             if (m_grabbedAtoms != null)
             {
                 var relativeTransform = targetTransform.Apply(m_armTransform.Inverse());
-                m_grabbedAtoms.Transform = relativeTransform.Apply(m_grabbedAtoms.Transform);
+                m_grabbedAtoms.WorldTransform = relativeTransform.Apply(m_grabbedAtoms.WorldTransform);
             }
 
             m_armTransform = targetTransform;
@@ -170,7 +170,7 @@ namespace OpusSolver.Solver.LowCost
             Writer.Write(m_mainArm, Instruction.PivotClockwise);
             if (m_grabbedAtoms != null)
             {
-                m_grabbedAtoms.Transform = m_grabbedAtoms.Transform.RotateAbout(GetGrabberPosition(), -HexRotation.R60);
+                m_grabbedAtoms.WorldTransform = m_grabbedAtoms.WorldTransform.RotateAbout(GetGrabberPosition(), -HexRotation.R60);
             }
         }
 
@@ -179,7 +179,7 @@ namespace OpusSolver.Solver.LowCost
             Writer.Write(m_mainArm, Instruction.PivotCounterclockwise);
             if (m_grabbedAtoms != null)
             {
-                m_grabbedAtoms.Transform = m_grabbedAtoms.Transform.RotateAbout(GetGrabberPosition(), HexRotation.R60);
+                m_grabbedAtoms.WorldTransform = m_grabbedAtoms.WorldTransform.RotateAbout(GetGrabberPosition(), HexRotation.R60);
             }
         }
 

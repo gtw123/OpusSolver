@@ -158,7 +158,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                     // Rotate them to prepare for the bond
                     var targetRotation = op.MoleculeRotation + HexRotation.R180;
-                    var requiredPivot = targetRotation - assembledAtoms.Transform.Rotation;
+                    var requiredPivot = targetRotation - assembledAtoms.WorldTransform.Rotation;
                     ArmArea.PivotBy(requiredPivot, rotateClockwiseIf180Degrees: true);
                     ArmArea.DropAtoms();
 
@@ -177,7 +177,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     if (opIndex == 0)
                     {
                         ArmArea.MoveGrabberTo(UpperBonderPosition, this);
-                        assembledAtoms.Transform = GetWorldTransform().Apply(new Transform2D(UpperBonderPosition.Position, op.MoleculeRotation));
+                        assembledAtoms.WorldTransform = GetWorldTransform().Apply(new Transform2D(UpperBonderPosition.Position, op.MoleculeRotation));
                         assembledAtoms.LocalOrigin = op.Atom.Position;
                         assembledAtoms.AddAtom(op.Atom);
                         ArmArea.SetAtoms(assembledAtoms);
@@ -197,7 +197,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     var output = m_outputs[builder.Product.ID];
 
                     var targetRotation = op.MoleculeRotation + output.Pivot;
-                    var requiredPivot = targetRotation - assembledAtoms.Transform.Rotation;
+                    var requiredPivot = targetRotation - assembledAtoms.WorldTransform.Rotation;
 
                     ArmArea.PivotBy(requiredPivot);
                     ArmArea.MoveGrabberTo(output.GrabberTransform, this);
@@ -206,13 +206,13 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 else
                 {
                     var targetRotation = op.MoleculeRotation + op.RotationToNext;
-                    var requiredPivot = targetRotation - assembledAtoms.Transform.Rotation;
+                    var requiredPivot = targetRotation - assembledAtoms.WorldTransform.Rotation;
 
                     bool willCollide = false;
                     if (op.RotationToNext == HexRotation.R60 || op.RotationToNext == HexRotation.R120)
                     {
                         // TODO: Should we always do this CCW?
-                        var currentRot = assembledAtoms.Transform.Rotation;
+                        var currentRot = assembledAtoms.WorldTransform.Rotation;
                         var rots = currentRot.CalculateRotationsTo(targetRotation);
                         willCollide = rots.Any(rot => GridState.WillAtomsCollideWhileRotating(assembledAtoms, UpperBonderPosition.Position, rot - currentRot, this));
                     }
@@ -221,7 +221,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     {
                         // Rotate/pivot the molecule so that we can move the next atom behind it
                         var targetRotation2 = op.MoleculeRotation - HexRotation.R120;
-                        var requiredPivot2 = targetRotation2 - assembledAtoms.Transform.Rotation;
+                        var requiredPivot2 = targetRotation2 - assembledAtoms.WorldTransform.Rotation;
 
                         ArmArea.PivotBy(requiredPivot2);
                         ArmArea.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
