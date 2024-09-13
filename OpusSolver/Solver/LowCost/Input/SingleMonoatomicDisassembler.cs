@@ -37,7 +37,7 @@ namespace OpusSolver.Solver.LowCost.Input
         {
             Writer.NewFragment();
             ArmArea.MoveGrabberTo(InputTransform, this);
-            ArmArea.GrabAtom(Element);
+            ArmArea.GrabAtoms(new AtomCollection(Element, InputTransform, this), removeFromGrid: false);
         }
     }
 }

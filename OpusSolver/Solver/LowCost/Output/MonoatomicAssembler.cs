@@ -72,7 +72,7 @@ namespace OpusSolver.Solver.LowCost.Output
         {
             var output = m_outputs[productID];
             ArmArea.MoveGrabberTo(output.Transform, this);
-            ArmArea.DropAtom();
+            ArmArea.DropAtoms();
         }
     }
 }

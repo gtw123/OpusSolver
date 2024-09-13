@@ -14,24 +14,21 @@ namespace OpusSolver.Solver.LowCost
             m_atoms[position] = element;
         }
 
-        public void RegisterAtoms(AtomCollection atomCollection, GameObject relativeToObj)
+        public void RegisterAtoms(AtomCollection atomCollection)
         {
-            RegisterMoleculeElements(atomCollection, relativeToObj, true);
+            RegisterMoleculeElements(atomCollection, true);
         }
 
-        public void UnregisterAtoms(AtomCollection atomCollection, GameObject relativeToObj)
+        public void UnregisterAtoms(AtomCollection atomCollection)
         {
-            RegisterMoleculeElements(atomCollection, relativeToObj, false);
+            RegisterMoleculeElements(atomCollection, false);
         }
 
-        private void RegisterMoleculeElements(AtomCollection atomCollection, GameObject relativeToObj, bool register)
+        private void RegisterMoleculeElements(AtomCollection atomCollection, bool register)
         {
-            var objTransform = relativeToObj?.GetWorldTransform() ?? new Transform2D();
-
             foreach (var (atom, pos) in atomCollection.GetTransformedAtomPositions())
             {
-                var worldPos = objTransform.Apply(pos);
-                m_atoms[worldPos] = register ? atom.Element : null;
+                m_atoms[pos] = register ? atom.Element : null;
             }
         }
 
@@ -43,7 +40,7 @@ namespace OpusSolver.Solver.LowCost
         public bool WillAtomsCollideWhileRotating(AtomCollection atomCollection, Vector2 rotationPoint, HexRotation rotation, GameObject relativeToObj)
         {
             var objTransform = relativeToObj?.GetWorldTransform() ?? new Transform2D();
-            var transform = objTransform.Apply(new Transform2D().RotateAbout(rotationPoint, rotation));
+            var transform = new Transform2D().RotateAbout(objTransform.Apply(rotationPoint), rotation);
 
             foreach (var (_, pos) in atomCollection.GetTransformedAtomPositions())
             {

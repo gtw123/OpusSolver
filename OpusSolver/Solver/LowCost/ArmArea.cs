@@ -13,7 +13,8 @@ namespace OpusSolver.Solver.LowCost
         public Transform2D ArmTransform => m_armTransform;
         private ArmPathFinder m_armPathFinder;
 
-        private Element? m_grabbedElement;
+        private AtomCollection m_grabbedAtoms;
+        public AtomCollection GrabbedAtoms => m_grabbedAtoms;
 
         public GridState GridState { get; private set; } = new GridState();
 
@@ -51,6 +52,8 @@ namespace OpusSolver.Solver.LowCost
         {
             return grabberTransform.Apply(new Vector2(-ArmLength, 0));
         }
+
+        private Vector2 GetGrabberPosition() => m_armTransform.Apply(new Vector2(ArmLength, 0));
 
         private void CreateTrack(IEnumerable<Vector2> armPoints)
         {
@@ -91,9 +94,9 @@ namespace OpusSolver.Solver.LowCost
         /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
         /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
         /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change the grabbed atom</param>
-        public void MoveGrabberTo(Transform2D grabberlocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null, bool allowCalcification = false)
+        public void MoveGrabberTo(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null, bool allowCalcification = false)
         {
-            var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberlocalTransform) ?? grabberlocalTransform;
+            var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
 
             var targetTransform = GrabberTransformToArmTransform(grabberWorldTransform);
             if (armRotationOffset != null)
@@ -101,45 +104,83 @@ namespace OpusSolver.Solver.LowCost
                 targetTransform.Rotation += armRotationOffset.Value;
             }
 
-            var disallowedGlyphs = new HashSet<GlyphType>();
-            if (m_grabbedElement.HasValue && !allowCalcification && PeriodicTable.Cardinals.Contains(m_grabbedElement.Value))
-            {
-                disallowedGlyphs.Add(GlyphType.Calcification);
-            }
-
-            var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform, m_grabbedElement, disallowedGlyphs);
+            var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform, m_grabbedAtoms, allowCalcification);
             Writer.Write(m_mainArm, instructions);
 
             GridState.RegisterArm(m_armTransform.Position, null, this);
+            if (m_grabbedAtoms != null)
+            {
+                var relativeTransform = targetTransform.Apply(m_armTransform.Inverse());
+                m_grabbedAtoms.Transform = relativeTransform.Apply(m_grabbedAtoms.Transform);
+            }
+
             m_armTransform = targetTransform;
             GridState.RegisterArm(m_armTransform.Position, m_mainArm, this);
         }
 
-        public void GrabAtom(Element element)
+        public void GrabAtoms(AtomCollection atoms, bool removeFromGrid = true)
         {
-            m_grabbedElement = element;
+            if (m_grabbedAtoms != null)
+            {
+                throw new InvalidOperationException("Cannot grab atoms when already holding some.");
+            }
+            
+            var grabberPosition = GetGrabberPosition();
+            if (!atoms.GetTransformedAtomPositions().Where(p => p.position == grabberPosition).Any())
+            {
+                throw new InvalidOperationException($"Cannot grab atoms as no atom is located at the current grabber position {grabberPosition}.");
+            }
+
+            if (removeFromGrid)
+            {
+                GridState.UnregisterAtoms(atoms);
+            }
+
+            m_grabbedAtoms = atoms;
             Writer.Write(m_mainArm, Instruction.Grab);
         }
 
-        public void DropAtom()
+        public AtomCollection DropAtoms(bool addToGrid = true)
         {
+            if (m_grabbedAtoms == null)
+            {
+                throw new InvalidOperationException("Cannot drop atoms when not holding any.");
+            }
+
+            if (addToGrid)
+            {
+                GridState.RegisterAtoms(m_grabbedAtoms);
+            }
+
+            var atoms = m_grabbedAtoms;
+            m_grabbedAtoms = null;
+
             Writer.Write(m_mainArm, Instruction.Drop);
-            m_grabbedElement = null;
+
+            return atoms;
         }
 
-        public void SetGrabbedElement(Element element)
+        public void SetAtoms(AtomCollection atoms)
         {
-            m_grabbedElement = element;
+            m_grabbedAtoms = atoms;
         }
 
         public void PivotClockwise()
         {
             Writer.Write(m_mainArm, Instruction.PivotClockwise);
+            if (m_grabbedAtoms != null)
+            {
+                m_grabbedAtoms.Transform = m_grabbedAtoms.Transform.RotateAbout(GetGrabberPosition(), -HexRotation.R60);
+            }
         }
 
         public void PivotCounterClockwise()
         {
             Writer.Write(m_mainArm, Instruction.PivotCounterclockwise);
+            if (m_grabbedAtoms != null)
+            {
+                m_grabbedAtoms.Transform = m_grabbedAtoms.Transform.RotateAbout(GetGrabberPosition(), HexRotation.R60);
+            }
         }
 
         public void PivotBy(HexRotation deltaRot, bool rotateClockwiseIf180Degrees = false)
@@ -165,7 +206,11 @@ namespace OpusSolver.Solver.LowCost
             m_armTransform = m_mainArm.Transform;
             GridState.RegisterArm(m_armTransform.Position, m_mainArm, this);
 
-            m_grabbedElement = null;
+            if (m_grabbedAtoms != null)
+            {
+                GridState.RegisterAtoms(m_grabbedAtoms);
+                m_grabbedAtoms = null;
+            }
         }
     }
 }

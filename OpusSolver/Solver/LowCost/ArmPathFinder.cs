@@ -21,7 +21,7 @@ namespace OpusSolver.Solver.LowCost
 
         private record class ArmPosition(int TrackIndex, HexRotation Rotation);
 
-        public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform, Element? grabbedElement, HashSet<GlyphType> disallowedGlyphs)
+        public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform, AtomCollection grabbedAtoms, bool allowCalcification)
         {
             if (!m_trackCellsToIndexes.TryGetValue(startTransform.Position, out var startTrackIndex))
             {
@@ -35,7 +35,7 @@ namespace OpusSolver.Solver.LowCost
 
             var startPosition = new ArmPosition(startTrackIndex, startTransform.Rotation);
             var endPosition = new ArmPosition(endTrackIndex, endTransform.Rotation);
-            var path = FindShortestPath(startPosition, endPosition, grabbedElement, disallowedGlyphs);
+            var path = FindShortestPath(startPosition, endPosition, grabbedAtoms, allowCalcification);
 
             return GetInstructionsForPath(startPosition, path);
         }
@@ -50,12 +50,14 @@ namespace OpusSolver.Solver.LowCost
         /// Finds the shortest "path" to move/rotate an arm from one position to another.
         /// Uses the Uniform Cost Search algorithm.
         /// </summary>
-        private IEnumerable<ArmPosition> FindShortestPath(ArmPosition startPosition, ArmPosition endPosition, Element? grabbedElement, HashSet<GlyphType> disallowedGlyphs)
+        private IEnumerable<ArmPosition> FindShortestPath(ArmPosition startPosition, ArmPosition endPosition, AtomCollection grabbedAtoms, bool allowCalcification)
         {
             var previousPosition = new Dictionary<ArmPosition, ArmPosition> { { startPosition, null } };
             var costs = new Dictionary<ArmPosition, int> { { startPosition, 0 } };
             var queue = new PriorityQueue<ArmPosition, int>();
             queue.Enqueue(startPosition, 0);
+
+            var originalGrabberTransform = new Transform2D(ArmPositionToGrabberPosition(startPosition), startPosition.Rotation);
 
             ArmPosition currentPosition = null;
             void AddNeighbor(ArmPosition neighbor)
@@ -63,7 +65,7 @@ namespace OpusSolver.Solver.LowCost
                 int newCost = costs[currentPosition] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    if (grabbedElement == null || IsMovementAllowed(currentPosition, neighbor, disallowedGlyphs))
+                    if (grabbedAtoms == null || IsMovementAllowed(currentPosition, neighbor, grabbedAtoms, originalGrabberTransform, allowCalcification))
                     {
                         costs[neighbor] = newCost;
                         int heuristic = Math.Abs(endPosition.TrackIndex - neighbor.TrackIndex) + endPosition.Rotation.DistanceTo(neighbor.Rotation);
@@ -109,7 +111,8 @@ namespace OpusSolver.Solver.LowCost
             return Enumerable.Reverse(path);
         }
 
-        private bool IsMovementAllowed(ArmPosition currentPosition, ArmPosition targetPosition, HashSet<GlyphType> disallowedGlyphs)
+        private bool IsMovementAllowed(ArmPosition currentPosition, ArmPosition targetPosition, AtomCollection grabbedAtoms,
+            Transform2D originalGrabberTransform, bool allowCalcification)
         {
             var targetGripperPosition = ArmPositionToGrabberPosition(targetPosition);
             if (m_gridState.GetAtom(targetGripperPosition) != null)
@@ -117,11 +120,22 @@ namespace OpusSolver.Solver.LowCost
                 return false;
             }
 
-            // Disallow movement over certain glyphs (e.g. calcification)
-            var glyph = m_gridState.GetGlyph(targetGripperPosition);
-            if (glyph != null && disallowedGlyphs.Contains(glyph.Value))
+            if (!allowCalcification)
             {
-                return false;
+                var targetTransform = new Transform2D(targetGripperPosition, targetPosition.Rotation);
+                var relativeTransform = targetTransform.Apply(originalGrabberTransform.Inverse());
+                
+                foreach (var (atom, pos) in grabbedAtoms.GetTransformedAtomPositions())
+                {
+                    if (PeriodicTable.Cardinals.Contains(atom.Element))
+                    {
+                        var newPos = relativeTransform.Apply(pos);
+                        if (m_gridState.GetGlyph(newPos) == GlyphType.Calcification)
+                        {
+                            return false;
+                        }
+                    }
+                }
             }
 
             if (m_armLength == 1)
@@ -133,6 +147,8 @@ namespace OpusSolver.Solver.LowCost
             var deltaRot = targetPosition.Rotation - currentPosition.Rotation;
             if (deltaRot != HexRotation.R0)
             {
+                // TODO: Check all atoms
+
                 // These are the locations where atoms will cause a collision with the atom held by a
                 // gripper when the arm rotates CCW from R300 to R0 or CW from R60 to R0. These are
                 // offsets from the target position.
