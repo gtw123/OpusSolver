@@ -189,41 +189,27 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 if (opIndex == operations.Count - 1)
                 {
                     var output = m_outputs[builder.Product.ID];
-
                     var targetRotation = op.MoleculeRotation + output.Pivot;
-                    var requiredPivot = targetRotation - assembledAtoms.WorldTransform.Rotation;
-
-                    ArmArea.PivotBy(requiredPivot);
+                    ArmArea.PivotBy(targetRotation - assembledAtoms.WorldTransform.Rotation);
                     ArmArea.MoveGrabberTo(output.GrabberTransform, this);
                     ArmArea.DropAtoms(addToGrid: false);
                 }
                 else
                 {
                     var targetRotation = op.MoleculeRotation + op.RotationToNext;
-                    var requiredPivot = targetRotation - assembledAtoms.WorldTransform.Rotation;
-
-                    bool willCollide = false;
-                    if (op.RotationToNext == HexRotation.R60 || op.RotationToNext == HexRotation.R120)
-                    {
-                        // TODO: Should we always do this CCW?
-                        var currentRot = assembledAtoms.WorldTransform.Rotation;
-                        var rots = currentRot.CalculateRotationsTo(targetRotation);
-                        willCollide = rots.Any(rot => GridState.WillAtomsCollideWhileRotating(assembledAtoms, UpperBonderPosition.Position, rot - currentRot, this));
-                    }
-
-                    if (willCollide)
+                    var currentRot = assembledAtoms.WorldTransform.Rotation;
+                    var rots = currentRot.CalculateRotationsTo(targetRotation);
+                    if (rots.Any(rot => GridState.WillAtomsCollideWhileRotating(assembledAtoms, UpperBonderPosition.Position, rot - currentRot, this)))
                     {
                         // Rotate/pivot the molecule so that we can move the next atom behind it
                         var targetRotation2 = op.MoleculeRotation - HexRotation.R120;
-                        var requiredPivot2 = targetRotation2 - assembledAtoms.WorldTransform.Rotation;
-
-                        ArmArea.PivotBy(requiredPivot2);
+                        ArmArea.PivotBy(targetRotation2 - assembledAtoms.WorldTransform.Rotation);
                         ArmArea.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
                         isBondingUpsideDown = true;
                     }
                     else
                     {
-                        ArmArea.PivotBy(requiredPivot);
+                        ArmArea.PivotBy(targetRotation - assembledAtoms.WorldTransform.Rotation);
                         isBondingUpsideDown = false;
                     }
 
