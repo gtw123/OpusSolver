@@ -133,7 +133,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         private IEnumerable<object> Assemble(MoleculeBuilder builder)
         {
-            var assembledAtoms = new AtomCollection();
+            AtomCollection assembledAtoms = null;
 
             bool isBondingUpsideDown = false;
 
@@ -168,26 +168,20 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     ArmArea.MoveGrabberTo(UpperBonderPosition, this);
 
                     // Bond it to the other atoms
-                    GridState.UnregisterAtoms(assembledAtoms);
-                    assembledAtoms.AddAtom(op.Atom);
-                    ArmArea.SetAtoms(assembledAtoms);
+                    ArmArea.BondAtomsTo(assembledAtoms);
                 }
                 else
                 {
                     if (opIndex == 0)
                     {
                         ArmArea.MoveGrabberTo(UpperBonderPosition, this);
-                        assembledAtoms.WorldTransform = GetWorldTransform().Apply(new Transform2D(UpperBonderPosition.Position, op.MoleculeRotation));
-                        assembledAtoms.LocalOrigin = op.Atom.Position;
-                        assembledAtoms.AddAtom(op.Atom);
-                        ArmArea.SetAtoms(assembledAtoms);
+                        assembledAtoms = ArmArea.GrabbedAtoms;
+                        assembledAtoms.WorldTransform.Rotation = op.MoleculeRotation;
                     }
                     else
                     {
                         ArmArea.MoveGrabberTo(LowerBonderPosition, this);
-                        GridState.UnregisterAtoms(assembledAtoms);
-                        assembledAtoms.AddAtom(op.Atom);
-                        ArmArea.SetAtoms(assembledAtoms);
+                        ArmArea.BondAtomsTo(assembledAtoms);
                         ArmArea.MoveGrabberTo(UpperBonderPosition, this);
                     }
                 }

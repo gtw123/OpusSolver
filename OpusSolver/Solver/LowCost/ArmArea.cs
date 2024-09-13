@@ -160,9 +160,21 @@ namespace OpusSolver.Solver.LowCost
             return atoms;
         }
 
-        public void SetAtoms(AtomCollection atoms)
+        public void BondAtomsTo(AtomCollection bondToAtoms)
         {
-            m_grabbedAtoms = atoms;
+            if (m_grabbedAtoms == null)
+            {
+                throw new InvalidOperationException("Cannot bond atoms when not holding any");
+            }
+
+            GridState.UnregisterAtoms(bondToAtoms);
+            foreach (var (atom, pos) in m_grabbedAtoms.GetTransformedAtomPositions())
+            {
+                atom.Position = bondToAtoms.WorldTransform.Inverse().Apply(pos);
+                bondToAtoms.AddAtom(atom);
+            }
+
+            m_grabbedAtoms = bondToAtoms;
         }
 
         public void PivotClockwise()
