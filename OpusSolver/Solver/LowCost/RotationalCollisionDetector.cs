@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace OpusSolver.Solver.LowCost
 {
@@ -6,61 +7,105 @@ namespace OpusSolver.Solver.LowCost
     {
         private readonly GridState m_gridState;
 
+        private const float HexSizeX = 82;
+        private const float HexSizeY = 71;
+        private const float AtomRadius = 29;
+        private const float ProducedAtomRadius = 15;
+        private const float ArmBaseRadius = 20;
+
+        private const float SixtyDegrees = MathF.PI / 3.0f;
+
+        private struct RectVector2
+        {
+            public float X;
+            public float Y;
+
+            public RectVector2(float x, float y)
+            {
+                X = x;
+                Y = y;
+            }
+
+            public RectVector2(Vector2 v)
+            {
+                X = (v.X + v.Y / 2.0f) * HexSizeX;
+                Y = v.Y * HexSizeY;
+            }
+
+            public readonly float Length => MathF.Sqrt(X * X + Y * Y);
+
+            /// <summary>
+            /// Calculates the 2D cross product of this vector with another. The result will be negative if this vector
+            /// points in a counterclockwise direction compared to the other, zero if they are parallel, or positive
+            /// if this vector points in a clockwise direction compared to the other.
+            /// </summary>
+            public readonly float CrossProduct(RectVector2 other)
+            {
+                return X * other.Y - Y * other.X;
+            }
+        }
+
         public RotationalCollisionDetector(GridState gridState)
         {
             m_gridState = gridState;
         }
 
-        public bool WillAtomsCollide(int armLength, Transform2D targetGrabberTransform, HexRotation rotation)
+        /// <summary>
+        /// Checks if any atoms will collide with any other atoms/arms in the grid when an arm rotates. Currently assumes
+        /// all other atoms/arms are stationary.
+        /// </summary>
+        /// <param name="atoms">The atoms to check for collisions</param>
+        /// <param name="currentAtomsTransform">The current transform of these atoms (overrides atoms.WorldTransform)</param>
+        /// <param name="armTransform">The current transform of the arm that will rotate the atoms</param>
+        /// <param name="deltaRotation">The direction the arm is rotating</param>
+        /// <returns>True if any of the atoms will collide; false otherwise</returns>
+        public bool WillAtomsCollide(AtomCollection atoms, Transform2D currentAtomsTransform, Transform2D armTransform, HexRotation deltaRotation)
         {
-            if (rotation != HexRotation.R60 && rotation != HexRotation.R300)
+            if (deltaRotation != HexRotation.R60 && deltaRotation != HexRotation.R300)
             {
-                throw new ArgumentException($"{nameof(WillAtomsCollide)} only supports rotations by 60 degrees but was given {rotation}.");
+                throw new ArgumentException($"{nameof(WillAtomsCollide)} only supports rotations by +/- 60 degrees but was given {deltaRotation}.");
             }
 
-            // TODO: Check all atoms
+            return atoms.GetTransformedAtomPositions(currentAtomsTransform).Any(p => WillAtomCollide(p.position, armTransform, deltaRotation));
+        }
 
-            // These are the locations where atoms will cause a collision with the atom held by a
-            // gripper when the arm rotates CCW from R300 to R0 or CW from R60 to R0. These are
-            // offsets from the target position.
+        private bool WillAtomCollide(Vector2 atom1Pos, Transform2D armTransform, HexRotation deltaRotation)
+        {
+            // Assuming atom1 is moving in a circular arc and the other atom is stationary, the minimum distance
+            // between the two atoms will occur when they are collinear with the center of rotation. Therefore
+            // we can simply calculate the distance of each atom from the center and compare it against the
+            // radii of the atoms.
+            var atom1Offset = new RectVector2(atom1Pos - armTransform.Position);
+            float atom1DistanceFromCenter = atom1Offset.Length;
 
-            Vector2[] offsets;
-            if (armLength == 1)
+            foreach (var atom2Pos in m_gridState.GetAllAtomPositions())
             {
-                return false;
-            }
-            else if (armLength == 2)
-            {
-                if (rotation == HexRotation.R60)
+                if (atom2Pos == atom1Pos)
                 {
-                    offsets = [new Vector2(0, -1), new Vector2(1, -1), new Vector2(1, -2)];
+                    // This can happen when rotating an atom out of an input glyph
+                    continue;
                 }
-                else
-                {
-                    offsets = [new Vector2(0, 1), new Vector2(-1, 1), new Vector2(-1, 2)];
-                }
-            }
-            else // length 3
-            {
-                if (rotation == HexRotation.R60)
-                {
-                    offsets = [new Vector2(0, -1), new Vector2(0, -2), new Vector2(1, -1), new Vector2(1, -2), new Vector2(1, -3)];
-                }
-                else
-                {
-                    offsets = [new Vector2(-1, 1), new Vector2(-2, 2), new Vector2(0, 1), new Vector2(-1, 2), new Vector2(-2, 3)];
-                }
-            }
 
-            foreach (var offset in offsets)
-            {
-                var checkPos = targetGrabberTransform.Position + offset.RotateBy(targetGrabberTransform.Rotation);
-                if (m_gridState.GetAtom(checkPos) != null)
+                var atom2Offset = new RectVector2(atom2Pos - armTransform.Position);
+                float atom2DistanceFromCenter = atom2Offset.Length;
+
+                float minSeparation = Math.Abs(atom2DistanceFromCenter - atom1DistanceFromCenter);
+                if (minSeparation < 2 * AtomRadius)
                 {
-                    return true;
+                    // Check that the atoms are in the same sextant
+                    float cross = atom1Offset.CrossProduct(atom2Offset);
+                    if (deltaRotation == HexRotation.R60 && cross > 0 || deltaRotation == HexRotation.R300 && cross < 0)
+                    {
+                        cross = new RectVector2((atom1Pos - armTransform.Position).RotateBy(deltaRotation)).CrossProduct(atom2Offset);
+                        if (deltaRotation == HexRotation.R60 && cross < 0 || deltaRotation == HexRotation.R300 && cross > 0)
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
 
+            // TODO: Check for arm collisions too
             return false;
         }
     }

@@ -110,6 +110,11 @@ namespace OpusSolver
             return 3 - Math.Abs((other - this).IntValue - 3);
         }
 
+        public float ToRadians()
+        {
+            return m_angle * MathF.PI / 3.0f;
+        }
+
         /// <summary>
         /// Calculates the shortest sequence of rotations to get from the current rotation to targetRot.
         /// </summary>

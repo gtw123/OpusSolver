@@ -42,6 +42,12 @@ namespace OpusSolver.Solver.LowCost
             return GetInstructionsForPath(startPosition, path);
         }
 
+        private Transform2D ArmPositionToArmTransform(ArmPosition armPos)
+        {
+            var armGridPos = m_trackCells[armPos.TrackIndex];
+            return new Transform2D(armGridPos, armPos.Rotation);
+        }
+
         private Transform2D ArmPositionToGrabberTransform(ArmPosition armPos)
         {
             var armGridPos = m_trackCells[armPos.TrackIndex];
@@ -117,9 +123,7 @@ namespace OpusSolver.Solver.LowCost
         private bool IsMovementAllowed(ArmPosition currentPosition, ArmPosition targetPosition, AtomCollection grabbedAtoms,
             Transform2D grabberToAtomsTransform, bool allowCalcification)
         {
-            var targetGrabberTransform = ArmPositionToGrabberTransform(targetPosition);
-            var targetAtomsTransform = targetGrabberTransform.Apply(grabberToAtomsTransform);
-
+            var targetAtomsTransform = ArmPositionToGrabberTransform(targetPosition).Apply(grabberToAtomsTransform);
             foreach (var (atom, pos) in grabbedAtoms.GetTransformedAtomPositions(targetAtomsTransform))
             {
                 if (m_gridState.GetAtom(pos) != null)
@@ -133,12 +137,6 @@ namespace OpusSolver.Solver.LowCost
                 }
             }
 
-            if (m_armLength == 1)
-            {
-                // Nothing to do here: length-1 arms don't collide with anything while rotating
-                return false;
-            }
-
             var deltaRot = targetPosition.Rotation - currentPosition.Rotation;
             if (deltaRot != HexRotation.R0)
             {
@@ -147,7 +145,9 @@ namespace OpusSolver.Solver.LowCost
                     throw new ArgumentException("Cannot move and rotate atoms at the same time.");
                 }
 
-                if (m_collisionDetector.WillAtomsCollide(m_armLength, targetGrabberTransform, deltaRot))
+                var currentAtomsTransform = ArmPositionToGrabberTransform(currentPosition).Apply(grabberToAtomsTransform);
+                var currentArmTransform = ArmPositionToArmTransform(currentPosition);
+                if (m_collisionDetector.WillAtomsCollide(grabbedAtoms, currentAtomsTransform, currentArmTransform, deltaRot))
                 {
                     return false;
                 }
