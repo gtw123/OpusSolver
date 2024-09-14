@@ -10,6 +10,7 @@ namespace OpusSolver.Solver.LowCost
         private readonly List<Vector2> m_trackCells;
         private readonly Dictionary<Vector2, int> m_trackCellsToIndexes;
         private readonly GridState m_gridState;
+        private readonly RotationalCollisionDetector m_collisionDetector;
 
         public ArmPathFinder(int armLength, IEnumerable<Vector2> trackCells, GridState gridState)
         {
@@ -17,6 +18,7 @@ namespace OpusSolver.Solver.LowCost
             m_trackCells = trackCells.ToList();
             m_trackCellsToIndexes = m_trackCells.Select((pos, index) => (pos, index)).ToDictionary(pair => pair.pos, pair => pair.index);
             m_gridState = gridState;
+            m_collisionDetector = new RotationalCollisionDetector(gridState);
         }
 
         private record class ArmPosition(int TrackIndex, HexRotation Rotation);
@@ -57,7 +59,8 @@ namespace OpusSolver.Solver.LowCost
             var queue = new PriorityQueue<ArmPosition, int>();
             queue.Enqueue(startPosition, 0);
 
-            var grabberToAtomsTransform = grabbedAtoms?.WorldTransform.Apply(ArmPositionToGrabberTransform(startPosition).Inverse()) ?? new Transform2D();
+            var startGrabberTransform = ArmPositionToGrabberTransform(startPosition);
+            var grabberToAtomsTransform = startGrabberTransform.Inverse().Apply(grabbedAtoms?.WorldTransform ?? new Transform2D());
 
             ArmPosition currentPosition = null;
             void AddNeighbor(ArmPosition neighbor)
@@ -115,9 +118,9 @@ namespace OpusSolver.Solver.LowCost
             Transform2D grabberToAtomsTransform, bool allowCalcification)
         {
             var targetGrabberTransform = ArmPositionToGrabberTransform(targetPosition);
-            var atomsTransform = targetGrabberTransform.Apply(grabberToAtomsTransform);
+            var targetAtomsTransform = targetGrabberTransform.Apply(grabberToAtomsTransform);
 
-            foreach (var (atom, pos) in grabbedAtoms.GetTransformedAtomPositions(atomsTransform))
+            foreach (var (atom, pos) in grabbedAtoms.GetTransformedAtomPositions(targetAtomsTransform))
             {
                 if (m_gridState.GetAtom(pos) != null)
                 {
@@ -139,42 +142,14 @@ namespace OpusSolver.Solver.LowCost
             var deltaRot = targetPosition.Rotation - currentPosition.Rotation;
             if (deltaRot != HexRotation.R0)
             {
-                // TODO: Check all atoms
-
-                // These are the locations where atoms will cause a collision with the atom held by a
-                // gripper when the arm rotates CCW from R300 to R0 or CW from R60 to R0. These are
-                // offsets from the target position.
-                Vector2[] offsets;
-                if (m_armLength == 2)
+                if (currentPosition.TrackIndex != targetPosition.TrackIndex)
                 {
-                    if (deltaRot == HexRotation.R60)
-                    {
-                        offsets = [new Vector2(0, -1), new Vector2(1, -1), new Vector2(1, -2)];
-                    }
-                    else
-                    {
-                        offsets = [new Vector2(0, 1), new Vector2(-1, 1), new Vector2(-1, 2)];
-                    }
-                }
-                else // length 3
-                {
-                    if (deltaRot == HexRotation.R60)
-                    {
-                        offsets = [new Vector2(0, -1), new Vector2(0, -2), new Vector2(1, -1), new Vector2(1, -2), new Vector2(1, -3)];
-                    }
-                    else
-                    {
-                        offsets = [new Vector2(-1, 1), new Vector2(-2, 2), new Vector2(0, 1), new Vector2(-1, 2), new Vector2(-2, 3)];
-                    }
+                    throw new ArgumentException("Cannot move and rotate atoms at the same time.");
                 }
 
-                foreach (var offset in offsets)
+                if (m_collisionDetector.WillAtomsCollide(m_armLength, targetGrabberTransform, deltaRot))
                 {
-                    var checkPos = targetGrabberTransform.Position + offset.RotateBy(targetPosition.Rotation);
-                    if (m_gridState.GetAtom(checkPos) != null)
-                    {
-                        return false;
-                    }
+                    return false;
                 }
             }
 
