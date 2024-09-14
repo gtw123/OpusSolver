@@ -14,21 +14,25 @@ namespace OpusSolver.Solver.LowCost
             m_atoms[position] = element;
         }
 
+        public void UnregisterAtom(Vector2 position, GameObject relativeToObj)
+        {
+            position = relativeToObj?.GetWorldTransform().Apply(position) ?? position;
+            m_atoms.Remove(position);
+        }
+
         public void RegisterAtoms(AtomCollection atomCollection)
         {
-            RegisterMoleculeElements(atomCollection, true);
+            foreach (var (atom, pos) in atomCollection.GetWorldAtomPositions())
+            {
+                m_atoms[pos] = atom.Element;
+            }
         }
 
         public void UnregisterAtoms(AtomCollection atomCollection)
         {
-            RegisterMoleculeElements(atomCollection, false);
-        }
-
-        private void RegisterMoleculeElements(AtomCollection atomCollection, bool register)
-        {
-            foreach (var (atom, pos) in atomCollection.GetWorldAtomPositions())
+            foreach (var (_, pos) in atomCollection.GetWorldAtomPositions())
             {
-                m_atoms[pos] = register ? atom.Element : null;
+                m_atoms.Remove(pos);
             }
         }
 
@@ -70,6 +74,8 @@ namespace OpusSolver.Solver.LowCost
         {
             return m_atoms.TryGetValue(position, out var element) ? element : null;
         }
+
+        public IEnumerable<Vector2> GetAllAtomPositions() => m_atoms.Keys;
 
         public Arm GetArm(Vector2 position)
         {
