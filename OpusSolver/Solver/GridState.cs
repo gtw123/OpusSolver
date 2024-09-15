@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace OpusSolver.Solver.LowCost
+namespace OpusSolver.Solver
 {
     public class GridState
     {

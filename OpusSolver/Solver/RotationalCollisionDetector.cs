@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace OpusSolver.Solver.LowCost
+namespace OpusSolver.Solver
 {
     public class RotationalCollisionDetector
     {
