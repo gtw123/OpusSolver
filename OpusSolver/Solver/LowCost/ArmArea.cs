@@ -17,12 +17,14 @@ namespace OpusSolver.Solver.LowCost
         public AtomCollection GrabbedAtoms => m_grabbedAtoms;
 
         public GridState GridState { get; private set; } = new GridState();
+        private RotationalCollisionDetector m_collisionDetector;
 
         public int ArmLength => 2;
 
         public ArmArea(SolverComponent parent, ProgramWriter writer)
             : base(parent, writer, new Vector2())
         {
+            m_collisionDetector = new RotationalCollisionDetector(GridState);
         }
 
         public void CreateComponents(IEnumerable<Transform2D> requiredAccessPoints)
@@ -40,7 +42,7 @@ namespace OpusSolver.Solver.LowCost
 
             CreateTrack(armPoints);
             CreateMainArm(GrabberTransformToArmTransform(requiredAccessPoints.First()));
-            m_armPathFinder = new ArmPathFinder(ArmLength, m_track.GetAllPathCells(), GridState);
+            m_armPathFinder = new ArmPathFinder(ArmLength, m_track.GetAllPathCells(), GridState, m_collisionDetector);
         }
 
         private Transform2D GrabberTransformToArmTransform(Transform2D grabberTransform)
@@ -83,7 +85,6 @@ namespace OpusSolver.Solver.LowCost
         {
             m_armTransform = transform;
             m_mainArm = new Arm(this, m_armTransform.Position, m_armTransform.Rotation, ArmType.Arm1, extension: ArmLength);
-            GridState.RegisterArm(m_armTransform.Position, m_mainArm, this);
         }
 
         /// <summary>
@@ -107,7 +108,6 @@ namespace OpusSolver.Solver.LowCost
             var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform, m_grabbedAtoms, allowCalcification);
             Writer.Write(m_mainArm, instructions);
 
-            GridState.RegisterArm(m_armTransform.Position, null, this);
             if (m_grabbedAtoms != null)
             {
                 var relativeTransform = targetTransform.Apply(m_armTransform.Inverse());
@@ -115,7 +115,6 @@ namespace OpusSolver.Solver.LowCost
             }
 
             m_armTransform = targetTransform;
-            GridState.RegisterArm(m_armTransform.Position, m_mainArm, this);
         }
 
         public void GrabAtoms(AtomCollection atoms, bool removeFromGrid = true)
@@ -164,7 +163,7 @@ namespace OpusSolver.Solver.LowCost
         {
             if (m_grabbedAtoms == null)
             {
-                throw new InvalidOperationException("Cannot bond atoms when not holding any");
+                throw new InvalidOperationException("Cannot bond atoms when not holding any.");
             }
 
             GridState.UnregisterAtoms(bondToAtoms);
@@ -197,6 +196,16 @@ namespace OpusSolver.Solver.LowCost
 
         public void PivotBy(HexRotation deltaRot, bool rotateClockwiseIf180Degrees = false)
         {
+            if (deltaRot == HexRotation.R0)
+            {
+                return;
+            }
+
+            if (m_grabbedAtoms == null)
+            {
+                throw new InvalidOperationException("Cannot pivot when not holding any atoms.");
+            }
+
             foreach (var rot in HexRotation.R0.CalculateDeltaRotationsTo(deltaRot, rotateClockwiseIf180Degrees))
             {
                 if (rot == HexRotation.R60)
@@ -210,13 +219,44 @@ namespace OpusSolver.Solver.LowCost
             }
         }
 
+        /// <summary>
+        /// Attempts to pivot the currently held atoms by the specified amount, but only if this won't cause any collisions.
+        /// </summary>
+        /// <returns>True if the pivot was successful; false otherwise (in which case no instructions will be written)</returns>
+        public bool TryPivotBy(HexRotation deltaRot, bool rotateClockwiseIf180Degrees = false)
+        {
+            if (deltaRot == HexRotation.R0)
+            {
+                return true;
+            }
+
+            if (m_grabbedAtoms == null)
+            {
+                throw new InvalidOperationException("Cannot pivot when not holding any atoms.");
+            }
+
+            var currentAtomsTransform = m_grabbedAtoms.WorldTransform;
+            var startRot = currentAtomsTransform.Rotation;
+            var grabberPosition = GetGrabberPosition();
+            foreach (var pivot in startRot.CalculateDeltaRotationsTo(startRot + deltaRot, rotateClockwiseIf180Degrees))
+            {
+                if (m_collisionDetector.WillAtomsCollideWhilePivoting(m_grabbedAtoms, currentAtomsTransform, m_armTransform.Position, grabberPosition, pivot))
+                {
+                    return false;
+                }
+
+                currentAtomsTransform = currentAtomsTransform.RotateAbout(grabberPosition, pivot);
+            }
+
+            PivotBy(deltaRot);
+
+            return true;
+        }
+
         public void ResetArm()
         {
             Writer.Write(m_mainArm, Instruction.Reset);
-
-            GridState.RegisterArm(m_armTransform.Position, null, this);
             m_armTransform = m_mainArm.Transform;
-            GridState.RegisterArm(m_armTransform.Position, m_mainArm, this);
 
             if (m_grabbedAtoms != null)
             {

@@ -12,13 +12,13 @@ namespace OpusSolver.Solver.LowCost
         private readonly GridState m_gridState;
         private readonly RotationalCollisionDetector m_collisionDetector;
 
-        public ArmPathFinder(int armLength, IEnumerable<Vector2> trackCells, GridState gridState)
+        public ArmPathFinder(int armLength, IEnumerable<Vector2> trackCells, GridState gridState, RotationalCollisionDetector collisionDetector)
         {
             m_armLength = armLength;
             m_trackCells = trackCells.ToList();
             m_trackCellsToIndexes = m_trackCells.Select((pos, index) => (pos, index)).ToDictionary(pair => pair.pos, pair => pair.index);
             m_gridState = gridState;
-            m_collisionDetector = new RotationalCollisionDetector(gridState);
+            m_collisionDetector = collisionDetector;
         }
 
         private record class ArmPosition(int TrackIndex, HexRotation Rotation);
@@ -40,12 +40,6 @@ namespace OpusSolver.Solver.LowCost
             var path = FindShortestPath(startPosition, endPosition, grabbedAtoms, allowCalcification);
 
             return GetInstructionsForPath(startPosition, path);
-        }
-
-        private Transform2D ArmPositionToArmTransform(ArmPosition armPos)
-        {
-            var armGridPos = m_trackCells[armPos.TrackIndex];
-            return new Transform2D(armGridPos, armPos.Rotation);
         }
 
         private Transform2D ArmPositionToGrabberTransform(ArmPosition armPos)
@@ -146,8 +140,8 @@ namespace OpusSolver.Solver.LowCost
                 }
 
                 var currentAtomsTransform = ArmPositionToGrabberTransform(currentPosition).Apply(grabberToAtomsTransform);
-                var currentArmTransform = ArmPositionToArmTransform(currentPosition);
-                if (m_collisionDetector.WillAtomsCollide(grabbedAtoms, currentAtomsTransform, currentArmTransform, deltaRot))
+                var armPos = m_trackCells[currentPosition.TrackIndex];
+                if (m_collisionDetector.WillAtomsCollideWhileRotating(grabbedAtoms, currentAtomsTransform, armPos, deltaRot))
                 {
                     return false;
                 }

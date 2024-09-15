@@ -197,20 +197,17 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 else
                 {
                     var targetRotation = op.MoleculeRotation + op.RotationToNext;
-                    var currentRot = assembledAtoms.WorldTransform.Rotation;
-                    var rots = currentRot.CalculateRotationsTo(targetRotation);
-                    if (rots.Any(rot => GridState.WillAtomsCollideWhileRotating(assembledAtoms, UpperBonderPosition.Position, rot - currentRot, this)))
+                    if (ArmArea.TryPivotBy(targetRotation - assembledAtoms.WorldTransform.Rotation))
+                    {
+                        isBondingUpsideDown = false;
+                    }
+                    else
                     {
                         // Rotate/pivot the molecule so that we can move the next atom behind it
                         var targetRotation2 = op.MoleculeRotation - HexRotation.R120;
                         ArmArea.PivotBy(targetRotation2 - assembledAtoms.WorldTransform.Rotation);
                         ArmArea.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
                         isBondingUpsideDown = true;
-                    }
-                    else
-                    {
-                        ArmArea.PivotBy(targetRotation - assembledAtoms.WorldTransform.Rotation);
-                        isBondingUpsideDown = false;
                     }
 
                     ArmArea.DropAtoms();

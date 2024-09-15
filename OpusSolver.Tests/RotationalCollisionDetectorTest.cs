@@ -100,7 +100,7 @@ namespace OpusSolver.Tests
         public void TestWillAtomsCollide_Clockwise((Vector2 pos, bool expectedCollision) testCase)
         {
             var detector = new RotationalCollisionDetector(CreateGridState(testCase.pos));
-            Assert.That(detector.WillAtomsCollide(CreateAtoms(), new Transform2D(), new Transform2D(new(-4, -3), HexRotation.R60), HexRotation.R300), Is.EqualTo(testCase.expectedCollision));
+            Assert.That(detector.WillAtomsCollideWhileRotating(CreateAtoms(), new Transform2D(), new(-4, -3), HexRotation.R300), Is.EqualTo(testCase.expectedCollision));
         }
 
         private static IEnumerable<(Vector2 pos, bool expectedCollision)> RotateCounterclockwiseTestCases()
@@ -131,7 +131,7 @@ namespace OpusSolver.Tests
         public void TestWillAtomsCollide_Counterclockwise((Vector2 pos, bool expectedCollision) testCase)
         {
             var detector = new RotationalCollisionDetector(CreateGridState(testCase.pos));
-            Assert.That(detector.WillAtomsCollide(CreateAtoms(), new Transform2D(), new Transform2D(new(6, -5), HexRotation.R120), HexRotation.R60), Is.EqualTo(testCase.expectedCollision));
+            Assert.That(detector.WillAtomsCollideWhileRotating(CreateAtoms(), new Transform2D(), new(6, -5), HexRotation.R60), Is.EqualTo(testCase.expectedCollision));
         }
 
         private static IEnumerable<(Vector2 pos, bool expectedCollision)> RotateCounterclockwiseTestCases_SmallRotation()
@@ -158,7 +158,7 @@ namespace OpusSolver.Tests
         public void TestWillAtomsCollide_Counterclockwise_SmallRotation((Vector2 pos, bool expectedCollision) testCase)
         {
             var detector = new RotationalCollisionDetector(CreateGridState(testCase.pos));
-            Assert.That(detector.WillAtomsCollide(CreateAtoms(), new Transform2D(), new Transform2D(new(-1, 0), HexRotation.R0), HexRotation.R60), Is.EqualTo(testCase.expectedCollision));
+            Assert.That(detector.WillAtomsCollideWhileRotating(CreateAtoms(), new Transform2D(), new(-1, 0), HexRotation.R60), Is.EqualTo(testCase.expectedCollision));
         }
     }
 }

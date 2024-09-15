@@ -30,8 +30,6 @@ namespace OpusSolver.Solver.LowCost
                 // Technically these aren't all salt elements, but that doesn't matter at the moment
                 GridState.RegisterAtom(m_wheelArm.Transform.Position + new Vector2(1, 0).RotateBy(rot), Element.Salt, this);
             }
-
-            GridState.RegisterArm(m_wheelArm.Transform.Position, m_wheelArm, this);
         }
 
         public override void Generate(Element element, int id)
