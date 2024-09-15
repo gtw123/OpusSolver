@@ -35,8 +35,8 @@ namespace OpusSolver.Solver.LowCost
             {
                 ArmArea.MoveGrabberTo(QuicksilverTransform, this);
                 ArmArea.DropAtoms(addToGrid: false);
-                GridState.RegisterAtom(MetalTransform.Position, element, this);
                 m_currentMetal++;
+                GridState.RegisterAtom(MetalTransform.Position, m_currentMetal, this);
             }
         }
 
