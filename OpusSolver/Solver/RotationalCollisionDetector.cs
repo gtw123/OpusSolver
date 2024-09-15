@@ -94,10 +94,10 @@ namespace OpusSolver.Solver
                 {
                     // Check that the atoms are in the same sextant
                     float cross = atom1Offset.CrossProduct(atom2Offset);
-                    if (deltaRotation == HexRotation.R60 && cross > 0 || deltaRotation == HexRotation.R300 && cross < 0)
+                    if (deltaRotation == HexRotation.R60 && cross >= 0 || deltaRotation == HexRotation.R300 && cross <= 0)
                     {
                         cross = new RectVector2((atom1Pos - armTransform.Position).RotateBy(deltaRotation)).CrossProduct(atom2Offset);
-                        if (deltaRotation == HexRotation.R60 && cross < 0 || deltaRotation == HexRotation.R300 && cross > 0)
+                        if (deltaRotation == HexRotation.R60 && cross <= 0 || deltaRotation == HexRotation.R300 && cross >= 0)
                         {
                             return true;
                         }
