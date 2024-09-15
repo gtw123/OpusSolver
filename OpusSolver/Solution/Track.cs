@@ -49,6 +49,8 @@ namespace OpusSolver
             }
         }
 
+        public bool IsLooping => m_path.Count > 2 && m_path.First().DistanceBetween(m_path.Last()) == 1;
+
         public IEnumerable<Vector2> GetAllPathCells()
         {
             var transform = GetWorldTransform();

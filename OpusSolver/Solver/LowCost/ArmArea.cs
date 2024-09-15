@@ -42,7 +42,7 @@ namespace OpusSolver.Solver.LowCost
 
             CreateTrack(armPoints);
             CreateMainArm(GrabberTransformToArmTransform(requiredAccessPoints.First()));
-            m_armPathFinder = new ArmPathFinder(ArmLength, m_track.GetAllPathCells(), GridState, m_collisionDetector);
+            m_armPathFinder = new ArmPathFinder(ArmLength, m_track, GridState, m_collisionDetector);
         }
 
         private Transform2D GrabberTransformToArmTransform(Transform2D grabberTransform)

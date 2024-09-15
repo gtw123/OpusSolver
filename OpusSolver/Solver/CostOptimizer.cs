@@ -71,10 +71,11 @@ namespace OpusSolver.Solver
             foreach (var track in m_solution.GetObjects<Track>().ToList())
             {
                 var cells = track.GetAllPathCells().ToList();
+                bool isLooping = track.IsLooping;
                 var usedCells = new SortedSet<int>();
                 foreach (var arm in m_solution.GetObjects<Arm>())
                 {
-                    usedCells.UnionWith(GetTrackCellsUsedByArm(cells, arm));
+                    usedCells.UnionWith(GetTrackCellsUsedByArm(cells, isLooping, arm));
                 }
 
                 if (!usedCells.Any())
@@ -88,7 +89,7 @@ namespace OpusSolver.Solver
             }
         }
 
-        private IEnumerable<int> GetTrackCellsUsedByArm(List<Vector2> trackCells, Arm arm)
+        private IEnumerable<int> GetTrackCellsUsedByArm(List<Vector2> trackCells, bool isLooping, Arm arm)
         {
             int startIndex = trackCells.IndexOf(arm.GetWorldTransform().Position);
             if (startIndex < 0)
@@ -109,11 +110,19 @@ namespace OpusSolver.Solver
                         {
                             index++;
                         }
+                        else if (isLooping)
+                        {
+                            index = 0;
+                        }
                         break;
                     case Instruction.MoveNegative:
                         if (index > 0)
                         {
                             index--;
+                        }
+                        else if (isLooping)
+                        {
+                            index = trackCells.Count - 1;
                         }
                         break;
                     case Instruction.Reset:

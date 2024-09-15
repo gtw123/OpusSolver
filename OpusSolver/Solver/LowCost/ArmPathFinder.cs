@@ -9,14 +9,16 @@ namespace OpusSolver.Solver.LowCost
         private readonly int m_armLength;
         private readonly List<Vector2> m_trackCells;
         private readonly Dictionary<Vector2, int> m_trackCellsToIndexes;
+        private readonly bool m_isLoopingTrack;
         private readonly GridState m_gridState;
         private readonly RotationalCollisionDetector m_collisionDetector;
 
-        public ArmPathFinder(int armLength, IEnumerable<Vector2> trackCells, GridState gridState, RotationalCollisionDetector collisionDetector)
+        public ArmPathFinder(int armLength, Track track, GridState gridState, RotationalCollisionDetector collisionDetector)
         {
             m_armLength = armLength;
-            m_trackCells = trackCells.ToList();
+            m_trackCells = track.GetAllPathCells().ToList();
             m_trackCellsToIndexes = m_trackCells.Select((pos, index) => (pos, index)).ToDictionary(pair => pair.pos, pair => pair.index);
+            m_isLoopingTrack = track.IsLooping;
             m_gridState = gridState;
             m_collisionDetector = collisionDetector;
         }
@@ -90,9 +92,18 @@ namespace OpusSolver.Solver.LowCost
                 {
                     AddNeighbor(new ArmPosition(currentPosition.TrackIndex + 1, currentPosition.Rotation));
                 }
+                else if (m_isLoopingTrack)
+                {
+                    AddNeighbor(new ArmPosition(0, currentPosition.Rotation));
+                }
+
                 if (currentPosition.TrackIndex > 0)
                 {
                     AddNeighbor(new ArmPosition(currentPosition.TrackIndex - 1, currentPosition.Rotation));
+                }
+                else if (m_isLoopingTrack)
+                {
+                    AddNeighbor(new ArmPosition(m_trackCells.Count - 1, currentPosition.Rotation));
                 }
 
                 AddNeighbor(new ArmPosition(currentPosition.TrackIndex, currentPosition.Rotation.Rotate60Counterclockwise()));
@@ -150,7 +161,7 @@ namespace OpusSolver.Solver.LowCost
             return true;
         }
 
-        private static IEnumerable<Instruction> GetInstructionsForPath(ArmPosition startPosition, IEnumerable<ArmPosition> path)
+        private IEnumerable<Instruction> GetInstructionsForPath(ArmPosition startPosition, IEnumerable<ArmPosition> path)
         {
             var instructions = new List<Instruction>();
 
@@ -160,6 +171,18 @@ namespace OpusSolver.Solver.LowCost
                 int trackDelta = pos.TrackIndex - previousPos.TrackIndex;
                 if (trackDelta != 0)
                 {
+                    if (m_isLoopingTrack)
+                    {
+                        if (pos.TrackIndex == 0 && previousPos.TrackIndex == m_trackCells.Count - 1)
+                        {
+                            trackDelta = 1;
+                        }
+                        else if (pos.TrackIndex == m_trackCells.Count - 1 && previousPos.TrackIndex == 0)
+                        {
+                            trackDelta = -1;
+                        }
+                    }
+
                     instructions.Add(trackDelta > 0 ? Instruction.MovePositive : Instruction.MoveNegative);
                 }
                 else
