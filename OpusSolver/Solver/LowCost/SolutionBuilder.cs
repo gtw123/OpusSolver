@@ -74,7 +74,7 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.StackInfos),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer, m_armArea),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => throw new UnsupportedException("LowCost solver doesn't currently support metal purification."),
-                ElementGenerators.MorsVitaeGenerator => throw new UnsupportedException("LowCost solver doesn't currently support generating mors/vitae from salt."),
+                ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer, m_armArea),
                 ElementGenerators.QuintessenceDisperserGenerator => throw new UnsupportedException("LowCost solver doesn't currently support generating cardinals from quintessence."),
                 ElementGenerators.QuintessenceGenerator => throw new UnsupportedException("LowCost solver doesn't currently support generating quintessence from cardinals."),
                 ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresCardinalPassThrough ? new SaltGenerator(m_writer, m_armArea) : new SaltGeneratorNoCardinalPassThrough(m_writer, m_armArea),
