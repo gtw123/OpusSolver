@@ -166,9 +166,14 @@ namespace OpusSolver
         public int DistanceBetween(Vector2 other)
         {
             var diff = other - this;
-            int dx = Math.Abs(diff.X);
-            int dy = Math.Abs(diff.Y);
-            return Math.Max(Math.Max(dx, dy), Math.Abs(dx - dy));
+            if (Math.Sign(diff.X) == Math.Sign(diff.Y))
+            {
+                return Math.Abs(diff.X + diff.Y);
+            }
+            else
+            {
+                return Math.Max(Math.Abs(diff.X), Math.Abs(diff.Y));
+            }
         }
 
         public override string ToString()
