@@ -16,7 +16,7 @@ namespace OpusSolver.Solver.ElementGenerators
         public class StackInfo
         {
             /// <summary>
-            /// Indicates whether the stack ever needs to store more than one atom at atime.
+            /// Indicates whether the stack ever needs to store more than one atom at a time.
             /// </summary>
             public bool MultiAtom { get; set; }
 
