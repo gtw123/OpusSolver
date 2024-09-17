@@ -8,8 +8,6 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class VanBerloGenerator : ElementGenerator
     {
-        private readonly Dictionary<Element, int> m_remainingUsages = new();
-
         public VanBerloGenerator(CommandSequence commandSequence, SolutionPlan plan)
             : base(commandSequence, plan)
         {
