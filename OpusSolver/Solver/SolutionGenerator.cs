@@ -14,10 +14,7 @@ namespace OpusSolver.Solver
         private Recipe m_recipe;
 
         private ISolutionBuilder m_solutionBuilder;
-
-        private CommandSequence m_commandSequence = new CommandSequence();
         private ProgramWriter m_writer = new ProgramWriter();
-        private ElementPipeline m_pipeline;
 
         public SolutionGenerator(Puzzle puzzle, SolutionType solutionType, Recipe recipe)
         {
@@ -38,10 +35,8 @@ namespace OpusSolver.Solver
             m_solutionBuilder = CreateSolutionBuilder();
             var plan = m_solutionBuilder.CreatePlan();
 
-            m_pipeline = new ElementPipeline(plan, m_commandSequence);
-            m_pipeline.GenerateCommandSequence();
-
-            GenerateProgramFragments();
+            var pipeline = new ElementPipeline(plan);
+            GenerateProgramFragments(pipeline);
 
             var solution = CreateSolution();
             return OptimizeSolution(solution);
@@ -50,19 +45,20 @@ namespace OpusSolver.Solver
         /// <summary>
         /// Generates the program fragments for the solution.
         /// </summary>
-        private void GenerateProgramFragments()
+        private void GenerateProgramFragments(ElementPipeline pipeline)
         {
             sm_log.Debug("Generating program fragments");
 
-            m_solutionBuilder.CreateAtomGenerators(m_pipeline);
+            var commandSequence = pipeline.GenerateCommandSequence();
+            m_solutionBuilder.CreateAtomGenerators(pipeline);
 
-            var generators = m_pipeline.ElementGenerators;
+            var generators = pipeline.ElementGenerators;
             foreach (var generator in generators)
             {
                 generator.AtomGenerator.BeginSolution();
             }
 
-            foreach (var command in m_commandSequence.Commands)
+            foreach (var command in commandSequence.Commands)
             {
                 command.Execute();
             }
