@@ -56,19 +56,23 @@ namespace OpusSolver.Solver
                 throw new ArgumentException("possibleElements must contain at least one item.", "possibleElements");
             }
 
-            // We have to clear out the pending elements before generating any more (or passing any through)
-            if (m_pendingElements.Any())
+            // Generate the element ourselves if we can (but only if no pending elements are in the way)
+            var elementsToGenerate = possibleElements.Where(e => CanGenerateElement(e));
+            if (elementsToGenerate.Any() && !m_pendingElements.Any())
             {
-                var pendingElement = m_pendingElements.Dequeue();
-                CommandSequence.Add(CommandType.Generate, pendingElement.Element, this, pendingElement.ID);
-                return pendingElement.Element;
+                return GenerateElement(elementsToGenerate);
             }
 
-            // Now see if we can generate any of the requested elements ourselves
-            var compatibleElements = possibleElements.Where(e => CanGenerateElement(e));
-            if (compatibleElements.Any())
+            if (m_pendingElements.Any())
             {
-                return GenerateElement(compatibleElements);
+                // Use the pending elements if there's a matching one or if we're not allowed to pass through when
+                // there are pending elements
+                if (!Plan.AllowPassthroughWithPendingElements || possibleElements.Contains(m_pendingElements.Peek().Element))
+                {
+                    var pendingElement = m_pendingElements.Dequeue();
+                    CommandSequence.Add(CommandType.Generate, pendingElement.Element, this, pendingElement.ID);
+                    return pendingElement.Element;
+                }
             }
 
             // If we couldn't generate it, try our parent
