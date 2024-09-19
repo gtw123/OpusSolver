@@ -20,11 +20,11 @@ namespace OpusSolver.Solver.Standard
 
         private List<AtomStack> m_stacks = new List<AtomStack>();
 
-        public AtomBuffer(ProgramWriter writer, IEnumerable<ElementBuffer.StackInfo> stackInfo)
+        public AtomBuffer(ProgramWriter writer, ElementBuffer.BufferInfo bufferInfo)
             : base(writer)
         {
             int i = 0;
-            foreach (var info in stackInfo)
+            foreach (var info in bufferInfo.Stacks)
             {
                 AddStack(i++, info);
             }

@@ -61,7 +61,7 @@ namespace OpusSolver.Solver.Standard
             {
                 ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
                 ElementGenerators.OutputGenerator => new SimpleOutputArea(m_writer, m_assemblerFactory),
-                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, elementBuffer.StackInfos),
+                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, elementBuffer.GetBufferInfo()),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => new MetalPurifier(m_writer, metalPurifier.Sequences),
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer),
@@ -69,6 +69,7 @@ namespace OpusSolver.Solver.Standard
                 ElementGenerators.QuintessenceGenerator => new QuintessenceGenerator(m_writer),
                 ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresCardinalPassThrough ? new SaltGenerator(m_writer) : new SaltGeneratorNoCardinalPassThrough(m_writer),
                 ElementGenerators.VanBerloGenerator => new VanBerloGenerator(m_writer),
+                ElementGenerators.WasteDisposer => new DummyWasteDisposer(m_writer),
                 _ => throw new ArgumentException($"Unknown element generator type {elementGenerator.GetType()}")
             };
         }

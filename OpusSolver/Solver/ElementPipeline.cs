@@ -78,6 +78,11 @@ namespace OpusSolver.Solver
                 AddGenerator(new QuintessenceGenerator(m_commandSequence, m_plan));
             }
 
+            if (recipe.HasWaste)
+            {
+                AddGenerator(new WasteDisposer(m_commandSequence, m_plan));
+            }
+
             m_outputGenerator = new OutputGenerator(m_commandSequence, m_plan);
             AddGenerator(m_outputGenerator);
         }

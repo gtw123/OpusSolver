@@ -43,8 +43,7 @@ namespace OpusSolver.Solver.LowCost
             var baseTransform = new Transform2D();
             var offsetTransform = new Transform2D(new Vector2(m_armArea.ArmLength, 0), HexRotation.R0);
 
-            // Process the generators in reverse so that we start with the output generator. This is important
-            // because we can't rotate the output generator (because repeating products can't be rotated).
+            // Process the generators in reverse so that we start with the output generator
             var elementGenerators = pipeline.ElementGenerators;
             foreach (var elementGenerator in Enumerable.Reverse(elementGenerators).Where(e => e is not ElementGenerators.ElementBuffer))
             {
@@ -56,7 +55,7 @@ namespace OpusSolver.Solver.LowCost
                 baseTransform.Position += positionOffset;
                 baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
             }
-            
+
             foreach (var elementBuffer in elementGenerators.OfType<ElementGenerators.ElementBuffer>())
             {
                 CreateAtomGenerator(elementBuffer, baseTransform.Apply(offsetTransform));
@@ -72,7 +71,7 @@ namespace OpusSolver.Solver.LowCost
             {
                 ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
                 ElementGenerators.OutputGenerator => new OutputArea(m_writer, m_armArea, m_assemblerFactory),
-                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.StackInfos),
+                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.GetBufferInfo(), m_atomGenerators.OfType<WasteDisposer>().SingleOrDefault()),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer, m_armArea),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => throw new UnsupportedException("LowCost solver doesn't currently support metal purification."),
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer, m_armArea),
@@ -80,6 +79,7 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.QuintessenceGenerator => throw new UnsupportedException("LowCost solver doesn't currently support generating quintessence from cardinals."),
                 ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresCardinalPassThrough ? new SaltGenerator(m_writer, m_armArea) : new SaltGeneratorNoCardinalPassThrough(m_writer, m_armArea),
                 ElementGenerators.VanBerloGenerator => new VanBerloGenerator(m_writer, m_armArea),
+                ElementGenerators.WasteDisposer => new WasteDisposer(m_writer, m_armArea),
                 _ => throw new ArgumentException($"Unknown element generator type {elementGenerator.GetType()}")
             };
 
