@@ -33,7 +33,7 @@ namespace OpusSolver.Solver.LowCost
             return new SolutionPlan(m_puzzle, m_recipe,
                 m_puzzle.Reagents.ToDictionary(p => p.ID, p => m_disassemblerFactory.GetReagentElementOrder(p)),
                 m_puzzle.Products.ToDictionary(p => p.ID, p => m_assemblerFactory.GetProductElementOrder(p)),
-                allowPassthroughWithPendingElements: true);
+                usePendingElementsInOrder: false);
         }
 
         public void CreateAtomGenerators(ElementPipeline pipeline)

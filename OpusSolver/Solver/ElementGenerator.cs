@@ -28,7 +28,7 @@ namespace OpusSolver.Solver
             public int ID;
         }
 
-        private Queue<PendingElement> m_pendingElements = new Queue<PendingElement>();
+        private List<PendingElement> m_pendingElements = new();
 
         protected ElementGenerator(CommandSequence commandSequence, SolutionPlan plan)
         {
@@ -56,23 +56,37 @@ namespace OpusSolver.Solver
                 throw new ArgumentException("possibleElements must contain at least one item.", "possibleElements");
             }
 
-            // Generate the element ourselves if we can (but only if no pending elements are in the way)
+            // Check if we can generate the element ourselves
             var elementsToGenerate = possibleElements.Where(e => CanGenerateElement(e));
-            if (elementsToGenerate.Any() && !m_pendingElements.Any())
-            {
-                return GenerateElement(elementsToGenerate);
-            }
 
+            // Deal with pending elements first
             if (m_pendingElements.Any())
             {
-                // Use the pending elements if there's a matching one or if we're not allowed to pass through when
-                // there are pending elements
-                if (!Plan.AllowPassthroughWithPendingElements || possibleElements.Contains(m_pendingElements.Peek().Element))
+                if (!Plan.UsePendingElementsInOrder)
                 {
-                    var pendingElement = m_pendingElements.Dequeue();
+                    int index = m_pendingElements.FindIndex(e => possibleElements.Contains(e.Element));
+                    if (index >= 0)
+                    {
+                        var pendingElement = m_pendingElements[index];
+                        m_pendingElements.RemoveAt(index);
+                        CommandSequence.Add(CommandType.Generate, pendingElement.Element, this, pendingElement.ID);
+                        return pendingElement.Element;
+                    }
+                }
+
+                if (Plan.UsePendingElementsInOrder || elementsToGenerate.Any())
+                {
+                    var pendingElement = m_pendingElements[0];
+                    m_pendingElements.RemoveAt(0);
                     CommandSequence.Add(CommandType.Generate, pendingElement.Element, this, pendingElement.ID);
                     return pendingElement.Element;
                 }
+            }
+
+            // Generate the element ourselves
+            if (elementsToGenerate.Any())
+            {
+                return GenerateElement(elementsToGenerate);
             }
 
             // If we couldn't generate it, try our parent
@@ -118,7 +132,7 @@ namespace OpusSolver.Solver
 
         protected void AddPendingElement(Element element, int id = 0)
         {
-            m_pendingElements.Enqueue(new PendingElement { Element = element, ID = id });
+            m_pendingElements.Add(new PendingElement { Element = element, ID = id });
         }
 
         /// <summary>
