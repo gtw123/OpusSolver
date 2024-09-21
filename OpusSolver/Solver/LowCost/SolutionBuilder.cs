@@ -62,7 +62,8 @@ namespace OpusSolver.Solver.LowCost
             }
 
             var requiredAccessPoints = Enumerable.Reverse(m_atomGenerators).SelectMany(g => g.RequiredAccessPoints.Select(p => g.GetWorldTransform().Apply(p)));
-            m_armArea.CreateComponents(requiredAccessPoints);
+            var additionalAccessPoints = m_atomGenerators.SelectMany(g => g.AdditionalAccessPoints.Select(p => g.GetWorldTransform().Apply(p)));
+            m_armArea.CreateComponents(additionalAccessPoints.Concat(requiredAccessPoints));
         }
 
         private LowCostAtomGenerator CreateAtomGenerator(ElementGenerator elementGenerator, Transform2D transform)
@@ -73,7 +74,7 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.OutputGenerator => new OutputArea(m_writer, m_armArea, m_assemblerFactory),
                 ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.GetBufferInfo(), m_atomGenerators.OfType<IWasteDisposer>().SingleOrDefault()),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer, m_armArea),
-                ElementGenerators.MetalPurifierGenerator metalPurifier => throw new UnsupportedException("LowCost solver doesn't currently support metal purification."),
+                ElementGenerators.MetalPurifierGenerator metalPurifier => new MetalPurifier(m_writer, m_armArea, metalPurifier.Sequences),
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer, m_armArea),
                 ElementGenerators.QuintessenceDisperserGenerator => throw new UnsupportedException("LowCost solver doesn't currently support generating cardinals from quintessence."),
                 ElementGenerators.QuintessenceGenerator => new QuintessenceGenerator(m_writer, m_armArea),

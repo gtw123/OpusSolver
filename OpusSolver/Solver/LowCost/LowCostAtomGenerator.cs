@@ -15,9 +15,15 @@ namespace OpusSolver.Solver.LowCost
         /// <summary>
         /// The points where an atom needs to pass over this glyph, plus the required rotation of the arm
         /// when its grabber is over each of these points. These points are in the local coordinate space
-        /// of this atom generator.
+        /// of this atom generator. These should be specified in counterclockwise order.
         /// </summary>
         public virtual IEnumerable<Transform2D> RequiredAccessPoints => [];
+
+        /// <summary>
+        /// Additional access points "behind" the main ones. These are defined separately because the logic
+        /// to build a track through these points is currently not very sophisticated.
+        /// </summary>
+        public virtual IEnumerable<Transform2D> AdditionalAccessPoints => [];
 
         public LowCostAtomGenerator(ProgramWriter writer, ArmArea armArea)
             : base(writer)
