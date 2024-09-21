@@ -76,7 +76,17 @@ namespace OpusSolver.Solver.ElementGenerators
             return new BufferInfo(stacks);
         }
 
-        protected override bool CanGenerateElement(Element element) => m_stacks.Any(stack => stack.CurrentElements.Contains(element));
+        protected override bool CanGenerateElement(Element element)
+        {
+            // Prefer using a pending element if there's one available rather than restoring one from the buffer.
+            // This helps avoid this buffer needing to store more than one element in many cases.
+            if (Parent != null && Parent.HasPendingElement(element))
+            {
+                return false;
+            }
+
+            return m_stacks.Any(stack => stack.CurrentElements.Contains(element));
+        }
 
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {

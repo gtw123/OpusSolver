@@ -30,6 +30,8 @@ namespace OpusSolver.Solver
 
         private List<PendingElement> m_pendingElements = new();
 
+        public bool HasPendingElement(Element element) => m_pendingElements.Any(e => e.Element == element);
+
         protected ElementGenerator(CommandSequence commandSequence, SolutionPlan plan)
         {
             CommandSequence = commandSequence;
