@@ -2,7 +2,7 @@
 
 namespace OpusSolver.Solver.LowCost
 {
-    public class WasteDisposer : LowCostAtomGenerator
+    public class WasteDisposer : LowCostAtomGenerator, IWasteDisposer
     {
         private static readonly Transform2D DisposalTransform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
 
@@ -16,7 +16,7 @@ namespace OpusSolver.Solver.LowCost
             new Glyph(this, DisposalTransform.Position, HexRotation.R120, GlyphType.Disposal);
         }
 
-        public override void Consume(Element element, int id)
+        public void Dispose(Element element)
         {
             ArmArea.MoveGrabberTo(DisposalTransform, this);
             ArmArea.DropAtoms(addToGrid: false);

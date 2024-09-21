@@ -71,7 +71,7 @@ namespace OpusSolver.Solver.LowCost
             {
                 ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
                 ElementGenerators.OutputGenerator => new OutputArea(m_writer, m_armArea, m_assemblerFactory),
-                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.GetBufferInfo(), m_atomGenerators.OfType<WasteDisposer>().SingleOrDefault()),
+                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.GetBufferInfo(), m_atomGenerators.OfType<IWasteDisposer>().SingleOrDefault()),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer, m_armArea),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => throw new UnsupportedException("LowCost solver doesn't currently support metal purification."),
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer, m_armArea),
@@ -79,7 +79,7 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.QuintessenceGenerator => throw new UnsupportedException("LowCost solver doesn't currently support generating quintessence from cardinals."),
                 ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresCardinalPassThrough ? new SaltGenerator(m_writer, m_armArea) : new SaltGeneratorNoCardinalPassThrough(m_writer, m_armArea),
                 ElementGenerators.VanBerloGenerator => new VanBerloGenerator(m_writer, m_armArea),
-                ElementGenerators.WasteDisposer => new WasteDisposer(m_writer, m_armArea),
+                ElementGenerators.WasteDisposer => CreateWasteDisposer(),
                 _ => throw new ArgumentException($"Unknown element generator type {elementGenerator.GetType()}")
             };
 
@@ -104,6 +104,12 @@ namespace OpusSolver.Solver.LowCost
             }
 
             throw new UnsupportedException("LowCost solver can't currently handle reagents with more than one atom.");
+        }
+
+        private LowCostAtomGenerator CreateWasteDisposer()
+        {
+            return m_puzzle.AllowedGlyphs.Contains(GlyphType.Disposal) ? new WasteDisposer(m_writer, m_armArea)
+                : new WasteChainDisposer(m_writer, m_armArea);
         }
 
         public IEnumerable<GameObject> GetAllObjects()
