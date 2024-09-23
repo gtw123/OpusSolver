@@ -103,8 +103,17 @@ namespace OpusSolver.Solver.LowCost
 
                 throw new UnsupportedException($"LowCost solver can't currently handle more than {SimpleInputArea.MaxReagents} monoatomic reagents.");
             }
+            else if (reagents.All(r => r.Atoms.Count() <= 2))
+            {
+                if (reagents.Count() <= DiatomicInputArea.MaxReagents)
+                {
+                    return new DiatomicInputArea(m_writer, m_armArea, reagents);
+                }
 
-            throw new UnsupportedException("LowCost solver can't currently handle reagents with more than one atom.");
+                throw new UnsupportedException($"LowCost solver can't currently handle more than {DiatomicInputArea.MaxReagents} diatomic reagents.");
+            }
+
+            throw new UnsupportedException("LowCost solver can't currently handle reagents with more than two atoms.");
         }
 
         private LowCostAtomGenerator CreateWasteDisposer()

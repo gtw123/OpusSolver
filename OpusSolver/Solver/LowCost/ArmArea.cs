@@ -75,7 +75,7 @@ namespace OpusSolver.Solver.LowCost
                 }
             }
 
-            // Note that we may end up with 0 segments if there's only one arm points, but that's OK.
+            // Note that we may end up with 0 segments if there's only one arm point, but that's OK.
             // Having the track always created simplifies things, and the degenerate track will get
             // optimized away eventually anyway.
             m_track = new Track(this, armPoints.First(), segments);

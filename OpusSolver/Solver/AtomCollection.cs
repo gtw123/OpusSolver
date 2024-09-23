@@ -7,7 +7,7 @@ namespace OpusSolver.Solver
     {
         private List<Atom> m_atoms;
 
-        public IEnumerable<Atom> Atoms => m_atoms;
+        public IReadOnlyList<Atom> Atoms => m_atoms;
         public Transform2D WorldTransform;
 
         public AtomCollection()
@@ -16,16 +16,19 @@ namespace OpusSolver.Solver
         }
 
         public AtomCollection(Element element, Transform2D transform, GameObject relativeToObj = null)
+            : this([new Atom(element, HexRotation.All.ToDictionary(r => r, r => BondType.None), new Vector2())], transform, relativeToObj)
         {
-            var atom = new Atom(element, HexRotation.All.ToDictionary(r => r, r => BondType.None), new Vector2());
-            m_atoms = [atom];
-
-            WorldTransform = relativeToObj?.GetWorldTransform().Apply(transform) ?? transform;
         }
 
-        public AtomCollection(IEnumerable<Atom> atoms)
+        public AtomCollection(Molecule molecule, Transform2D transform, GameObject relativeToObj = null)
+            : this(molecule.Atoms.Select(a => a.Copy()).ToList(), transform, relativeToObj)
         {
-            m_atoms = atoms.ToList();
+        }
+
+        private AtomCollection(List<Atom> copiedAtoms, Transform2D transform, GameObject relativeToObj = null)
+        {
+            m_atoms = copiedAtoms;
+            WorldTransform = relativeToObj?.GetWorldTransform().Apply(transform) ?? transform;
         }
 
         public Atom GetAtom(Vector2 localPosition)
@@ -36,6 +39,14 @@ namespace OpusSolver.Solver
         public void AddAtom(Atom atom)
         {
             m_atoms.Add(atom);
+        }
+
+        public Atom RemoveAtom(int index)
+        {
+            var atom = m_atoms[index];
+            m_atoms.RemoveAt(index);
+
+            return atom;
         }
 
         public IEnumerable<(Atom atom, Vector2 position)> GetWorldAtomPositions()
