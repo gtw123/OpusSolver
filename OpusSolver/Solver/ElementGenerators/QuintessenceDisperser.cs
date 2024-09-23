@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace OpusSolver.Solver.ElementGenerators
 {
@@ -21,13 +22,28 @@ namespace OpusSolver.Solver.ElementGenerators
         {
             CommandSequence.Add(CommandType.Consume, Parent.RequestElement(Element.Quintessence), this);
 
-            AddPendingElement(Element.Air);
-            AddPendingElement(Element.Water);
-            AddPendingElement(Element.Fire);
-            CommandSequence.Add(CommandType.Generate, Element.Earth, this);
+            Element generatedElement;
+            if (Plan.UsePendingElementsInOrder)
+            {
+                // Standard solver requires a fixed element order
+                generatedElement = Element.Earth;
+                AddPendingElement(Element.Air);
+                AddPendingElement(Element.Water);
+                AddPendingElement(Element.Fire);
+            }
+            else
+            {
+                generatedElement = possibleElements.First();
+                foreach (var cardinal in PeriodicTable.Cardinals.Where(e => e != generatedElement))
+                {
+                    AddPendingElement(cardinal);
+                }
+            }
+
+            CommandSequence.Add(CommandType.Generate, generatedElement, this);
             Recipe.RecordReactionUsage(ReactionType.Dispersion);
 
-            return Element.Earth;
+            return generatedElement;
         }
     }
 }
