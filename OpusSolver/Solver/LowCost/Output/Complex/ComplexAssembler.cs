@@ -56,7 +56,10 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
             var possibleRotations = new[] { HexRotation.R60, HexRotation.R120 };
             var possiblePivots = new[] { HexRotation.R0, -HexRotation.R60 };
-            var rotationCases = possibleRotations.SelectMany(r => possiblePivots, (rotation, pivot) => (rotation, pivot)).ToList();
+            var rotationCases = (
+                from rotation in possibleRotations
+                from pivot in possiblePivots
+                select (rotation, pivot)).ToList();
 
             var builder1 = m_builders.First();
             foreach (var (rot1, pivot1) in rotationCases)
