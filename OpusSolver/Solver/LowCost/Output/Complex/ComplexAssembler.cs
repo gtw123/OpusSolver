@@ -100,7 +100,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 }
             }
 
-            var missingOutputs = m_outputs.Keys.Except(m_builders.Select(b => b.Product.ID));
+            var missingOutputs = m_builders.Select(b => b.Product.ID).Except(m_outputs.Keys);
             if (missingOutputs.Any())
             {
                 throw new InvalidOperationException($"Could not find valid output positions for products.");
