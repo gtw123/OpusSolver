@@ -11,7 +11,7 @@ namespace OpusSolver.Solver.Standard.Output
         private Dictionary<int, IEnumerable<Element>> m_productElementOrders;
 
         public MoleculeAssembler CreateAssembler(SolverComponent parent, ProgramWriter writer) => m_createAssembler(parent, writer);
-        public IEnumerable<Element> GetProductElementOrder(Molecule molecule) => m_productElementOrders[molecule.ID];
+        public SolutionPlan.MoleculeElementInfo GetProductElementInfo(Molecule molecule) => new SolutionPlan.MoleculeElementInfo(m_productElementOrders[molecule.ID]);
 
         public MoleculeAssemblerFactory(IEnumerable<Molecule> products)
         {

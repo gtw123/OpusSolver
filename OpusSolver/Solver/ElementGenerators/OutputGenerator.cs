@@ -23,7 +23,7 @@ namespace OpusSolver.Solver.ElementGenerators
         {
             foreach (var product in m_products)
             {
-                var elementOrder = Plan.GetProductElementOrder(product);
+                var elementOrder = Plan.GetProductElementInfo(product).ElementOrder;
                 int numCopies = Recipe.GetAvailableReactions(ReactionType.Product, id: product.ID).Single().MaxUsages;
                 for (int i = 0; i < numCopies; i++)
                 {

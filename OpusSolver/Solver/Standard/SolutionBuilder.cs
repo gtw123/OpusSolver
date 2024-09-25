@@ -30,8 +30,8 @@ namespace OpusSolver.Solver.Standard
         public SolutionPlan CreatePlan()
         {
             return new SolutionPlan(m_puzzle, m_recipe,
-                m_puzzle.Reagents.ToDictionary(p => p.ID, p => m_disassemblerFactory.GetReagentElementOrder(p)),
-                m_puzzle.Products.ToDictionary(p => p.ID, p => m_assemblerFactory.GetProductElementOrder(p)),
+                m_puzzle.Reagents.ToDictionary(p => p.ID, p => m_disassemblerFactory.GetReagentElementInfo(p)),
+                m_puzzle.Products.ToDictionary(p => p.ID, p => m_assemblerFactory.GetProductElementInfo(p)),
                 usePendingElementsInOrder: true);
         }
 

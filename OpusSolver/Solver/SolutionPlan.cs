@@ -5,18 +5,20 @@ namespace OpusSolver.Solver
     public class SolutionPlan(
         Puzzle puzzle,
         Recipe recipe,
-        IReadOnlyDictionary<int, IEnumerable<Element>> reagentElementOrders,
-        IReadOnlyDictionary<int, IEnumerable<Element>> productElementOrders,
+        IReadOnlyDictionary<int, SolutionPlan.MoleculeElementInfo> reagentElementInfo,
+        IReadOnlyDictionary<int, SolutionPlan.MoleculeElementInfo> productElementInfo,
         bool usePendingElementsInOrder)
     {
+        public record class MoleculeElementInfo(IEnumerable<Element> ElementOrder, bool IsElementOrderReversible = false);
+
         public Puzzle Puzzle { get; private set; } = puzzle;
         public Recipe Recipe { get; private set; } = recipe;
 
-        private IReadOnlyDictionary<int, IEnumerable<Element>> m_reagentElementOrders = reagentElementOrders;
-        private IReadOnlyDictionary<int, IEnumerable<Element>> m_productElementOrders = productElementOrders;
+        private IReadOnlyDictionary<int, MoleculeElementInfo> m_reagentElementOrders = reagentElementInfo;
+        private IReadOnlyDictionary<int, MoleculeElementInfo> m_productElementOrders = productElementInfo;
 
-        public IEnumerable<Element> GetReagentElementOrder(Molecule reagent) => m_reagentElementOrders[reagent.ID];
-        public IEnumerable<Element> GetProductElementOrder(Molecule product) => m_productElementOrders[product.ID];
+        public MoleculeElementInfo GetReagentElementInfo(Molecule reagent) => m_reagentElementOrders[reagent.ID];
+        public MoleculeElementInfo GetProductElementInfo(Molecule product) => m_productElementOrders[product.ID];
 
         public bool UsePendingElementsInOrder { get; private set; } = usePendingElementsInOrder;
     }

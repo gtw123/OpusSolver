@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver.ElementGenerators
@@ -11,28 +12,42 @@ namespace OpusSolver.Solver.ElementGenerators
         public Molecule Molecule { get; private set; }
         public SolutionPlan Plan { get; private set; }
 
-        public IEnumerable<Element> ElementSequence => m_elementSequence;
         public bool HasPendingElements => m_currentIndex > 0;
 
-        private List<Element> m_elementSequence;
+        private List<Element> m_originalElementSequence;
+        private List<Element> m_currentElementSequence;
         private int m_currentIndex;
+        private bool m_isReversible;
      
         public ElementInput(Molecule molecule, SolutionPlan plan)
         {
             Molecule = molecule;
             Plan = plan;
 
-            m_elementSequence = plan.GetReagentElementOrder(molecule).ToList();
+            var elementInfo = plan.GetReagentElementInfo(molecule);
+            m_originalElementSequence = elementInfo.ElementOrder.ToList();
+            m_isReversible = elementInfo.IsElementOrderReversible;
         }
 
-        public Element GetNextElement()
+        public Element GetNextElement(IEnumerable<Element> preferredElements)
         {
-            var element = m_elementSequence[m_currentIndex];
+            if (m_currentElementSequence == null)
+            {
+                m_currentElementSequence = new List<Element>(m_originalElementSequence);
+
+                if (m_isReversible && !preferredElements.Contains(m_currentElementSequence.First()) && preferredElements.Contains(m_currentElementSequence.Last()))
+                {
+                    m_currentElementSequence.Reverse();
+                }
+            }
+
+            var element = m_currentElementSequence[m_currentIndex];
 
             m_currentIndex++;
-            if (m_currentIndex >= m_elementSequence.Count)
+            if (m_currentIndex >= m_currentElementSequence.Count)
             {
                 m_currentIndex = 0;
+                m_currentElementSequence = null;
                 Plan.Recipe.RecordReactionUsage(ReactionType.Reagent, id: Molecule.ID);
             }
 
@@ -41,15 +56,27 @@ namespace OpusSolver.Solver.ElementGenerators
 
         public int? FindClosestElement(IEnumerable<Element> elements)
         {
-            // Search the elements that will be generated next, up to the end of the sequence
-            int index = m_elementSequence.FindIndex(m_currentIndex, element => elements.Contains(element));
-            if (index < 0)
+            if (m_currentElementSequence != null)
             {
-                // Search the elements that will be generated when the sequence next wraps around
-                index = m_elementSequence.FindIndex(0, m_currentIndex, element => elements.Contains(element));
+                // Search the elements that will be generated next, up to the end of the sequence
+                int index = m_currentElementSequence.FindIndex(m_currentIndex, element => elements.Contains(element));
+                if (index >= 0)
+                {
+                    return index;
+                }
             }
 
-            return (index >= 0) ? index : default(int?);
+            // TODO: Remember whether we chose the reverse order and use that in GetNextElement
+            int index1 = m_originalElementSequence.FindIndex(element => elements.Contains(element));
+            int index2 = m_isReversible ? (m_originalElementSequence.Count - 1 - m_originalElementSequence.FindLastIndex(element => elements.Contains(element))) : -1;
+            if (index1 >= 0 && index2 >= 0)
+            {
+                return Math.Min(index1, index2);
+            }
+            else
+            {
+                return (index1 >= 0) ? index1 : (index2 >= 0) ? index2 : default(int?);
+            }
         }       
     }
 }

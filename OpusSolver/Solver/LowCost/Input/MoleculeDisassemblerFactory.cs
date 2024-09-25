@@ -6,11 +6,9 @@ namespace OpusSolver.Solver.LowCost.Input
 {
     public class MoleculeDisassemblerFactory
     {
-        private class DisassemblerInfo(Func<SolverComponent, ProgramWriter, Vector2, MoleculeDisassembler> createAssembler, IEnumerable<Element> reagentElementOrder)
-        {
-            public Func<SolverComponent, ProgramWriter, Vector2, MoleculeDisassembler> CreateAssembler = createAssembler;
-            public IEnumerable<Element> ReagentElementOrder = reagentElementOrder;
-        }
+        private record class DisassemblerInfo(
+            Func<SolverComponent, ProgramWriter, Vector2, MoleculeDisassembler> CreateAssembler,
+            SolutionPlan.MoleculeElementInfo ElementInfo);
 
         private Dictionary<int, DisassemblerInfo> m_disassemblerInfo;
 
@@ -19,9 +17,9 @@ namespace OpusSolver.Solver.LowCost.Input
             return m_disassemblerInfo[molecule.ID].CreateAssembler(parent, writer, position);
         }
 
-        public IEnumerable<Element> GetReagentElementOrder(Molecule molecule)
+        public SolutionPlan.MoleculeElementInfo GetReagentElementInfo(Molecule molecule)
         {
-            return m_disassemblerInfo[molecule.ID].ReagentElementOrder;
+            return m_disassemblerInfo[molecule.ID].ElementInfo;
         }
 
         public MoleculeDisassemblerFactory(IEnumerable<Molecule> reagents)
@@ -35,11 +33,11 @@ namespace OpusSolver.Solver.LowCost.Input
 
             if (molecule.Atoms.Count() == 1)
             {
-                return new DisassemblerInfo(null, GetDefaultElementOrder(molecule));
+                return new DisassemblerInfo(null, new SolutionPlan.MoleculeElementInfo(GetDefaultElementOrder(molecule)));
             }
             else if (molecule.Atoms.Count() == 2)
             {
-                return new DisassemblerInfo(null, GetDefaultElementOrder(molecule).Reverse());
+                return new DisassemblerInfo(null, new SolutionPlan.MoleculeElementInfo(GetDefaultElementOrder(molecule).Reverse(), IsElementOrderReversible: true));
             }
 
             throw new UnsupportedException("LowCost solver can't currently handle reagents with more than one atom.");

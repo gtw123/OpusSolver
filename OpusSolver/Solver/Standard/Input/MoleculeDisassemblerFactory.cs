@@ -19,9 +19,9 @@ namespace OpusSolver.Solver.Standard.Input
             return m_disassemblerInfo[molecule.ID].CreateAssembler(parent, writer, position);
         }
 
-        public IEnumerable<Element> GetReagentElementOrder(Molecule molecule)
+        public SolutionPlan.MoleculeElementInfo GetReagentElementInfo(Molecule molecule)
         {
-            return m_disassemblerInfo[molecule.ID].ReagentElementOrder;
+            return new SolutionPlan.MoleculeElementInfo(m_disassemblerInfo[molecule.ID].ReagentElementOrder);
         }
 
         public MoleculeDisassemblerFactory(IEnumerable<Molecule> reagents)

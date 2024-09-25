@@ -13,6 +13,7 @@ namespace OpusSolver.Solver.LowCost.Input
         private readonly Dictionary<int, MoleculeDisassembler> m_disassemblers = new();
 
         private Element? m_unbondedElement = null;
+        private Transform2D? m_unbondedElementTransform = null;
 
         public const int MaxReagents = 1;
 
@@ -70,18 +71,36 @@ namespace OpusSolver.Solver.LowCost.Input
 
             if (m_unbondedElement == null)
             {
+                // Move the molecule onto the unbonder
                 disassembler.GenerateNextAtom();
                 ArmArea.MoveGrabberTo(InnerUnbonderPosition, this);
 
                 var atoms = ArmArea.GrabbedAtoms;
-                m_unbondedElement = atoms.RemoveAtom(1).Element;
-                GridState.RegisterAtom(OuterUnbonderPosition.Position, m_unbondedElement, this);
+                var grabbedAtom = atoms.GetAtomAtTransformedPosition(InnerUnbonderPosition.Position, this);
+                if (grabbedAtom.Element == element)
+                {
+                    var otherAtom = atoms.GetAtomAtTransformedPosition(OuterUnbonderPosition.Position, this);
+                    atoms.RemoveAtom(otherAtom);
+                    GridState.RegisterAtom(OuterUnbonderPosition.Position, m_unbondedElement, this);
+                    m_unbondedElement = otherAtom.Element;
+                    m_unbondedElementTransform = OuterUnbonderPosition;
+                }
+                else
+                {
+                    // Drop the atom we're currently holding and pick up the other atom instead
+                    ArmArea.DropAtoms();
+                    m_unbondedElement = grabbedAtom.Element;
+                    m_unbondedElementTransform = InnerUnbonderPosition;
+                    ArmArea.MoveGrabberTo(OuterUnbonderPosition, this);
+                    ArmArea.GrabAtoms(new AtomCollection(element, OuterUnbonderPosition, this));
+                }
             }
             else
             {
-                ArmArea.MoveGrabberTo(OuterUnbonderPosition, this);
-                ArmArea.GrabAtoms(new AtomCollection(m_unbondedElement.Value, OuterUnbonderPosition, this));
+                ArmArea.MoveGrabberTo(m_unbondedElementTransform.Value, this);
+                ArmArea.GrabAtoms(new AtomCollection(m_unbondedElement.Value, m_unbondedElementTransform.Value, this));
                 m_unbondedElement = null;
+                m_unbondedElementTransform = null;
             }
         }
     }

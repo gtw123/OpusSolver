@@ -41,12 +41,12 @@ namespace OpusSolver.Solver
             m_atoms.Add(atom);
         }
 
-        public Atom RemoveAtom(int index)
+        public void RemoveAtom(Atom atom)
         {
-            var atom = m_atoms[index];
-            m_atoms.RemoveAt(index);
-
-            return atom;
+            if (!m_atoms.Remove(atom))
+            {
+                throw new System.ArgumentException("Cannot remove an atom that is not part of this AtomCollection.");
+            }
         }
 
         public IEnumerable<(Atom atom, Vector2 position)> GetWorldAtomPositions()

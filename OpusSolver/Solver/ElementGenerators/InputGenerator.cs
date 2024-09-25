@@ -26,7 +26,7 @@ namespace OpusSolver.Solver.ElementGenerators
         protected override Element GenerateElement(IEnumerable<Element> possibleElements)
         {
             var input = ChooseInput(possibleElements);
-            var generated = input.GetNextElement();
+            var generated = input.GetNextElement(possibleElements);
 
             CommandSequence.Add(CommandType.Generate, generated, this, input.Molecule.ID);
             return generated;
@@ -50,7 +50,7 @@ namespace OpusSolver.Solver.ElementGenerators
             {
                 while (input.HasPendingElements)
                 {
-                    AddPendingElement(input.GetNextElement(), input.Molecule.ID);
+                    AddPendingElement(input.GetNextElement(PeriodicTable.AllElements), input.Molecule.ID);
                 }
             }
         }
