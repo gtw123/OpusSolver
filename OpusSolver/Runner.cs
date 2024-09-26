@@ -1,5 +1,6 @@
 ﻿using OpusSolver.IO;
 using OpusSolver.Solver;
+using OpusSolver.Utils;
 using OpusSolver.Verifier;
 using System;
 using System.Collections.Generic;
@@ -44,7 +45,7 @@ namespace OpusSolver
             if (!m_args.SkipVerification)
             {
                 VerifySolutions(m_generatedSolutions);
-                totalSuccessfulSolutions = m_generatedSolutions.Count(s => s.Verified);
+                totalSuccessfulSolutions = m_generatedSolutions.Count(s => s.PassedVerification);
                 totalFailedVerification = m_generatedSolutions.Count - totalSuccessfulSolutions;
             }
             else
@@ -114,6 +115,14 @@ namespace OpusSolver
                 sm_log.Debug($"Writing solution to \"{solutionFile}\"");
                 SolutionWriter.WriteSolution(solution, solutionFile);
 
+                if (solution.HasErrors)
+                {
+                    // In this case an error message will have already been logged, so we don't need to do that again.
+                    // But return null so that we don't try to verify the solution and generate another error.
+                    m_totalErrors++;
+                    return null;
+                }
+
                 return new GeneratedSolution { PuzzleFile = puzzleFile, SolutionFile = solutionFile, Solution = solution };
             }
             catch (UnsupportedException e)
@@ -124,33 +133,8 @@ namespace OpusSolver
             }
             catch (Exception e)
             {
-                string exceptionDetail = e.Message;
-                string message;
-                switch (e)
-                {
-                    case ParseException:
-                        message = "Error loading puzzle file";
-                        break;
-                    case SolverException:
-                        message = "Error solving puzzle";
-                        break;
-                    default:
-                        message = "Internal error while solving puzzle";
-                        exceptionDetail = e.ToString();
-                        break;
-                };
-
-                if (puzzleName != null)
-                {
-                    message += $" \"{puzzleName}\" from";
-                }
-                message += $" \"{puzzleFile}\": {exceptionDetail}";
-
-                // Write a new line first because there may be progress dots on the current line
-                Console.WriteLine();
-                sm_log.Error(message);
+                LogUtils.LogSolverException(puzzleName, puzzleFile, e);
                 m_totalErrors++;
-
                 return null;
             }
         }
@@ -163,7 +147,7 @@ namespace OpusSolver
             verifier.Verify(generatedSolutions);
 
             var metricSums = new Metrics();
-            var verifiedSolutions = generatedSolutions.Where(s => s.Verified);
+            var verifiedSolutions = generatedSolutions.Where(s => s.PassedVerification);
 
             foreach (var generatedSolution in verifiedSolutions)
             {

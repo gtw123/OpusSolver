@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -6,6 +7,7 @@ namespace OpusSolver
 {
     public class Puzzle
     {
+        public string FilePath { get; private set; }
         public string FileName { get; private set; }
         public string Name { get; private set; }
         public List<Molecule> Products { get; private set; }
@@ -18,9 +20,10 @@ namespace OpusSolver
         /// </summary>
         public int OutputScale { get; private set; }
 
-        public Puzzle(string filename, string name, IEnumerable<Molecule> products, IEnumerable<Molecule> reagents, IEnumerable<ArmType> allowedArmTypes, IEnumerable<GlyphType> allowedGlyphs, int outputScale)
+        public Puzzle(string filePath, string name, IEnumerable<Molecule> products, IEnumerable<Molecule> reagents, IEnumerable<ArmType> allowedArmTypes, IEnumerable<GlyphType> allowedGlyphs, int outputScale)
         {
-            FileName = filename;
+            FilePath = filePath;
+            FileName = Path.GetFileNameWithoutExtension(filePath);
             Name = name;
             Products = products.ToList();
             Reagents = reagents.ToList();

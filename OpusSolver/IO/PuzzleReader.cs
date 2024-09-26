@@ -68,7 +68,7 @@ namespace OpusSolver.IO
                 throw new ParseException("OpusSolver doesn't currently support production puzzles.");
             }
 
-            return new Puzzle(Path.GetFileNameWithoutExtension(m_filePath), puzzleName,
+            return new Puzzle(m_filePath, puzzleName,
                 products, reagents, allowedArmTypes, allowedGlyphs, outputScale);
         }
 

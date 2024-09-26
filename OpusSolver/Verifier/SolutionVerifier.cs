@@ -171,7 +171,7 @@ namespace OpusSolver.Verifier
 
                     sm_log.Debug($"Solution \"{generatedSolution.SolutionFile}\" verified successfully. ");
                     sm_log.Debug($"Cost/cycles/area/instructions: {metrics.Cost}/{metrics.Cycles}/{metrics.Area}/{metrics.Instructions}");
-                    generatedSolution.Verified = true;
+                    generatedSolution.PassedVerification = true;
 
                     sm_log.Debug($"Writing metrics to solution file");
                     generatedSolution.Solution.Metrics = metrics;
@@ -181,7 +181,7 @@ namespace OpusSolver.Verifier
                 {
                     sm_log.Debug($"Solution \"{generatedSolution.SolutionFile}\" failed verification.");
                     sm_log.Error($"Error verifying solution for puzzle {generatedSolution.Solution.Puzzle.Name} from \"{generatedSolution.PuzzleFile}\": {match.Groups[1].Value}");
-                    generatedSolution.Verified = false;
+                    generatedSolution.PassedVerification = false;
                 }
                 else
                 {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpusSolver.Utils;
+using System;
 
 namespace OpusSolver.Solver
 {
@@ -33,10 +34,26 @@ namespace OpusSolver.Solver
         public Solution Generate()
         {
             m_solutionBuilder = CreateSolutionBuilder();
-            var plan = m_solutionBuilder.CreatePlan();
 
-            var pipeline = new ElementPipeline(plan);
-            GenerateProgramFragments(pipeline);
+            try
+            {
+                var plan = m_solutionBuilder.CreatePlan();
+                var pipeline = new ElementPipeline(plan);
+                GenerateProgramFragments(pipeline);
+            }
+            catch (UnsupportedException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                LogUtils.LogSolverException(m_puzzle.Name, m_puzzle.FilePath, e);
+
+                // Try to generate a solution anyway so that it can be saved to disk and the user can debug it
+                var solution2 = CreateSolution();
+                solution2.HasErrors = true;
+                return solution2;
+            }
 
             var solution = CreateSolution();
             return OptimizeSolution(solution);

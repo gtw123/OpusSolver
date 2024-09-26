@@ -5,6 +5,6 @@
         public string PuzzleFile;
         public string SolutionFile;
         public Solution Solution;
-        public bool Verified = false;
+        public bool PassedVerification;
     }
 }
