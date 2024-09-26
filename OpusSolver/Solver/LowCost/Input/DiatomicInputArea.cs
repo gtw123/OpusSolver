@@ -81,9 +81,9 @@ namespace OpusSolver.Solver.LowCost.Input
                 {
                     var otherAtom = atoms.GetAtomAtTransformedPosition(OuterUnbonderPosition.Position, this);
                     atoms.RemoveAtom(otherAtom);
-                    GridState.RegisterAtom(OuterUnbonderPosition.Position, m_unbondedElement, this);
                     m_unbondedElement = otherAtom.Element;
                     m_unbondedElementTransform = OuterUnbonderPosition;
+                    GridState.RegisterAtom(OuterUnbonderPosition.Position, m_unbondedElement, this);
                 }
                 else
                 {
