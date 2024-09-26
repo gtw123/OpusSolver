@@ -55,7 +55,7 @@ namespace OpusSolver.Solver
         {
             if (possibleElements.Count() == 0)
             {
-                throw new ArgumentException("possibleElements must contain at least one item.", "possibleElements");
+                throw new SolverException("possibleElements must contain at least one item.");
             }
 
             // Check if we can generate the element ourselves

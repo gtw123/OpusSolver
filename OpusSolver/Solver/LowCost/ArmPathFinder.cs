@@ -29,12 +29,12 @@ namespace OpusSolver.Solver.LowCost
         {
             if (!m_trackCellsToIndexes.TryGetValue(startTransform.Position, out var startTrackIndex))
             {
-                throw new InvalidOperationException($"Starting position {startTransform.Position} is not on the track.");
+                throw new SolverException($"Starting position {startTransform.Position} is not on the track.");
             }
 
             if (!m_trackCellsToIndexes.TryGetValue(endTransform.Position, out var endTrackIndex))
             {
-                throw new InvalidOperationException($"Ending position {endTransform.Position} is not on the track.");
+                throw new SolverException($"Ending position {endTransform.Position} is not on the track.");
             }
 
             var startPosition = new ArmPosition(startTrackIndex, startTransform.Rotation);
@@ -112,7 +112,7 @@ namespace OpusSolver.Solver.LowCost
 
             if (currentPosition != endPosition)
             {
-                throw new InvalidOperationException($"Cannot find path from {startPosition} to {endPosition}.");
+                throw new SolverException($"Cannot find path from {startPosition} to {endPosition}.");
             }
 
             var path = new List<ArmPosition>();
@@ -147,7 +147,7 @@ namespace OpusSolver.Solver.LowCost
             {
                 if (currentPosition.TrackIndex != targetPosition.TrackIndex)
                 {
-                    throw new ArgumentException("Cannot move and rotate atoms at the same time.");
+                    throw new SolverException("Cannot move and rotate atoms at the same time.");
                 }
 
                 var currentAtomsTransform = ArmPositionToGrabberTransform(currentPosition).Apply(grabberToAtomsTransform);

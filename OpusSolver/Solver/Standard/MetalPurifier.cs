@@ -124,13 +124,13 @@ namespace OpusSolver.Solver.Standard
         {
             if (m_purifiers.Any(p => p.CurrentElement.HasValue))
             {
-                throw new InvalidOperationException("Expected all purifiers to be empty but some still had elements.");
+                throw new SolverException("Expected all purifiers to be empty but some still had elements.");
             }
 
             var sequence = m_sequences[id];
             if (element != sequence.TargetMetal)
             {
-                throw new InvalidOperationException($"Expected to generate an element of {sequence.TargetMetal} but {element} was requested.");
+                throw new SolverException($"Expected to generate an element of {sequence.TargetMetal} but {element} was requested.");
             }
 
             // Move the atom past the unused purifiers

@@ -253,7 +253,7 @@ namespace OpusSolver.Solver
             var values = lp.GetVariableValues();
             if (values.Length != m_reactions.Count)
             {
-                throw new InvalidOperationException($"Linear program returned {values.Length} variables but expected {m_reactions.Count}.");
+                throw new SolverException($"Linear program returned {values.Length} variables but expected {m_reactions.Count}.");
             }
 
             var recipe = new Recipe();

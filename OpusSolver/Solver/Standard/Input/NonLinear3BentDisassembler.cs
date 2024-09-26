@@ -74,7 +74,7 @@ namespace OpusSolver.Solver.Standard.Input
                 molecule.Rotate60Clockwise();
             }
 
-            throw new ArgumentException($"Unexpected molecule shape for {nameof(NonLinear3BentDisassembler)}: {molecule}");
+            throw new SolverException($"Unexpected molecule shape for {nameof(NonLinear3BentDisassembler)}: {molecule}");
         }
 
         public static IEnumerable<Element> GetElementInputOrder(Molecule molecule)

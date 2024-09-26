@@ -121,13 +121,13 @@ namespace OpusSolver.Solver.LowCost
         {
             if (m_grabbedAtoms != null)
             {
-                throw new InvalidOperationException("Cannot grab atoms when already holding some.");
+                throw new SolverException("Cannot grab atoms when already holding some.");
             }
             
             var grabberPosition = GetGrabberPosition();
             if (!atoms.GetWorldAtomPositions().Where(p => p.position == grabberPosition).Any())
             {
-                throw new InvalidOperationException($"Cannot grab atoms as no atom is located at the current grabber position {grabberPosition}.");
+                throw new SolverException($"Cannot grab atoms as no atom is located at the current grabber position {grabberPosition}.");
             }
 
             if (removeFromGrid)
@@ -143,7 +143,7 @@ namespace OpusSolver.Solver.LowCost
         {
             if (m_grabbedAtoms == null)
             {
-                throw new InvalidOperationException("Cannot drop atoms when not holding any.");
+                throw new SolverException("Cannot drop atoms when not holding any.");
             }
 
             if (addToGrid)
@@ -163,7 +163,7 @@ namespace OpusSolver.Solver.LowCost
         {
             if (m_grabbedAtoms == null)
             {
-                throw new InvalidOperationException("Cannot bond atoms when not holding any.");
+                throw new SolverException("Cannot bond atoms when not holding any.");
             }
 
             GridState.UnregisterAtoms(bondToAtoms);
@@ -203,7 +203,7 @@ namespace OpusSolver.Solver.LowCost
 
             if (m_grabbedAtoms == null)
             {
-                throw new InvalidOperationException("Cannot pivot when not holding any atoms.");
+                throw new SolverException("Cannot pivot when not holding any atoms.");
             }
 
             foreach (var rot in HexRotation.R0.CalculateDeltaRotationsTo(deltaRot, rotateClockwiseIf180Degrees))
@@ -232,7 +232,7 @@ namespace OpusSolver.Solver.LowCost
 
             if (m_grabbedAtoms == null)
             {
-                throw new InvalidOperationException("Cannot pivot when not holding any atoms.");
+                throw new SolverException("Cannot pivot when not holding any atoms.");
             }
 
             var currentAtomsTransform = m_grabbedAtoms.WorldTransform;

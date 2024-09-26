@@ -43,7 +43,7 @@ namespace OpusSolver.Solver.ElementGenerators
         {
             if (possibleElements.Count() > 1)
             {
-                throw new InvalidOperationException($"MetalGenerator only supports generating one type of element but {possibleElements.Count()} were specified");
+                throw new SolverException($"MetalGenerator only supports generating one type of element but {possibleElements.Count()} were specified");
             }
 
             var targetElement = possibleElements.First();

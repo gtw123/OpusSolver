@@ -106,7 +106,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             var missingOutputs = m_builders.Select(b => b.Product.ID).Except(m_outputs.Keys);
             if (missingOutputs.Any())
             {
-                throw new InvalidOperationException($"Could not find valid output positions for products.");
+                throw new SolverException($"Could not find valid output positions for products.");
             }
 
             foreach (var (id, output) in m_outputs)

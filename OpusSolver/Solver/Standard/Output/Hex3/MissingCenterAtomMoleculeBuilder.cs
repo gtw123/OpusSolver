@@ -75,7 +75,7 @@ namespace OpusSolver.Solver.Standard.Output.Hex3
 
             if (commonPositions.Count != 1)
             {
-                throw new InvalidOperationException($"Expected to find a center position but instead found {commonPositions.Count}.");
+                throw new SolverException($"Expected to find a center position but instead found {commonPositions.Count}.");
             }
 
             return commonPositions.First();

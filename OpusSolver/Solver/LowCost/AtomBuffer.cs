@@ -31,7 +31,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            throw new InvalidOperationException("LowCost AtomBuffer doesn't currently support generating atoms.");
+            throw new SolverException("LowCost AtomBuffer doesn't currently support generating atoms.");
         }
     }
 }

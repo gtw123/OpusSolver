@@ -52,7 +52,7 @@ namespace OpusSolver.Solver.LowCost
             {
                 Element.Mors => MorsOutputTransform,
                 Element.Vitae => VitaeOutputTransform,
-                _ => throw new ArgumentException($"{nameof(MorsVitaeGenerator)} can only generate Mors and Vitae but {element} was requested.")
+                _ => throw new SolverException($"{nameof(MorsVitaeGenerator)} can only generate Mors and Vitae but {element} was requested.")
             };
 
             ArmArea.MoveGrabberTo(transform, this);

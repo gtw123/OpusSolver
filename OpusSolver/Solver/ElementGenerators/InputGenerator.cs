@@ -38,7 +38,7 @@ namespace OpusSolver.Solver.ElementGenerators
             var inputDistances = availableInputs.Select(input => new { input, distance = input.FindClosestElement(possibleElements) }).Where(x => x.distance != null);
             if (!inputDistances.Any())
             {
-                throw new InvalidOperationException(Invariant($"Cannot find a suitable input to generate one of ({String.Join(", ", possibleElements)})."));
+                throw new SolverException(Invariant($"Cannot find a suitable input to generate one of ({String.Join(", ", possibleElements)})."));
             }
 
             return inputDistances.MinBy(x => x.distance.Value).input;
