@@ -59,26 +59,40 @@ namespace OpusSolver.Solver.LowCost
 
         private void CreateTrack(IEnumerable<Vector2> armPoints)
         {
-            Vector2 previousPoint = armPoints.First();
-            var seenPoints = new HashSet<Vector2> { previousPoint };
-            var segments = new List<Track.Segment>();
-            foreach (var point in armPoints.Skip(1))
+            try
             {
-                if (!seenPoints.Contains(point))
+                Vector2 previousPoint = armPoints.First();
+                var seenPoints = new HashSet<Vector2> { previousPoint };
+                var segments = new List<Track.Segment>();
+
+                foreach (var point in armPoints.Skip(1))
                 {
-                    var dir = (point - previousPoint).ToRotation() ?? throw new InvalidOperationException($"Cannot create a straight track segment from {previousPoint} to {point}.");
-                    int length = point.DistanceBetween(previousPoint);
-                    segments.Add(new Track.Segment(dir, length));
+                    if (!seenPoints.Contains(point))
+                    {
+                        var dir = (point - previousPoint).ToRotation() ?? throw new SolverException($"Cannot create a straight track segment from {previousPoint} to {point}.");
+                        int length = point.DistanceBetween(previousPoint);
+                        segments.Add(new Track.Segment(dir, length));
 
-                    seenPoints.Add(point);
-                    previousPoint = point;
+                        seenPoints.Add(point);
+                        previousPoint = point;
+                    }
                 }
-            }
 
-            // Note that we may end up with 0 segments if there's only one arm point, but that's OK.
-            // Having the track always created simplifies things, and the degenerate track will get
-            // optimized away eventually anyway.
-            m_track = new Track(this, armPoints.First(), segments);
+                // Note that we may end up with 0 segments if there's only one arm point, but that's OK.
+                // Having the track always created simplifies things, and the degenerate track will get
+                // optimized away eventually anyway.
+                m_track = new Track(this, armPoints.First(), segments);
+            }
+            catch (Exception)
+            {
+                // Add some markers to help the user see why the track can't be created
+                foreach (var point in armPoints)
+                {
+                    new Glyph(this, point, HexRotation.R0, GlyphType.Equilibrium);
+                }
+
+                throw;
+            }
         }
 
         private void CreateMainArm(Transform2D transform)
