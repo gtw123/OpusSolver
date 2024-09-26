@@ -9,7 +9,7 @@ namespace OpusSolver.Solver.LowCost.Input
     /// </summary>
     public class DiatomicDisassembler : MoleculeDisassembler
     {
-        private static readonly Transform2D InputTransform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
+        private static readonly Transform2D InputTransform = new Transform2D(new Vector2(0, 0), HexRotation.R180);
         public override IEnumerable<Transform2D> RequiredAccessPoints => [InputTransform];
 
         public DiatomicDisassembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, Transform2D transform, Molecule molecule)
@@ -22,7 +22,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 throw new ArgumentException($"{nameof(DiatomicDisassembler)} can't handle molecules that don't have two atoms");
             }
 
-            new Reagent(this, InputTransform.Position, InputTransform.Rotation, molecule);
+            new Reagent(this, new(), HexRotation.R0, molecule);
         }
 
         public override void BeginSolution()
@@ -39,7 +39,7 @@ namespace OpusSolver.Solver.LowCost.Input
 
         private AtomCollection CreateAtomCollection()
         {
-            return new AtomCollection(Molecule, InputTransform, this);
+            return new AtomCollection(Molecule, new Transform2D(), this);
         }
     }
 }
