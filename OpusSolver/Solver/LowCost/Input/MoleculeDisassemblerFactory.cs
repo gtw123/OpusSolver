@@ -40,7 +40,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 return new DisassemblerInfo(null, new SolutionPlan.MoleculeElementInfo(GetDefaultElementOrder(molecule).Reverse(), IsElementOrderReversible: true));
             }
 
-            throw new UnsupportedException("LowCost solver can't currently handle reagents with more than one atom.");
+            throw new UnsupportedException($"LowCost solver can't currently handle reagents with more than 2 atoms (requested {molecule.Atoms.Count()}).");
         }
     }
 }
