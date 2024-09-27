@@ -74,7 +74,7 @@ namespace OpusSolver.Solver.LowCost.Input
 
         private void AddDisassembler(Molecule reagent, Transform2D transform, bool addAccessPointAtStart = false)
         {
-            var disassembler = new SingleMonoatomicDisassembler(this, Writer, ArmArea, transform, reagent);
+            var disassembler = new SimpleDisassembler(this, Writer, ArmArea, transform, reagent, new Transform2D());
             m_disassemblers[reagent.ID] = disassembler;
 
             if (addAccessPointAtStart)

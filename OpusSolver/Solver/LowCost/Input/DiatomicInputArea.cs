@@ -11,7 +11,7 @@ namespace OpusSolver.Solver.LowCost.Input
     /// </summary>
     public class DiatomicInputArea : LowCostAtomGenerator
     {
-        private record DisassemblerInfo(DiatomicDisassembler Disassembler, int Index);
+        private record DisassemblerInfo(SimpleDisassembler Disassembler, int Index);
 
         private readonly Dictionary<int, DisassemblerInfo> m_disassemblers = new();
 
@@ -92,7 +92,7 @@ namespace OpusSolver.Solver.LowCost.Input
 
         private void AddDisassembler(Molecule reagent, Transform2D transform, HexRotation moleculeRotation, int index)
         {
-            var disassembler = new DiatomicDisassembler(this, Writer, ArmArea, transform, reagent, moleculeRotation);
+            var disassembler = new SimpleDisassembler(this, Writer, ArmArea, transform, reagent, new Transform2D(new(), moleculeRotation));
             m_disassemblers[reagent.ID] = new DisassemblerInfo(disassembler, index);
         }
 
@@ -140,8 +140,8 @@ namespace OpusSolver.Solver.LowCost.Input
             {
                 disassembler.GrabMolecule();
 
-                var targetGrabberPosition = disassembler.MoleculeRotation == HexRotation.R180 ? OuterUnbonderPosition : InnerUnbonderPosition;
-                var otherAtomPosition = disassembler.MoleculeRotation == HexRotation.R180 ? InnerUnbonderPosition : OuterUnbonderPosition;
+                var targetGrabberPosition = disassembler.MoleculeTransform.Rotation == HexRotation.R180 ? OuterUnbonderPosition : InnerUnbonderPosition;
+                var otherAtomPosition = disassembler.MoleculeTransform.Rotation == HexRotation.R180 ? InnerUnbonderPosition : OuterUnbonderPosition;
 
                 if (disassemblerInfo.Index == 1)
                 {
