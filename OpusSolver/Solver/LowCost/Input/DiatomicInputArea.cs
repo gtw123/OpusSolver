@@ -48,11 +48,6 @@ namespace OpusSolver.Solver.LowCost.Input
                 throw new ArgumentException(Invariant($"{nameof(DiatomicInputArea)} can't handle more than {MaxReagents} distinct reagents."));
             }
 
-            if (reagents.Any(r => r.Atoms.Count() != 2))
-            {
-                throw new UnsupportedException($"{nameof(DiatomicInputArea)} can't handle reagents that don't have exactly 2 atoms.");
-            }
-
             new Glyph(this, InnerUnbonderPosition.Position, HexRotation.R0, GlyphType.Unbonding);
 
             m_accessPoints.Add(OuterUnbonderPosition);
@@ -82,6 +77,12 @@ namespace OpusSolver.Solver.LowCost.Input
             }
             else if (reagentsList.Count == 2)
             {
+                // If there's a single-atom reagent, add that last
+                if (reagentsList[0].Atoms.Count() == 1)
+                {
+                    reagentsList.Reverse();
+                }
+
                 var transform = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R0).RotateAbout(OuterUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), -HexRotation.R60);
                 AddDisassembler(reagentsList[0], transform, HexRotation.R0, 0);
 
@@ -108,6 +109,13 @@ namespace OpusSolver.Solver.LowCost.Input
         {
             var disassemblerInfo = m_disassemblers[id];
             var disassembler = disassemblerInfo.Disassembler;
+
+            if (disassembler.Molecule.Atoms.Count() == 1)
+            {
+                // We don't need to unbond monoatomic molecules
+                disassembler.GrabMolecule();
+                return;
+            }
 
             if (m_stashedAtom != null && m_stashedAtom.MoleculeID == id)
             {
