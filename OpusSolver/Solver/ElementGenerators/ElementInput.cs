@@ -62,7 +62,7 @@ namespace OpusSolver.Solver.ElementGenerators
                 int index = m_currentElementSequence.FindIndex(m_currentIndex, element => elements.Contains(element));
                 if (index >= 0)
                 {
-                    return index;
+                    return index - m_currentIndex;
                 }
             }
 
