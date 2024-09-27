@@ -98,7 +98,7 @@ namespace OpusSolver.Solver.LowCost.Input
         public override void Generate(Element element, int id)
         {
             var disassembler = m_disassemblers[id];
-            disassembler.GenerateNextAtom();
+            disassembler.GrabMolecule();
         }
     }
 }

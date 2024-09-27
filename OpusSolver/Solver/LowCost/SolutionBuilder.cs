@@ -110,7 +110,7 @@ namespace OpusSolver.Solver.LowCost
                     return new DiatomicInputArea(m_writer, m_armArea, reagents);
                 }
 
-                throw new SolverException($"LowCost solver can't currently handle more than {DiatomicInputArea.MaxReagents} diatomic reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
+                throw new UnsupportedException($"LowCost solver can't currently handle more than {DiatomicInputArea.MaxReagents} diatomic reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
             }
 
             throw new UnsupportedException("LowCost solver can't currently handle reagents with more than two atoms.");

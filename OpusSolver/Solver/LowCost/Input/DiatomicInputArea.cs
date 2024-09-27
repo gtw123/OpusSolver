@@ -1,3 +1,4 @@
+using log4net.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,17 +11,29 @@ namespace OpusSolver.Solver.LowCost.Input
     /// </summary>
     public class DiatomicInputArea : LowCostAtomGenerator
     {
-        private readonly Dictionary<int, MoleculeDisassembler> m_disassemblers = new();
+        private record DisassemblerInfo(DiatomicDisassembler Disassembler, int Index);
 
-        private Element? m_unbondedElement = null;
-        private Transform2D? m_unbondedElementTransform = null;
+        private readonly Dictionary<int, DisassemblerInfo> m_disassemblers = new();
 
-        public const int MaxReagents = 1;
+        private class StoredAtom
+        {
+            public Transform2D Transform;
+            public Element Element;
+            public int MoleculeID;
+        }
+
+        private StoredAtom m_unbondedAtom;
+        private StoredAtom m_stashedAtom;
+
+        public const int MaxReagents = 2;
 
         private static readonly Transform2D InnerUnbonderPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D OuterUnbonderPosition = new Transform2D(new Vector2(1, 0), HexRotation.R0);
+        private readonly Transform2D m_stashPosition;
+        private readonly Transform2D m_input2GrabPosition;
 
-        public override IEnumerable<Transform2D> RequiredAccessPoints => [OuterUnbonderPosition, InnerUnbonderPosition];
+        private List<Transform2D> m_accessPoints = new();
+        public override IEnumerable<Transform2D> RequiredAccessPoints => m_accessPoints;
 
         public DiatomicInputArea(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
             : base(writer, armArea)
@@ -35,7 +48,25 @@ namespace OpusSolver.Solver.LowCost.Input
                 throw new ArgumentException(Invariant($"{nameof(DiatomicInputArea)} can't handle more than {MaxReagents} distinct reagents."));
             }
 
+            if (reagents.Any(r => r.Atoms.Count() != 2))
+            {
+                throw new UnsupportedException($"{nameof(DiatomicInputArea)} can't handle reagents that don't have exactly 2 atoms.");
+            }
+
             new Glyph(this, InnerUnbonderPosition.Position, HexRotation.R0, GlyphType.Unbonding);
+
+            m_accessPoints.Add(OuterUnbonderPosition);
+            m_accessPoints.Add(InnerUnbonderPosition);
+
+            if (reagents.Count() >= 2)
+            {
+                m_stashPosition = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R0).RotateAbout(OuterUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), HexRotation.R60);
+                m_accessPoints.Add(m_stashPosition);
+
+                m_input2GrabPosition = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R0).RotateAbout(OuterUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), -HexRotation.R60);
+                m_input2GrabPosition.Position.X -= 2;
+                m_accessPoints.Add(m_input2GrabPosition);
+            }
 
             CreateDisassemblers(reagents);
         }
@@ -45,62 +76,130 @@ namespace OpusSolver.Solver.LowCost.Input
             var reagentsList = reagents.ToList();
             if (reagentsList.Count == 1)
             {
-                var transform = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R180).RotateAbout(OuterUnbonderPosition.Position + new Vector2(-ArmArea.ArmLength, 0), -HexRotation.R60);
-                AddDisassembler(reagentsList[0], transform);
+                var transform = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R0).RotateAbout(OuterUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), -HexRotation.R60);
+                AddDisassembler(reagentsList[0], transform, HexRotation.R180, 0);
                 return;
+            }
+            else if (reagentsList.Count == 2)
+            {
+                var transform = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R0).RotateAbout(OuterUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), -HexRotation.R60);
+                AddDisassembler(reagentsList[0], transform, HexRotation.R0, 0);
+
+                transform.Position.X -= 1;
+                AddDisassembler(reagentsList[1], transform, HexRotation.R0, 1);
             }
         }
 
-        private void AddDisassembler(Molecule reagent, Transform2D transform)
+        private void AddDisassembler(Molecule reagent, Transform2D transform, HexRotation moleculeRotation, int index)
         {
-            var disassembler = new DiatomicDisassembler(this, Writer, ArmArea, transform, reagent);
-            m_disassemblers[reagent.ID] = disassembler;
+            var disassembler = new DiatomicDisassembler(this, Writer, ArmArea, transform, reagent, moleculeRotation);
+            m_disassemblers[reagent.ID] = new DisassemblerInfo(disassembler, index);
         }
 
         public override void BeginSolution()
         {
             foreach (var disassembler in m_disassemblers.Values)
             {
-                disassembler.BeginSolution();
+                disassembler.Disassembler.BeginSolution();
             }
         }
 
         public override void Generate(Element element, int id)
         {
-            var disassembler = m_disassemblers[id];
+            var disassemblerInfo = m_disassemblers[id];
+            var disassembler = disassemblerInfo.Disassembler;
 
-            if (m_unbondedElement == null)
+            if (m_stashedAtom != null && m_stashedAtom.MoleculeID == id)
             {
+                // Use the stashed atom before dissassembling another molecule
+                ArmArea.MoveGrabberTo(m_stashedAtom.Transform, this);
+                ArmArea.GrabAtoms(new AtomCollection(m_stashedAtom.Element, m_stashedAtom.Transform, this));
+                m_stashedAtom = null;
+                return;
+            }
+
+            if (m_unbondedAtom != null && m_unbondedAtom.MoleculeID != id)
+            {
+                if (m_stashedAtom != null)
+                {
+                    throw new SolverException("Cannot stash an atom when one is already stashed.");
+                }
+
+                // Stash the atom temporarily so that we can disassemble another molecule
+                ArmArea.MoveGrabberTo(m_unbondedAtom.Transform, this);
+                ArmArea.GrabAtoms(new AtomCollection(m_unbondedAtom.Element, m_unbondedAtom.Transform, this));
+                ArmArea.MoveGrabberTo(m_stashPosition, this);
+                ArmArea.DropAtoms();
+
+                m_stashedAtom = m_unbondedAtom;
+                m_stashedAtom.Transform = m_stashPosition;
+                m_unbondedAtom = null;
+            }
+
+            if (m_unbondedAtom == null)
+            {
+                disassembler.GrabMolecule();
+
+                var targetGrabberPosition = disassembler.MoleculeRotation == HexRotation.R180 ? OuterUnbonderPosition : InnerUnbonderPosition;
+                var otherAtomPosition = disassembler.MoleculeRotation == HexRotation.R180 ? InnerUnbonderPosition : OuterUnbonderPosition;
+
+                if (disassemblerInfo.Index == 1)
+                {
+                    // TODO: Make ArmArea understand how to pivot molecules automatically so that we can simplify this
+                    ArmArea.PivotClockwise();
+                    ArmArea.PivotClockwise();
+                    var tempAtoms = ArmArea.DropAtoms();
+                    ArmArea.MoveGrabberTo(m_input2GrabPosition, this);
+                    ArmArea.GrabAtoms(tempAtoms);
+                    var transform = InnerUnbonderPosition;
+                    transform.Position.X -= 1;
+                    ArmArea.MoveGrabberTo(transform, this);
+
+                    if (ArmArea.GrabbedAtoms.GetAtomAtTransformedPosition(ArmArea.GetGrabberPosition()).Element == element)
+                    {
+                        ArmArea.PivotClockwise();
+                    }
+                    else
+                    {
+                        ArmArea.PivotCounterClockwise();
+                        ArmArea.PivotCounterClockwise();
+                        targetGrabberPosition = OuterUnbonderPosition;
+                        otherAtomPosition = InnerUnbonderPosition;
+                    }
+                }
+
                 // Move the molecule onto the unbonder
-                disassembler.GenerateNextAtom();
-                ArmArea.MoveGrabberTo(OuterUnbonderPosition, this);
+                ArmArea.MoveGrabberTo(targetGrabberPosition, this);
+
+                m_unbondedAtom = new StoredAtom { MoleculeID = id };
 
                 var atoms = ArmArea.GrabbedAtoms;
-                var grabbedAtom = atoms.GetAtomAtTransformedPosition(OuterUnbonderPosition.Position, this);
+                var grabbedAtom = atoms.GetAtomAtTransformedPosition(targetGrabberPosition.Position, this);
                 if (grabbedAtom.Element == element)
                 {
-                    var otherAtom = atoms.GetAtomAtTransformedPosition(InnerUnbonderPosition.Position, this);
+                    // Keep hold of the atom we've currently got
+                    var otherAtom = atoms.GetAtomAtTransformedPosition(otherAtomPosition.Position, this);
                     atoms.RemoveAtom(otherAtom);
-                    m_unbondedElement = otherAtom.Element;
-                    m_unbondedElementTransform = InnerUnbonderPosition;
-                    GridState.RegisterAtom(InnerUnbonderPosition.Position, m_unbondedElement, this);
+                    m_unbondedAtom.Element = otherAtom.Element;
+                    m_unbondedAtom.Transform = otherAtomPosition;
+                    GridState.RegisterAtom(otherAtomPosition.Position, m_unbondedAtom.Element, this);
                 }
                 else
                 {
                     // Drop the atom we're currently holding and pick up the other atom instead
                     ArmArea.DropAtoms();
-                    m_unbondedElement = grabbedAtom.Element;
-                    m_unbondedElementTransform = OuterUnbonderPosition;
-                    ArmArea.MoveGrabberTo(InnerUnbonderPosition, this);
-                    ArmArea.GrabAtoms(new AtomCollection(element, InnerUnbonderPosition, this));
+                    m_unbondedAtom.Element = grabbedAtom.Element;
+                    m_unbondedAtom.Transform = targetGrabberPosition;
+                    ArmArea.MoveGrabberTo(otherAtomPosition, this);
+                    ArmArea.GrabAtoms(new AtomCollection(element, otherAtomPosition, this));
                 }
             }
             else
             {
-                ArmArea.MoveGrabberTo(m_unbondedElementTransform.Value, this);
-                ArmArea.GrabAtoms(new AtomCollection(m_unbondedElement.Value, m_unbondedElementTransform.Value, this));
-                m_unbondedElement = null;
-                m_unbondedElementTransform = null;
+                // Grab the already unbonded atom
+                ArmArea.MoveGrabberTo(m_unbondedAtom.Transform, this);
+                ArmArea.GrabAtoms(new AtomCollection(m_unbondedAtom.Element, m_unbondedAtom.Transform, this));
+                m_unbondedAtom = null;
             }
         }
     }

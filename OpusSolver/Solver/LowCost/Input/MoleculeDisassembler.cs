@@ -22,6 +22,6 @@ namespace OpusSolver.Solver.LowCost.Input
 
         public virtual void BeginSolution() { }
 
-        public abstract void GenerateNextAtom();
+        public abstract void GrabMolecule();
     }
 }

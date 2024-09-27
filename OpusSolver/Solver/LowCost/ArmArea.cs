@@ -55,7 +55,7 @@ namespace OpusSolver.Solver.LowCost
             return grabberTransform.Apply(new Vector2(-ArmLength, 0));
         }
 
-        private Vector2 GetGrabberPosition() => m_armTransform.Apply(new Vector2(ArmLength, 0));
+        public Vector2 GetGrabberPosition() => m_armTransform.Apply(new Vector2(ArmLength, 0));
 
         private void CreateTrack(IEnumerable<Vector2> armPoints)
         {

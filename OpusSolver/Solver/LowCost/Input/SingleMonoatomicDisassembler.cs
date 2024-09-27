@@ -33,7 +33,7 @@ namespace OpusSolver.Solver.LowCost.Input
             GridState.RegisterAtom(InputTransform.Position, Element, this);
         }
 
-        public override void GenerateNextAtom()
+        public override void GrabMolecule()
         {
             Writer.NewFragment();
             ArmArea.MoveGrabberTo(InputTransform, this);

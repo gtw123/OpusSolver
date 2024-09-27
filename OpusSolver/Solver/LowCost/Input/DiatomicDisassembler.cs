@@ -9,10 +9,14 @@ namespace OpusSolver.Solver.LowCost.Input
     /// </summary>
     public class DiatomicDisassembler : MoleculeDisassembler
     {
-        private static readonly Transform2D InputTransform = new Transform2D(new Vector2(0, 0), HexRotation.R180);
+        private static readonly Transform2D InputTransform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         public override IEnumerable<Transform2D> RequiredAccessPoints => [InputTransform];
 
-        public DiatomicDisassembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, Transform2D transform, Molecule molecule)
+        private Reagent m_reagent;
+
+        public HexRotation MoleculeRotation { get; private set; }
+
+        public DiatomicDisassembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, Transform2D transform, Molecule molecule, HexRotation moleculeRotation)
             : base(parent, writer, armArea, transform.Position, molecule)
         {
             Transform.Rotation = transform.Rotation;
@@ -22,7 +26,8 @@ namespace OpusSolver.Solver.LowCost.Input
                 throw new ArgumentException($"{nameof(DiatomicDisassembler)} can't handle molecules that don't have two atoms");
             }
 
-            new Reagent(this, new(), HexRotation.R0, molecule);
+            MoleculeRotation = moleculeRotation;
+            m_reagent = new Reagent(this, new(), moleculeRotation, molecule);
         }
 
         public override void BeginSolution()
@@ -30,7 +35,7 @@ namespace OpusSolver.Solver.LowCost.Input
             GridState.RegisterAtoms(CreateAtomCollection());
         }
 
-        public override void GenerateNextAtom()
+        public override void GrabMolecule()
         {
             Writer.NewFragment();
             ArmArea.MoveGrabberTo(InputTransform, this);
@@ -39,7 +44,7 @@ namespace OpusSolver.Solver.LowCost.Input
 
         private AtomCollection CreateAtomCollection()
         {
-            return new AtomCollection(Molecule, new Transform2D(), this);
+            return new AtomCollection(Molecule, m_reagent.Transform, this);
         }
     }
 }
