@@ -30,9 +30,9 @@ namespace OpusSolver.Solver.LowCost.Input
         private static readonly Transform2D InnerUnbonderPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D OuterUnbonderPosition = new Transform2D(new Vector2(1, 0), HexRotation.R0);
         private readonly Transform2D m_stashPosition;
-        private readonly Transform2D m_input2GrabPosition;
+        private Transform2D m_input2GrabPosition;
 
-        private List<Transform2D> m_accessPoints = new();
+        private readonly List<Transform2D> m_accessPoints = new();
         public override IEnumerable<Transform2D> RequiredAccessPoints => m_accessPoints;
 
         public DiatomicInputArea(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
@@ -57,10 +57,6 @@ namespace OpusSolver.Solver.LowCost.Input
             {
                 m_stashPosition = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R0).RotateAbout(OuterUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), HexRotation.R60);
                 m_accessPoints.Add(m_stashPosition);
-
-                m_input2GrabPosition = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R0).RotateAbout(OuterUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), -HexRotation.R60);
-                m_input2GrabPosition.Position.X -= 2;
-                m_accessPoints.Add(m_input2GrabPosition);
             }
 
             CreateDisassemblers(reagents);
@@ -88,6 +84,13 @@ namespace OpusSolver.Solver.LowCost.Input
 
                 transform.Position.X -= 1;
                 AddDisassembler(reagentsList[1], transform, HexRotation.R0, 1);
+
+                if (reagentsList[1].Atoms.Count() > 1)
+                {
+                    m_input2GrabPosition = transform;
+                    m_input2GrabPosition.Position.X -= 1;
+                    m_accessPoints.Add(m_input2GrabPosition);
+                }
             }
         }
 
