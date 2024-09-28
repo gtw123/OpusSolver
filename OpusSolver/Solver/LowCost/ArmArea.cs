@@ -61,27 +61,12 @@ namespace OpusSolver.Solver.LowCost
         {
             try
             {
-                Vector2 previousPoint = armPoints.First();
-                var seenPoints = new HashSet<Vector2> { previousPoint };
-                var segments = new List<Track.Segment>();
-
-                foreach (var point in armPoints.Skip(1))
-                {
-                    if (!seenPoints.Contains(point))
-                    {
-                        var dir = (point - previousPoint).ToRotation() ?? throw new SolverException($"Cannot create a straight track segment from {previousPoint} to {point}.");
-                        int length = point.DistanceBetween(previousPoint);
-                        segments.Add(new Track.Segment(dir, length));
-
-                        seenPoints.Add(point);
-                        previousPoint = point;
-                    }
-                }
+                var path = new TrackPathBuilder(armPoints).CreateTrack();
 
                 // Note that we may end up with 0 segments if there's only one arm point, but that's OK.
                 // Having the track always created simplifies things, and the degenerate track will get
                 // optimized away eventually anyway.
-                m_track = new Track(this, armPoints.First(), segments);
+                m_track = new Track(this, path.StartPosition, path.Segments);
             }
             catch (Exception)
             {
