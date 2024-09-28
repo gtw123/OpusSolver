@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using System;
+using System.Drawing;
 
 namespace OpusSolver.Solver.LowCost
 {
@@ -83,7 +84,32 @@ namespace OpusSolver.Solver.LowCost
             var closedPaths = paths.Where(p => m_adjacentPoints[p[0]].Contains(p[p.Length - 1]));
             var candidatePaths = closedPaths.Any() ? closedPaths.ToList() : paths;
 
-            return candidatePaths.First();
+            // Prefer a path which has more straight segments than a wiggly one
+            int CalculateWiggle(int[] path)
+            {
+                HexRotation? prevDir = null;
+                int wiggleCount = 0;
+                for (int i = 1; i < path.Length; i++)
+                {
+                    var point = m_points[path[i]];
+                    var previousPoint = m_points[path[i - 1]];
+                    var dir = (point - previousPoint).ToRotation() ?? throw new InvalidOperationException($"Cannot create a straight track segment from {previousPoint} to {point}.");
+                    if (prevDir != null)
+                    {
+                        if (dir != prevDir.Value)
+                        {
+                            wiggleCount++;
+                        }
+                    }
+
+                    prevDir = dir;
+                }
+
+                return wiggleCount;
+            }
+            var pathWiggles = candidatePaths.Select(p => (p, CalculateWiggle(p))).ToList();
+
+            return pathWiggles.OrderBy(p => p.Item2).First().p;
         }
 
         private IEnumerable<Track.Segment> CreateSegments(int[] path)
