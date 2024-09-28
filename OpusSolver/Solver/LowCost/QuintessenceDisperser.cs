@@ -20,8 +20,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override int RequiredWidth => 3;
 
-        public override IEnumerable<Transform2D> RequiredAccessPoints => [OutputTransforms[Element.Water], OutputTransforms[Element.Fire]];
-        public override IEnumerable<Transform2D> AdditionalAccessPoints => [InputTransform, OutputTransforms[Element.Earth], OutputTransforms[Element.Air]];
+        public override IEnumerable<Transform2D> RequiredAccessPoints => [OutputTransforms[Element.Water], OutputTransforms[Element.Fire], OutputTransforms[Element.Earth], OutputTransforms[Element.Air], InputTransform];
 
         public QuintessenceDisperser(ProgramWriter writer, ArmArea armArea)
             : base(writer, armArea)
