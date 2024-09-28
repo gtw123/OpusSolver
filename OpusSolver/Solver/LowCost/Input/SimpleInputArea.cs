@@ -15,7 +15,7 @@ namespace OpusSolver.Solver.LowCost.Input
         public const int MaxReagents = 4;
 
         // We need to manually specify the order in which to add the access points because the logic in ArmArea
-        // for building the track is currently a bit simplistic.
+        // for building the track is currently a bit sensitive to the order of these.
         private readonly List<int> m_disassemblerAccessPointOrder = new();
         public override IEnumerable<Transform2D> RequiredAccessPoints =>
             m_disassemblerAccessPointOrder.Select(o => m_disassemblers[o]).SelectMany(d => d.RequiredAccessPoints.Select(p => d.Transform.Apply(p)));

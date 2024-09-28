@@ -14,10 +14,7 @@ namespace OpusSolver.Solver.LowCost.Output
 
         private readonly Dictionary<int, Product> m_outputs = new();
 
-        // We need to manually specify the order in which to add the access points because the logic in ArmArea
-        // for building the track is currently a bit simplistic.
-        private readonly List<int> m_outputAccessPointOrder = new();
-        public override IEnumerable<Transform2D> RequiredAccessPoints => m_outputAccessPointOrder.Select(o => m_outputs[o]).Select(p => p.Transform);
+        public override IEnumerable<Transform2D> RequiredAccessPoints => m_outputs.Values.OrderBy(o => o.Molecule.ID).Select(p => p.Transform);
 
         public MonoatomicAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> products)
             : base(parent, writer, armArea)
@@ -43,7 +40,7 @@ namespace OpusSolver.Solver.LowCost.Output
 
             if (productList.Count > 2)
             {
-                AddProductOutput(productList[2], new Vector2(-1, 0), HexRotation.R0, addAccessPointAtStart: true);
+                AddProductOutput(productList[2], new Vector2(-1, 0), HexRotation.R0);
             }
 
             if (productList.Count > 3)
@@ -53,19 +50,10 @@ namespace OpusSolver.Solver.LowCost.Output
             }
         }
 
-        private void AddProductOutput(Molecule product, Vector2 position, HexRotation rotation, bool addAccessPointAtStart = false)
+        private void AddProductOutput(Molecule product, Vector2 position, HexRotation rotation)
         {
             var output = new Product(this, position, rotation, product);
             m_outputs[product.ID] = output;
-
-            if (addAccessPointAtStart)
-            {
-                m_outputAccessPointOrder.Insert(0, product.ID);
-            }
-            else
-            {
-                m_outputAccessPointOrder.Add(product.ID);
-            }
         }
 
         public override void AddAtom(Element element, int productID)
