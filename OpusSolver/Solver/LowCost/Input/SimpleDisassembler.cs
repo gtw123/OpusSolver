@@ -23,7 +23,7 @@ namespace OpusSolver.Solver.LowCost.Input
 
         public override void BeginSolution()
         {
-            GridState.RegisterAtoms(CreateAtomCollection());
+            RegisterInputAtoms();
         }
 
         public override void GrabMolecule()
@@ -36,6 +36,11 @@ namespace OpusSolver.Solver.LowCost.Input
         private AtomCollection CreateAtomCollection()
         {
             return new AtomCollection(Molecule, MoleculeTransform, this);
+        }
+
+        public override void RegisterInputAtoms()
+        {
+            GridState.RegisterAtoms(CreateAtomCollection());
         }
     }
 }

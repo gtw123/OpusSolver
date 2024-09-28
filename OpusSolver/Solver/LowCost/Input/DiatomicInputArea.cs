@@ -159,9 +159,14 @@ namespace OpusSolver.Solver.LowCost.Input
                     var tempAtoms = ArmArea.DropAtoms();
                     ArmArea.MoveGrabberTo(m_input2GrabPosition, this);
                     ArmArea.GrabAtoms(tempAtoms);
+
                     var transform = InnerUnbonderPosition;
                     transform.Position.X -= 1;
                     ArmArea.MoveGrabberTo(transform, this);
+
+                    // Because we don't currently handle input suppression automatically, we need to manually
+                    // re-register the input atoms after we've dropped and then picked up atoms on top of the input.
+                    disassembler.RegisterInputAtoms();
 
                     if (ArmArea.GrabbedAtoms.GetAtomAtTransformedPosition(ArmArea.GetGrabberPosition()).Element == element)
                     {
