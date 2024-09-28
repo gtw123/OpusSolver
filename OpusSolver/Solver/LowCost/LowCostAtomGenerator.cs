@@ -19,12 +19,6 @@ namespace OpusSolver.Solver.LowCost
         /// </summary>
         public virtual IEnumerable<Transform2D> RequiredAccessPoints => [];
 
-        /// <summary>
-        /// Additional access points "behind" the main ones. These are defined separately because the logic
-        /// to build a track through these points is currently not very sophisticated.
-        /// </summary>
-        public virtual IEnumerable<Transform2D> AdditionalAccessPoints => [];
-
         public LowCostAtomGenerator(ProgramWriter writer, ArmArea armArea)
             : base(writer)
         {

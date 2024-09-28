@@ -62,8 +62,7 @@ namespace OpusSolver.Solver.LowCost
             }
 
             var requiredAccessPoints = Enumerable.Reverse(m_atomGenerators).SelectMany(g => g.RequiredAccessPoints.Select(p => g.GetWorldTransform().Apply(p)));
-            var additionalAccessPoints = m_atomGenerators.SelectMany(g => g.AdditionalAccessPoints.Select(p => g.GetWorldTransform().Apply(p)));
-            m_armArea.CreateComponents(additionalAccessPoints.Concat(requiredAccessPoints));
+            m_armArea.CreateComponents(requiredAccessPoints);
         }
 
         private LowCostAtomGenerator CreateAtomGenerator(ElementGenerator elementGenerator, Transform2D transform)

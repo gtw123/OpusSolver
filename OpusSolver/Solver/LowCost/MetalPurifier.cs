@@ -25,8 +25,7 @@ namespace OpusSolver.Solver.LowCost
         private static readonly Transform2D Input2Transform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D OutputTransform = new Transform2D(new Vector2(-1, 0), HexRotation.R0);
 
-        public override IEnumerable<Transform2D> RequiredAccessPoints => new[] { Input2Transform, Input1Transform }.Concat(m_storageLocations.Select(s => s.Transform));
-        public override IEnumerable<Transform2D> AdditionalAccessPoints => [OutputTransform];
+        public override IEnumerable<Transform2D> RequiredAccessPoints => new[] { Input2Transform, OutputTransform, Input1Transform }.Concat(m_storageLocations.Select(s => s.Transform));
 
         public override int RequiredWidth => Math.Max(2, m_storageLocations.Length + 1);
 
