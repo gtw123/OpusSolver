@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OpusSolver.Solver.ElementGenerators;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static System.FormattableString;
@@ -13,6 +14,8 @@ namespace OpusSolver.Solver
     {
         public ElementGenerator Parent { get; set; }
         public AtomGenerator AtomGenerator { get; set; }
+
+        public ElementBuffer ElementBuffer { get; set; }
 
         public bool HasPendingElements => m_pendingElements.Any();
 
@@ -48,8 +51,7 @@ namespace OpusSolver.Solver
         }
 
         /// <summary>
-        /// Generates one of the specified elements. If this element generator cannot generate it,
-        /// it will recursively try to generate it from its parent element generator.
+        /// Generates one of the specified elements, either from this generator or its parent.
         /// </summary>
         public Element RequestElement(IEnumerable<Element> possibleElements)
         {
@@ -58,8 +60,31 @@ namespace OpusSolver.Solver
                 throw new SolverException("possibleElements must contain at least one item.");
             }
 
+            var generated = TryGenerateElement(possibleElements);
+            while (!possibleElements.Contains(generated))
+            {
+                if (ElementBuffer == null)
+                {
+                    throw new SolverException(Invariant($"Requested to generate one of {string.Join(", ", possibleElements)} but instead generated {generated}."));
+                }
+
+                ElementBuffer.StoreElement(generated);
+                generated = TryGenerateElement(possibleElements);
+            }
+
+            return generated;
+        }
+
+        /// <summary>
+        /// Tries to generates one of the specified elements. Uses any pending or stored elements before actually
+        /// generating it. If this element generator cannot generate it, it will try to generate it from its parent
+        /// element generator instead. This method may return a different element from what was requested if there
+        /// pending elements from either this generator or its parent.
+        /// </summary>
+        private Element TryGenerateElement(IEnumerable<Element> possibleElements)
+        {
             // Check if we can generate the element ourselves
-            var elementsToGenerate = possibleElements.Where(e => CanGenerateElement(e));
+            var elementsToGenerate = possibleElements.Where(e => CanGenerateElement(e)).ToList();
 
             // Deal with pending elements first
             if (m_pendingElements.Any())
@@ -85,6 +110,12 @@ namespace OpusSolver.Solver
                 }
             }
 
+            // Restore elements from the buffer if possible
+            if (ElementBuffer != null && possibleElements.Any(e => ElementBuffer.CanGenerateElement(e)))
+            {
+                return ElementBuffer.GenerateElement(possibleElements);
+            }
+
             // Generate the element ourselves
             if (elementsToGenerate.Any())
             {
@@ -95,17 +126,11 @@ namespace OpusSolver.Solver
             if (Parent != null)
             {
                 var generated = Parent.RequestElement(possibleElements);
-                while (!possibleElements.Contains(generated))
-                {
-                    StoreElement(generated);
-                    generated = Parent.RequestElement(possibleElements);
-                }
-
                 PassThrough(generated);
                 return generated;
             }
 
-            throw new SolverException(Invariant($"Cannot find suitable generator to generate {String.Join(", ", possibleElements)}."));
+            throw new SolverException(Invariant($"Cannot find suitable generator to generate {string.Join(", ", possibleElements)}."));
         }
 
         protected abstract bool CanGenerateElement(Element element);
@@ -114,15 +139,6 @@ namespace OpusSolver.Solver
         /// Adds the commands required to generate one of the specified elements.
         /// </summary>
         protected abstract Element GenerateElement(IEnumerable<Element> possibleElements);
-
-        /// <summary>
-        /// Adds the commands required to store the specified element so that it doesn't get
-        /// in the way of future elements.
-        /// </summary>
-        protected virtual void StoreElement(Element element)
-        {
-            throw new SolverException(Invariant($"{GetType()} cannot store elements. Requested to store: {element}."));
-        }
 
         /// <summary>
         /// Adds the commands required to pass an element through this generator without modifying it.
@@ -140,7 +156,20 @@ namespace OpusSolver.Solver
         /// <summary>
         /// Performs optional clean up once the command sequence has been created.
         /// </summary>
-        public virtual void EndSolution()
+        public void EndSolution()
+        {
+            AddAllPendingElements();
+
+            if (ElementBuffer != null)
+            {
+                while (HasPendingElements)
+                {
+                    ElementBuffer.StoreElement(RequestElement(PeriodicTable.AllElements));
+                }
+            }
+        }
+
+        protected virtual void AddAllPendingElements()
         {
         }
     }

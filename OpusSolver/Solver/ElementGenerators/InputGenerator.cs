@@ -44,7 +44,7 @@ namespace OpusSolver.Solver.ElementGenerators
             return inputDistances.MinBy(x => x.distance.Value).input;
         }
 
-        public override void EndSolution()
+        protected override void AddAllPendingElements()
         {
             foreach (var input in m_inputs)
             {

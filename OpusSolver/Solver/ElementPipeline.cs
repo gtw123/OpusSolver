@@ -37,8 +37,7 @@ namespace OpusSolver.Solver
 
         private void AddGenerators()
         {
-            AddGenerator(new InputGenerator(m_commandSequence, m_plan));
-            AddGenerator(new ElementBuffer(m_commandSequence, m_plan));
+            AddGenerator(new InputGenerator(m_commandSequence, m_plan), new ElementBuffer(m_commandSequence, m_plan));
 
             var recipe = m_plan.Recipe;
             if (recipe.HasAvailableReactions(ReactionType.Purification))
@@ -53,8 +52,7 @@ namespace OpusSolver.Solver
 
             if (recipe.HasAvailableReactions(ReactionType.Dispersion))
             {
-                AddGenerator(new QuintessenceDisperserGenerator(m_commandSequence, m_plan));
-                AddGenerator(new ElementBuffer(m_commandSequence, m_plan));
+                AddGenerator(new QuintessenceDisperserGenerator(m_commandSequence, m_plan), new ElementBuffer(m_commandSequence, m_plan));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.Calcification))
@@ -69,8 +67,7 @@ namespace OpusSolver.Solver
 
             if (recipe.HasAvailableReactions(ReactionType.Animismus))
             {
-                AddGenerator(new MorsVitaeGenerator(m_commandSequence, m_plan));
-                AddGenerator(new ElementBuffer(m_commandSequence, m_plan));
+                AddGenerator(new MorsVitaeGenerator(m_commandSequence, m_plan), new ElementBuffer(m_commandSequence, m_plan));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.Unification))
@@ -87,10 +84,17 @@ namespace OpusSolver.Solver
             AddGenerator(m_outputGenerator);
         }
 
-        private void AddGenerator(ElementGenerator generator)
+        private void AddGenerator(ElementGenerator generator, ElementBuffer buffer = null)
         {
             generator.Parent = m_generators.LastOrDefault();
             m_generators.Add(generator);
+
+            if (buffer != null)
+            {
+                generator.ElementBuffer = buffer;
+                buffer.Parent = generator;
+                m_generators.Add(buffer);
+            }
         }
 
         /// <summary>

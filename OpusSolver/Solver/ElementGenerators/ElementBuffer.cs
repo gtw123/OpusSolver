@@ -105,7 +105,7 @@ namespace OpusSolver.Solver.ElementGenerators
             throw new SolverException(Invariant($"Can't find any of {String.Join(", ", possibleElements)} in buffer."));
         }
 
-        protected override void StoreElement(Element element)
+        public void StoreElement(Element element)
         {
             var stack = m_stacks.FirstOrDefault(s => s.CurrentElements.FirstOrDefault() == element);
             if (stack == null)
@@ -123,14 +123,6 @@ namespace OpusSolver.Solver.ElementGenerators
             stack.MaxCount = Math.Max(stack.MaxCount, stack.CurrentElements.Count);
 
             CommandSequence.Add(CommandType.Consume, element, this, stack.ID);
-        }
-
-        public override void EndSolution()
-        {
-            while (Parent.HasPendingElements)
-            {
-                StoreElement(Parent.RequestElement(PeriodicTable.AllElements));
-            }
         }
     }
 }
