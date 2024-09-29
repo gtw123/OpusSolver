@@ -61,8 +61,6 @@ namespace OpusSolver.Solver.ElementGenerators
         {
         }
 
-        public bool HasWaste => m_stacks.Any(stack => stack.HasWaste);
-
         public BufferInfo GetBufferInfo()
         {
             var stacks = m_stacks.Select(stack => new StackInfo

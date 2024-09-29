@@ -120,19 +120,14 @@ namespace OpusSolver.Solver.LowCost
                 return new DummyAtomGenerator(m_writer, m_armArea);
             }
 
-            if (bufferInfo.Stacks.All(s => s.Elements.All(e => e.IsWaste)))
+            if (bufferInfo.Stacks.All(s => s.Elements.All(e => e.IsWaste)) && m_puzzle.AllowedGlyphs.Contains(GlyphType.Disposal))
             {
-                if (m_puzzle.AllowedGlyphs.Contains(GlyphType.Disposal))
-                {
-                    return new WasteDisposer(m_writer, m_armArea);
-                }
-                else
-                {
-                    return new AtomBuffer(m_writer, m_armArea, bufferInfo);
-                }
+                return new WasteDisposer(m_writer, m_armArea);
             }
-
-            throw new UnsupportedException("LowCost AtomBuffer currently only supports stacks that are entirely waste.");
+            else
+            {
+                return new AtomBuffer(m_writer, m_armArea, bufferInfo);
+            }
         }
 
         public IEnumerable<GameObject> GetAllObjects()

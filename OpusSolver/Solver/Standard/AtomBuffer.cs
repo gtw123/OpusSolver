@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace OpusSolver.Solver.Standard
 {
     /// <summary>
-    /// Temporarily stores atoms that aren't currently needed.
+    /// Stores atoms that are waste or aren't currently needed.
     /// </summary>
     public class AtomBuffer : AtomGenerator
     {
