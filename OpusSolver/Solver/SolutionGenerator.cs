@@ -35,11 +35,13 @@ namespace OpusSolver.Solver
         {
             m_solutionBuilder = CreateSolutionBuilder();
 
+            var plan = m_solutionBuilder.CreatePlan();
+            var pipeline = new ElementPipeline(plan);
+            var commandSequence = pipeline.GenerateCommandSequence();
+
             try
             {
-                var plan = m_solutionBuilder.CreatePlan();
-                var pipeline = new ElementPipeline(plan);
-                GenerateProgramFragments(pipeline);
+                GenerateProgramFragments(pipeline, commandSequence);
             }
             catch (UnsupportedException)
             {
@@ -62,11 +64,10 @@ namespace OpusSolver.Solver
         /// <summary>
         /// Generates the program fragments for the solution.
         /// </summary>
-        private void GenerateProgramFragments(ElementPipeline pipeline)
+        private void GenerateProgramFragments(ElementPipeline pipeline, CommandSequence commandSequence)
         {
             sm_log.Debug("Generating program fragments");
 
-            var commandSequence = pipeline.GenerateCommandSequence();
             m_solutionBuilder.CreateAtomGenerators(pipeline);
 
             var generators = pipeline.ElementGenerators;
