@@ -7,6 +7,7 @@ namespace OpusSolver.Solver
         Recipe recipe,
         IReadOnlyDictionary<int, SolutionPlan.MoleculeElementInfo> reagentElementInfo,
         IReadOnlyDictionary<int, SolutionPlan.MoleculeElementInfo> productElementInfo,
+        bool useSharedElementBuffer,
         bool usePendingElementsInOrder)
     {
         public record class MoleculeElementInfo(IEnumerable<Element> ElementOrder, bool IsElementOrderReversible = false);
@@ -20,6 +21,7 @@ namespace OpusSolver.Solver
         public MoleculeElementInfo GetReagentElementInfo(Molecule reagent) => m_reagentElementOrders[reagent.ID];
         public MoleculeElementInfo GetProductElementInfo(Molecule product) => m_productElementOrders[product.ID];
 
+        public bool UseSharedElementBuffer { get; private set; } = useSharedElementBuffer;
         public bool UsePendingElementsInOrder { get; private set; } = usePendingElementsInOrder;
     }
 }

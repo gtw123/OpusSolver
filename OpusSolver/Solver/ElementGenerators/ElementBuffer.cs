@@ -78,6 +78,13 @@ namespace OpusSolver.Solver.ElementGenerators
 
         protected override bool CanGenerateElement(Element element)
         {
+            // Don't automatically restore elements when using a shared buffer - instead, element generators will
+            // do it themselves. This is because the "parent" check below won't work for a shared buffer.
+            if (Plan.UseSharedElementBuffer)
+            {
+                return false;
+            }
+
             // Prefer using a pending element if there's one available rather than restoring one from the buffer.
             // This helps avoid this buffer needing to store more than one element in many cases.
             if (Parent != null && Parent.HasPendingElement(element))
@@ -85,6 +92,11 @@ namespace OpusSolver.Solver.ElementGenerators
                 return false;
             }
 
+            return CanRestoreElement(element);
+        }
+
+        public bool CanRestoreElement(Element element)
+        {
             return m_stacks.Any(stack => stack.CurrentElements.Contains(element));
         }
 

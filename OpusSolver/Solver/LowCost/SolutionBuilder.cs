@@ -33,6 +33,7 @@ namespace OpusSolver.Solver.LowCost
             return new SolutionPlan(m_puzzle, m_recipe,
                 m_puzzle.Reagents.ToDictionary(p => p.ID, p => m_disassemblerFactory.GetReagentElementInfo(p)),
                 m_puzzle.Products.ToDictionary(p => p.ID, p => m_assemblerFactory.GetProductElementInfo(p)),
+                useSharedElementBuffer: true,
                 usePendingElementsInOrder: false);
         }
 
@@ -45,20 +46,18 @@ namespace OpusSolver.Solver.LowCost
 
             // Process the generators in reverse so that we start with the output generator
             var elementGenerators = pipeline.ElementGenerators;
-            foreach (var elementGenerator in Enumerable.Reverse(elementGenerators).Where(e => e is not ElementGenerators.ElementBuffer))
+            foreach (var elementGenerator in Enumerable.Reverse(elementGenerators))
             {
                 var atomGenerator = CreateAtomGenerator(elementGenerator, baseTransform.Apply(offsetTransform));
                 m_atomGenerators.Add(atomGenerator);
 
-                var positionOffset = (atomGenerator.RequiredWidth - 1) * new Vector2(1, -1).RotateBy(baseTransform.Rotation);
-                atomGenerator.Transform.Position += positionOffset;
-                baseTransform.Position += positionOffset;
-                baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
-            }
-
-            foreach (var elementBuffer in elementGenerators.OfType<ElementGenerators.ElementBuffer>())
-            {
-                CreateAtomGenerator(elementBuffer, baseTransform.Apply(offsetTransform));
+                if (!atomGenerator.IsEmpty)
+                {
+                    var positionOffset = (atomGenerator.RequiredWidth - 1) * new Vector2(1, -1).RotateBy(baseTransform.Rotation);
+                    atomGenerator.Transform.Position += positionOffset;
+                    baseTransform.Position += positionOffset;
+                    baseTransform.Rotation = baseTransform.Rotation.Rotate60Clockwise();
+                }
             }
 
             var requiredAccessPoints = Enumerable.Reverse(m_atomGenerators).SelectMany(g => g.RequiredAccessPoints.Select(p => g.GetWorldTransform().Apply(p)));
@@ -71,7 +70,7 @@ namespace OpusSolver.Solver.LowCost
             {
                 ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
                 ElementGenerators.OutputGenerator => new OutputArea(m_writer, m_armArea, m_assemblerFactory),
-                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, m_armArea, elementBuffer.GetBufferInfo(), m_atomGenerators.OfType<IWasteDisposer>().SingleOrDefault()),
+                ElementGenerators.ElementBuffer elementBuffer => CreateAtomBuffer(elementBuffer.GetBufferInfo()),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer, m_armArea),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => new MetalPurifier(m_writer, m_armArea, metalPurifier.Sequences),
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer, m_armArea),
@@ -79,7 +78,6 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.QuintessenceGenerator => new QuintessenceGenerator(m_writer, m_armArea),
                 ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresCardinalPassThrough ? new SaltGenerator(m_writer, m_armArea) : new SaltGeneratorNoCardinalPassThrough(m_writer, m_armArea),
                 ElementGenerators.VanBerloGenerator => new VanBerloGenerator(m_writer, m_armArea),
-                ElementGenerators.WasteDisposer => CreateWasteDisposer(),
                 _ => throw new ArgumentException($"Unknown element generator type {elementGenerator.GetType()}")
             };
 
@@ -115,10 +113,26 @@ namespace OpusSolver.Solver.LowCost
             throw new UnsupportedException("LowCost solver can't currently handle reagents with more than two atoms.");
         }
 
-        private LowCostAtomGenerator CreateWasteDisposer()
+        private LowCostAtomGenerator CreateAtomBuffer(ElementGenerators.ElementBuffer.BufferInfo bufferInfo)
         {
-            return m_puzzle.AllowedGlyphs.Contains(GlyphType.Disposal) ? new WasteDisposer(m_writer, m_armArea)
-                : new WasteChainDisposer(m_writer, m_armArea);
+            if (bufferInfo.Stacks.Count == 0)
+            {
+                return new DummyAtomGenerator(m_writer, m_armArea);
+            }
+
+            if (bufferInfo.Stacks.All(s => s.Elements.All(e => e.IsWaste)))
+            {
+                if (m_puzzle.AllowedGlyphs.Contains(GlyphType.Disposal))
+                {
+                    return new WasteDisposer(m_writer, m_armArea);
+                }
+                else
+                {
+                    return new AtomBuffer(m_writer, m_armArea, bufferInfo);
+                }
+            }
+
+            throw new UnsupportedException("LowCost AtomBuffer currently only supports stacks that are entirely waste.");
         }
 
         public IEnumerable<GameObject> GetAllObjects()

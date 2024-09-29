@@ -13,6 +13,11 @@ namespace OpusSolver.Solver.LowCost
         public virtual int RequiredWidth => 1;
 
         /// <summary>
+        /// If true, this generator takes up no space on the grid.
+        /// </summary>
+        public virtual bool IsEmpty => false;
+
+        /// <summary>
         /// The points where an atom needs to pass over this glyph, plus the required rotation of the arm
         /// when its grabber is over each of these points. These points are in the local coordinate space
         /// of this atom generator. These should be specified in counterclockwise order.

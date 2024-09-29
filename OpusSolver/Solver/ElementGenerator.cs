@@ -15,7 +15,7 @@ namespace OpusSolver.Solver
         public ElementGenerator Parent { get; set; }
         public AtomGenerator AtomGenerator { get; set; }
 
-        public ElementBuffer ElementBuffer { get; set; }
+        public ElementBuffer ElementBuffer { get; private set; }
 
         public bool HasPendingElements => m_pendingElements.Any();
 
@@ -35,10 +35,11 @@ namespace OpusSolver.Solver
 
         public bool HasPendingElement(Element element) => m_pendingElements.Any(e => e.Element == element);
 
-        protected ElementGenerator(CommandSequence commandSequence, SolutionPlan plan)
+        protected ElementGenerator(CommandSequence commandSequence, SolutionPlan plan, ElementBuffer elementBuffer = null)
         {
             CommandSequence = commandSequence;
             Plan = plan;
+            ElementBuffer = elementBuffer;
         }
 
         /// <summary>
@@ -111,7 +112,7 @@ namespace OpusSolver.Solver
             }
 
             // Restore elements from the buffer if possible
-            if (ElementBuffer != null && possibleElements.Any(e => ElementBuffer.CanGenerateElement(e)))
+            if (ElementBuffer != null && possibleElements.Any(e => ElementBuffer.CanRestoreElement(e)))
             {
                 return ElementBuffer.GenerateElement(possibleElements);
             }

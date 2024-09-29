@@ -1,6 +1,5 @@
 ﻿using OpusSolver.Solver.ElementGenerators;
-using System;
-using System.Linq;
+using System.Collections.Generic;
 
 namespace OpusSolver.Solver.LowCost
 {
@@ -10,28 +9,40 @@ namespace OpusSolver.Solver.LowCost
     public class AtomBuffer : LowCostAtomGenerator
     {
         private ElementBuffer.BufferInfo m_bufferInfo;
-        private IWasteDisposer m_wasteDisposer;
+        private Arm m_arm;
 
-        public AtomBuffer(ProgramWriter writer, ArmArea armArea, ElementBuffer.BufferInfo bufferInfo, IWasteDisposer wasteDisposer)
+        private static readonly Transform2D GrabPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
+
+        public override int RequiredWidth => 2;
+
+        public override IEnumerable<Transform2D> RequiredAccessPoints => [GrabPosition];
+
+        public AtomBuffer(ProgramWriter writer, ArmArea armArea, ElementBuffer.BufferInfo bufferInfo)
             : base(writer, armArea)
         {
-            if (bufferInfo.Stacks.Any(s => !s.Elements.All(e => e.IsWaste)))
-            {
-                throw new UnsupportedException("LowCost AtomBuffer currently only supports stacks that are entirely waste.");
-            }
-
             m_bufferInfo = bufferInfo;
-            m_wasteDisposer = wasteDisposer;
+
+            m_arm = new Arm(this, new(1, 0), HexRotation.R180, ArmType.Arm1, extension: 1);
+            new Glyph(this, new(1, 1), HexRotation.R180, GlyphType.Bonding);
+        }
+
+        public override void BeginSolution()
+        {
+            // Register dummy atoms where the waste chain will be so the solver will know to avoid them.
+            for (int i = 1; i <= 6; i++)
+            {
+                GridState.RegisterAtom(new(i, 1), Element.Salt, this);
+            }
         }
 
         public override void Consume(Element element, int id)
         {
-            m_wasteDisposer.Dispose(element);
-        }
+            ArmArea.MoveGrabberTo(GrabPosition, this);
+            ArmArea.DropAtoms(addToGrid: false);
 
-        public override void Generate(Element element, int id)
-        {
-            throw new SolverException("LowCost AtomBuffer doesn't currently support generating atoms.");
+            // Bond the atom to the waste chain
+            Writer.AdjustTime(-1);
+            Writer.WriteGrabResetAction(m_arm, [Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise]);
         }
     }
 }

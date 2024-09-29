@@ -8,8 +8,8 @@ namespace OpusSolver.Solver.ElementGenerators
     /// </summary>
     public class MorsVitaeGenerator : ElementGenerator
     {
-        public MorsVitaeGenerator(CommandSequence commandSequence, SolutionPlan plan)
-            : base(commandSequence, plan)
+        public MorsVitaeGenerator(CommandSequence commandSequence, SolutionPlan plan, ElementBuffer elementBuffer)
+            : base(commandSequence, plan, elementBuffer)
         {
         }
 

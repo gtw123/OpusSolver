@@ -37,7 +37,10 @@ namespace OpusSolver.Solver
 
         private void AddGenerators()
         {
-            AddGenerator(new InputGenerator(m_commandSequence, m_plan), new ElementBuffer(m_commandSequence, m_plan));
+            var sharedElementBuffer = m_plan.UseSharedElementBuffer ? new ElementBuffer(m_commandSequence, m_plan) : null;
+            ElementBuffer GetElementBuffer() => sharedElementBuffer ?? new ElementBuffer(m_commandSequence, m_plan);
+
+            AddGenerator(new InputGenerator(m_commandSequence, m_plan, GetElementBuffer()));
 
             var recipe = m_plan.Recipe;
             if (recipe.HasAvailableReactions(ReactionType.Purification))
@@ -52,7 +55,7 @@ namespace OpusSolver.Solver
 
             if (recipe.HasAvailableReactions(ReactionType.Dispersion))
             {
-                AddGenerator(new QuintessenceDisperserGenerator(m_commandSequence, m_plan), new ElementBuffer(m_commandSequence, m_plan));
+                AddGenerator(new QuintessenceDisperserGenerator(m_commandSequence, m_plan, GetElementBuffer()));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.Calcification))
@@ -67,7 +70,7 @@ namespace OpusSolver.Solver
 
             if (recipe.HasAvailableReactions(ReactionType.Animismus))
             {
-                AddGenerator(new MorsVitaeGenerator(m_commandSequence, m_plan), new ElementBuffer(m_commandSequence, m_plan));
+                AddGenerator(new MorsVitaeGenerator(m_commandSequence, m_plan, GetElementBuffer()));
             }
 
             if (recipe.HasAvailableReactions(ReactionType.Unification))
@@ -75,25 +78,24 @@ namespace OpusSolver.Solver
                 AddGenerator(new QuintessenceGenerator(m_commandSequence, m_plan));
             }
 
-            if (recipe.HasWaste)
+            if (sharedElementBuffer != null)
             {
-                AddGenerator(new WasteDisposer(m_commandSequence, m_plan));
+                AddGenerator(sharedElementBuffer);
             }
 
             m_outputGenerator = new OutputGenerator(m_commandSequence, m_plan);
             AddGenerator(m_outputGenerator);
         }
 
-        private void AddGenerator(ElementGenerator generator, ElementBuffer buffer = null)
+        private void AddGenerator(ElementGenerator generator)
         {
             generator.Parent = m_generators.LastOrDefault();
             m_generators.Add(generator);
 
-            if (buffer != null)
+            if (generator.ElementBuffer != null && !m_plan.UseSharedElementBuffer)
             {
-                generator.ElementBuffer = buffer;
-                buffer.Parent = generator;
-                m_generators.Add(buffer);
+                generator.ElementBuffer.Parent = generator;
+                m_generators.Add(generator.ElementBuffer);
             }
         }
 
