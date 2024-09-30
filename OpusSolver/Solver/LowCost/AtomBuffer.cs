@@ -1,6 +1,5 @@
 ﻿using OpusSolver.Solver.ElementGenerators;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace OpusSolver.Solver.LowCost
 {

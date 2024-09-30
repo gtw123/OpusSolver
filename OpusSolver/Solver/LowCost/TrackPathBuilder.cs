@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using System;
-using System.Drawing;
 
 namespace OpusSolver.Solver.LowCost
 {
