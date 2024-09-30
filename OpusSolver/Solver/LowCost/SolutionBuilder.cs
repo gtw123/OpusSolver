@@ -109,8 +109,17 @@ namespace OpusSolver.Solver.LowCost
 
                 throw new UnsupportedException($"LowCost solver can't currently handle more than {DiatomicInputArea.MaxReagents} diatomic reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
             }
+            else if (reagents.All(r => r.Height == 1))
+            {
+                if (reagents.Count() <= LinearInputArea.MaxReagents)
+                {
+                    return new LinearInputArea(m_writer, m_armArea, reagents);
+                }
 
-            throw new UnsupportedException("LowCost solver can't currently handle reagents with more than two atoms.");
+                throw new UnsupportedException($"LowCost solver can't currently handle more than {LinearInputArea.MaxReagents} linear reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
+            }
+
+            throw new UnsupportedException("LowCost solver can't currently handle non-linear reagents with more than two atoms.");
         }
 
         private LowCostAtomGenerator CreateAtomBuffer(ElementGenerators.SingleStackElementBuffer.BufferInfo bufferInfo)

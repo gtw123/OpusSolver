@@ -29,7 +29,7 @@ namespace OpusSolver.Solver.LowCost.Input
 
         private DisassemblerInfo CreateDisassemblerInfo(Molecule molecule)
         {
-            IEnumerable<Element> GetDefaultElementOrder(Molecule molecule) => molecule.GetAtomsInInputOrder().Select(a => a.Element);
+            IEnumerable<Element> GetDefaultElementOrder(Molecule molecule) => molecule.GetAtomsInInputOrder().Reverse().Select(a => a.Element);
 
             if (molecule.Atoms.Count() == 1)
             {
@@ -37,10 +37,14 @@ namespace OpusSolver.Solver.LowCost.Input
             }
             else if (molecule.Atoms.Count() == 2)
             {
-                return new DisassemblerInfo(null, new SolutionPlan.MoleculeElementInfo(GetDefaultElementOrder(molecule).Reverse(), IsElementOrderReversible: true));
+                return new DisassemblerInfo(null, new SolutionPlan.MoleculeElementInfo(GetDefaultElementOrder(molecule), IsElementOrderReversible: true));
+            }
+            else if (molecule.Height == 1)
+            {
+                return new DisassemblerInfo(null, new SolutionPlan.MoleculeElementInfo(GetDefaultElementOrder(molecule)));
             }
 
-            throw new UnsupportedException($"LowCost solver can't currently handle reagents with more than 2 atoms (requested {molecule.Atoms.Count()}).");
+            throw new UnsupportedException($"LowCost solver can't currently handle non-linear reagents with more than 2 atoms (requested {molecule.Atoms.Count()}).");
         }
     }
 }

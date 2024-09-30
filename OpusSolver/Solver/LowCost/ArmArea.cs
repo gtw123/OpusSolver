@@ -175,6 +175,25 @@ namespace OpusSolver.Solver.LowCost
             m_grabbedAtoms = bondToAtoms;
         }
 
+        public AtomCollection RemoveAllExceptGrabbedAtom()
+        {
+            if (m_grabbedAtoms == null)
+            {
+                throw new SolverException("Cannot unbond atoms when not holding any.");
+            }
+
+            var grabberPosition = GetGrabberPosition();
+            var grabbedAtom = m_grabbedAtoms.GetAtomAtTransformedPosition(grabberPosition);
+
+            m_grabbedAtoms.RemoveAtom(grabbedAtom);
+            var droppedAtoms = m_grabbedAtoms;
+            GridState.RegisterAtoms(droppedAtoms);
+
+            m_grabbedAtoms = new AtomCollection(grabbedAtom.Element, new Transform2D(grabberPosition, HexRotation.R0));
+
+            return droppedAtoms;
+        }
+
         public void PivotClockwise()
         {
             Writer.Write(m_mainArm, Instruction.PivotClockwise);
