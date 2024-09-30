@@ -9,16 +9,10 @@ namespace OpusSolver.Solver.LowCost
     /// </summary>
     public class AtomBuffer : LowCostAtomGenerator
     {
-        private ElementBuffer.BufferInfo m_bufferInfo;
+        private SingleStackElementBuffer.BufferInfo m_bufferInfo;
         private Arm m_arm;
 
-        private class AtomStack
-        {
-            public ElementBuffer.StackInfo Info;
-            public int AtomCount;
-        }
-
-        private AtomStack m_atomStack;
+        private int m_storedAtomCount = 0;
 
         private static readonly Transform2D GrabPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
 
@@ -26,19 +20,14 @@ namespace OpusSolver.Solver.LowCost
 
         public override IEnumerable<Transform2D> RequiredAccessPoints => [GrabPosition];
 
-        public AtomBuffer(ProgramWriter writer, ArmArea armArea, ElementBuffer.BufferInfo bufferInfo)
+        public AtomBuffer(ProgramWriter writer, ArmArea armArea, SingleStackElementBuffer.BufferInfo bufferInfo)
             : base(writer, armArea)
         {
             m_bufferInfo = bufferInfo;
 
-            if (bufferInfo.Stacks.Count > 1)
-            {
-                throw new UnsupportedException($"LowCost {nameof(AtomBuffer)} currently only supports one stack.");
-            }
-
             m_arm = new Arm(this, new(1, 0), HexRotation.R180, ArmType.Arm1, extension: 1);
 
-            if (bufferInfo.Stacks.Any(s => s.UsesRestore && (s.MultiAtom || s.WastesAtoms)))
+            if (bufferInfo.UsesRestore && (bufferInfo.MultiAtom || bufferInfo.WastesAtoms))
             {
                 // It would be a bit more efficient to have the unbonder closer to the bonder but then we risk
                 // the atom chain colliding with glyphs that are clockwise from this atom buffer, or with the
@@ -46,12 +35,10 @@ namespace OpusSolver.Solver.LowCost
                 new Glyph(this, new(2, -1), HexRotation.R180, GlyphType.Unbonding);
             }
 
-            if (bufferInfo.Stacks.Any(s => s.MultiAtom || s.WastesAtoms))
+            if (bufferInfo.MultiAtom || bufferInfo.WastesAtoms)
             {
                 new Glyph(this, new(1, 1), HexRotation.R180, GlyphType.Bonding);
             }
-
-            m_atomStack = new AtomStack { Info = bufferInfo.Stacks.First() };
         }
 
         public override void BeginSolution()
@@ -72,7 +59,7 @@ namespace OpusSolver.Solver.LowCost
             Writer.AdjustTime(-1);
             Writer.WriteGrabResetAction(m_arm, [Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise]);
 
-            m_atomStack.AtomCount++;
+            m_storedAtomCount++;
         }
 
         public override void Generate(Element element, int id)
@@ -83,7 +70,7 @@ namespace OpusSolver.Solver.LowCost
             // the grab for the main arm if possible.
             Writer.NewFragment();
 
-            if (m_atomStack.AtomCount == 1 && !m_atomStack.Info.WastesAtoms)
+            if (m_storedAtomCount == 1 && !m_bufferInfo.WastesAtoms)
             {
                 Writer.Write(m_arm, [Instruction.RotateClockwise, Instruction.RotateClockwise]);
                 Writer.WriteGrabResetAction(m_arm, [Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise]);
@@ -105,7 +92,7 @@ namespace OpusSolver.Solver.LowCost
                 ArmArea.GrabAtoms(new AtomCollection(element, GrabPosition, this));
             }
 
-            m_atomStack.AtomCount--;
+            m_storedAtomCount--;
         }
     }
 }

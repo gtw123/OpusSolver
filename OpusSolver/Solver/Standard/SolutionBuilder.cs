@@ -62,7 +62,7 @@ namespace OpusSolver.Solver.Standard
             {
                 ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
                 ElementGenerators.OutputGenerator => new SimpleOutputArea(m_writer, m_assemblerFactory),
-                ElementGenerators.ElementBuffer elementBuffer => new AtomBuffer(m_writer, elementBuffer.GetBufferInfo()),
+                ElementGenerators.MultiStackElementBuffer elementBuffer => new AtomBuffer(m_writer, elementBuffer.GetBufferInfo()),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => new MetalPurifier(m_writer, metalPurifier.Sequences),
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer),

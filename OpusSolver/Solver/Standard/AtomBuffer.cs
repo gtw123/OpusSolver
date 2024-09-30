@@ -10,7 +10,7 @@ namespace OpusSolver.Solver.Standard
     {
         private class AtomStack
         {
-            public ElementBuffer.StackInfo Info;
+            public MultiStackElementBuffer.StackInfo Info;
             public int Index;
             public Arm PushArm;
             public Arm PopArm;
@@ -20,7 +20,7 @@ namespace OpusSolver.Solver.Standard
 
         private List<AtomStack> m_stacks = new List<AtomStack>();
 
-        public AtomBuffer(ProgramWriter writer, ElementBuffer.BufferInfo bufferInfo)
+        public AtomBuffer(ProgramWriter writer, MultiStackElementBuffer.BufferInfo bufferInfo)
             : base(writer)
         {
             int i = 0;
@@ -32,7 +32,7 @@ namespace OpusSolver.Solver.Standard
             OutputArm = new Arm(this, new Vector2(m_stacks.Count * 2 + 3, 0), HexRotation.R180, ArmType.Arm1, extension: 3);
         }
 
-        private void AddStack(int index, ElementBuffer.StackInfo info)
+        private void AddStack(int index, MultiStackElementBuffer.StackInfo info)
         {              
             var stack = new AtomStack { Info = info, Index = index };
             var pos = new Vector2(index * 2, 0);

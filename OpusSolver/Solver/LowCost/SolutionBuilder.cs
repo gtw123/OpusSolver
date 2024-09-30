@@ -70,7 +70,7 @@ namespace OpusSolver.Solver.LowCost
             {
                 ElementGenerators.InputGenerator inputGenerator => CreateInputArea(inputGenerator),
                 ElementGenerators.OutputGenerator => new OutputArea(m_writer, m_armArea, m_assemblerFactory),
-                ElementGenerators.ElementBuffer elementBuffer => CreateAtomBuffer(elementBuffer.GetBufferInfo()),
+                ElementGenerators.SingleStackElementBuffer elementBuffer => CreateAtomBuffer(elementBuffer.GetBufferInfo()),
                 ElementGenerators.MetalProjectorGenerator => new MetalProjector(m_writer, m_armArea),
                 ElementGenerators.MetalPurifierGenerator metalPurifier => new MetalPurifier(m_writer, m_armArea, metalPurifier.Sequences),
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer, m_armArea),
@@ -113,14 +113,14 @@ namespace OpusSolver.Solver.LowCost
             throw new UnsupportedException("LowCost solver can't currently handle reagents with more than two atoms.");
         }
 
-        private LowCostAtomGenerator CreateAtomBuffer(ElementGenerators.ElementBuffer.BufferInfo bufferInfo)
+        private LowCostAtomGenerator CreateAtomBuffer(ElementGenerators.SingleStackElementBuffer.BufferInfo bufferInfo)
         {
-            if (bufferInfo.Stacks.Count == 0)
+            if (bufferInfo.Elements.Count == 0)
             {
                 return new DummyAtomGenerator(m_writer, m_armArea);
             }
 
-            if (bufferInfo.Stacks.All(s => s.Elements.All(e => e.IsWaste)) && m_puzzle.AllowedGlyphs.Contains(GlyphType.Disposal))
+            if (bufferInfo.Elements.All(e => e.IsStored) && m_puzzle.AllowedGlyphs.Contains(GlyphType.Disposal))
             {
                 return new WasteDisposer(m_writer, m_armArea);
             }

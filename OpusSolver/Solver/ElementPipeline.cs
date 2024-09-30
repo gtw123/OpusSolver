@@ -37,8 +37,8 @@ namespace OpusSolver.Solver
 
         private void AddGenerators()
         {
-            var sharedElementBuffer = m_plan.UseSharedElementBuffer ? new ElementBuffer(m_commandSequence, m_plan) : null;
-            ElementBuffer GetElementBuffer() => sharedElementBuffer ?? new ElementBuffer(m_commandSequence, m_plan);
+            ElementBuffer sharedElementBuffer = m_plan.UseSharedElementBuffer ? new SingleStackElementBuffer(m_commandSequence, m_plan) : null;
+            ElementBuffer GetElementBuffer() => sharedElementBuffer ?? new MultiStackElementBuffer(m_commandSequence, m_plan);
 
             AddGenerator(new InputGenerator(m_commandSequence, m_plan, GetElementBuffer()));
 
