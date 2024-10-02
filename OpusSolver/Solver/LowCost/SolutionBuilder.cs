@@ -129,13 +129,17 @@ namespace OpusSolver.Solver.LowCost
                 return new DummyAtomGenerator(m_writer, m_armArea);
             }
 
-            if (bufferInfo.Elements.All(e => e.IsStored) && m_puzzle.AllowedGlyphs.Contains(GlyphType.Disposal))
+            if (bufferInfo.Elements.All(e => e.IsWaste) && m_puzzle.AllowedGlyphs.Contains(GlyphType.Disposal))
             {
                 return new WasteDisposer(m_writer, m_armArea);
             }
+            else if (bufferInfo.Elements.All(e => !e.IsWaste))
+            {
+                return new AtomBufferNoWaste(m_writer, m_armArea, bufferInfo);
+            }
             else
             {
-                return new AtomBuffer(m_writer, m_armArea, bufferInfo);
+                return new AtomBufferWithWaste(m_writer, m_armArea, bufferInfo);
             }
         }
 

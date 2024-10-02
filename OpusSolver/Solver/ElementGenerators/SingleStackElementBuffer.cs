@@ -38,11 +38,15 @@ namespace OpusSolver.Solver.ElementGenerators
         {
             public Element Element { get; init; } = element;
             public int Index { get; init; } = index;
-            public bool IsStored { get; set; } = true;
+            public int? RestoreOrder { get; set; }
+
+            public bool IsStored => RestoreOrder == null;
+            public bool IsWaste => IsStored;
         }
 
         public List<BufferedElement> m_elements = new();
         private int m_maxStoredCount;
+        private int m_restoredCount;
   
         public SingleStackElementBuffer(CommandSequence commandSequence, SolutionPlan plan)
             : base(commandSequence, plan)
@@ -77,10 +81,11 @@ namespace OpusSolver.Solver.ElementGenerators
             var storedElement = m_elements.LastOrDefault(e => e.IsStored && possibleElements.Contains(e.Element));
             if (storedElement != null)
             {
-                storedElement.IsStored = false;
+                storedElement.RestoreOrder = m_restoredCount;
+                m_restoredCount++;
 
                 var element = storedElement.Element;
-                CommandSequence.Add(CommandType.Generate, element, this);
+                CommandSequence.Add(CommandType.Generate, element, this, storedElement.Index);
                 return element;
             }
 
@@ -89,10 +94,11 @@ namespace OpusSolver.Solver.ElementGenerators
 
         public override void StoreElement(Element element)
         {
-            m_elements.Add(new BufferedElement(element, m_elements.Count));
+            var storedElement = new BufferedElement(element, m_elements.Count);
+            m_elements.Add(storedElement);
             m_maxStoredCount = Math.Max(m_maxStoredCount, m_elements.Count(e => e.IsStored));
 
-            CommandSequence.Add(CommandType.Consume, element, this);
+            CommandSequence.Add(CommandType.Consume, element, this, storedElement.Index);
         }
     }
 }

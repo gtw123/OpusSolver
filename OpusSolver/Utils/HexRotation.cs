@@ -155,5 +155,21 @@ namespace OpusSolver
                 return Enumerable.Repeat(R60, numRotations);
             }
         }
+
+        public IEnumerable<HexRotation> CalculateCounterclockwiseDeltaRotationsTo(HexRotation targetRot)
+        {
+            for (var rot = this; rot != targetRot; rot += R60)
+            {
+                yield return R60;
+            }
+        }
+
+        public IEnumerable<HexRotation> CalculateClockwiseDeltaRotationsTo(HexRotation targetRot)
+        {
+            for (var rot = this; rot != targetRot; rot -= R60)
+            {
+                yield return -R60;
+            }
+        }
     }
 }

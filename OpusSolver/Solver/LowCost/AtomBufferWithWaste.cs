@@ -1,17 +1,19 @@
 ﻿using OpusSolver.Solver.ElementGenerators;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace OpusSolver.Solver.LowCost
 {
     /// <summary>
     /// Stores atoms that are waste or aren't currently needed.
     /// </summary>
-    public class AtomBuffer : LowCostAtomGenerator
+    public class AtomBufferWithWaste : LowCostAtomGenerator
     {
         private SingleStackElementBuffer.BufferInfo m_bufferInfo;
         private Arm m_arm;
 
-        private int m_storedAtomCount = 0;
+        private List<SingleStackElementBuffer.BufferedElement> m_storedElements = [];
 
         private static readonly Transform2D GrabPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
 
@@ -19,7 +21,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override IEnumerable<Transform2D> RequiredAccessPoints => [GrabPosition];
 
-        public AtomBuffer(ProgramWriter writer, ArmArea armArea, SingleStackElementBuffer.BufferInfo bufferInfo)
+        public AtomBufferWithWaste(ProgramWriter writer, ArmArea armArea, SingleStackElementBuffer.BufferInfo bufferInfo)
             : base(writer, armArea)
         {
             m_bufferInfo = bufferInfo;
@@ -54,11 +56,24 @@ namespace OpusSolver.Solver.LowCost
             ArmArea.MoveGrabberTo(GrabPosition, this);
             ArmArea.DropAtoms(addToGrid: false);
 
+            // If necessary, move the atom further down the atom chain so that all the atoms that need to be restored
+            // before it come after it.
+            var elementToStore = m_bufferInfo.Elements[id];
+            var elementsToReorder = m_storedElements.Where(s => s.RestoreOrder.HasValue && (!elementToStore.RestoreOrder.HasValue || elementToStore.RestoreOrder > s.RestoreOrder));
+            if (elementsToReorder.Any())
+            {
+                var insertBefore = elementsToReorder.First();
+                int insertPosition = m_storedElements.IndexOf(insertBefore);
+                m_storedElements.Insert(insertPosition, elementToStore);
+            }
+            else
+            {
+                m_storedElements.Add(elementToStore);
+            }
+
             // Bond the atom to the waste chain
             Writer.AdjustTime(-1);
             Writer.WriteGrabResetAction(m_arm, [Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise]);
-
-            m_storedAtomCount++;
         }
 
         public override void Generate(Element element, int id)
@@ -69,7 +84,8 @@ namespace OpusSolver.Solver.LowCost
             // the grab for the main arm if possible.
             Writer.NewFragment();
 
-            if (m_storedAtomCount == 1 && !m_bufferInfo.WastesAtoms)
+            var restoredElement = m_storedElements.Single(s => s.Index == id);
+            if (m_storedElements.Count == 1 && !m_bufferInfo.WastesAtoms)
             {
                 Writer.Write(m_arm, [Instruction.RotateClockwise, Instruction.RotateClockwise]);
                 Writer.WriteGrabResetAction(m_arm, [Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise]);
@@ -91,7 +107,7 @@ namespace OpusSolver.Solver.LowCost
                 ArmArea.GrabAtoms(new AtomCollection(element, GrabPosition, this));
             }
 
-            m_storedAtomCount--;
+            m_storedElements.Remove(restoredElement);
         }
     }
 }
