@@ -36,7 +36,7 @@ namespace OpusSolver.Solver
                 {
                     // Rotate the wheel before the atom gets into position
                     m_writer.AdjustTime(-deltaRotations.Count());
-                    m_writer.Write(m_wheelArm, deltaRotations.Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
+                    m_writer.Write(m_wheelArm, deltaRotations.ToRotationInstructions());
                 }
 
                 // Force the wheel to not rotate again until the atom is moving away. Otherwise salt

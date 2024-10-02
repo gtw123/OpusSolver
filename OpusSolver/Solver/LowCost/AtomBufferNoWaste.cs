@@ -70,7 +70,7 @@ namespace OpusSolver.Solver.LowCost
 
                 Writer.Write(m_arm, Instruction.Grab);
                 var targetDir = m_storedAtoms.EnumerateCounterclockwise(startFrom: NextAtomDirection).Last().Key + HexRotation.R60;
-                Writer.Write(m_arm, GrabDirection.CalculateClockwiseDeltaRotationsTo(targetDir).Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
+                Writer.Write(m_arm, GrabDirection.CalculateClockwiseDeltaRotationsTo(targetDir).ToRotationInstructions());
                 Writer.Write(m_arm, Instruction.Reset);
 
                 m_storedAtoms[targetDir] = elementToStore;
@@ -92,9 +92,9 @@ namespace OpusSolver.Solver.LowCost
                 var targetDir = m_storedAtoms.EnumerateCounterclockwise(startFrom: NextAtomDirection).Last().Key + HexRotation.R60;
                 foreach (var (dir, atom) in m_storedAtoms.EnumerateClockwise(startFrom: GrabDirection).ToList())
                 {
-                    Writer.Write(m_arm, currentArmRot.CalculateDeltaRotationsTo(dir).Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
+                    Writer.Write(m_arm, currentArmRot.CalculateDeltaRotationsTo(dir).ToRotationInstructions());
                     Writer.Write(m_arm, Instruction.Grab);
-                    Writer.Write(m_arm, dir.CalculateCounterclockwiseDeltaRotationsTo(targetDir).Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
+                    Writer.Write(m_arm, dir.CalculateCounterclockwiseDeltaRotationsTo(targetDir).ToRotationInstructions());
                     Writer.Write(m_arm, Instruction.Drop);
 
                     m_storedAtoms[targetDir] = atom;
@@ -108,9 +108,9 @@ namespace OpusSolver.Solver.LowCost
             ArmArea.MoveGrabberTo(GrabPosition, this);
             ArmArea.DropAtoms(addToGrid: false);
 
-            Writer.Write(m_arm, currentArmRot.CalculateDeltaRotationsTo(GrabDirection).Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
+            Writer.Write(m_arm, currentArmRot.CalculateDeltaRotationsTo(GrabDirection).ToRotationInstructions());
             Writer.Write(m_arm, Instruction.Grab);
-            Writer.Write(m_arm, GrabDirection.CalculateCounterclockwiseDeltaRotationsTo(NextAtomDirection).Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
+            Writer.Write(m_arm, GrabDirection.CalculateCounterclockwiseDeltaRotationsTo(NextAtomDirection).ToRotationInstructions());
             Writer.Write(m_arm, Instruction.Reset);
 
             m_storedAtoms[NextAtomDirection] = elementToStore;
@@ -137,9 +137,9 @@ namespace OpusSolver.Solver.LowCost
             var targetDir = NextAtomDirection;
             foreach (var (dir, atom) in m_storedAtoms.EnumerateCounterclockwise(startFrom: NextAtomDirection).ToList())
             {
-                Writer.Write(m_arm, currentDir.CalculateDeltaRotationsTo(dir).Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
+                Writer.Write(m_arm, currentDir.CalculateDeltaRotationsTo(dir).ToRotationInstructions());
                 Writer.Write(m_arm, Instruction.Grab);
-                Writer.Write(m_arm, dir.CalculateClockwiseDeltaRotationsTo(targetDir).Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise));
+                Writer.Write(m_arm, dir.CalculateClockwiseDeltaRotationsTo(targetDir).ToRotationInstructions());
                 Writer.Write(m_arm, Instruction.Drop);
 
                 m_storedAtoms[targetDir] = atom;

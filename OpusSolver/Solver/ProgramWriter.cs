@@ -70,17 +70,17 @@ namespace OpusSolver.Solver
         /// was added.</param>
         public void Write(Arm arm, Instruction instruction, bool updateTime = true)
         {
-            Write(new[] { arm }, new[] { instruction }, updateTime);
+            Write([arm], [instruction], updateTime);
         }
 
         public void Write(Arm arm, IEnumerable<Instruction> instructions, bool updateTime = true)
         {
-            Write(new[] { arm }, instructions, updateTime);
+            Write([arm], instructions, updateTime);
         }
 
         public void Write(IEnumerable<Arm> arms, Instruction instruction, bool updateTime = true)
         {
-            Write(arms, new[] { instruction }, updateTime);
+            Write(arms, [instruction], updateTime);
         }
 
         public void Write(IEnumerable<Arm> arms, IEnumerable<Instruction> instructions, bool updateTime = true)

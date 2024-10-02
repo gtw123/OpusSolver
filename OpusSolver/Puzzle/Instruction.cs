@@ -1,4 +1,7 @@
-﻿namespace OpusSolver
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace OpusSolver
 {
     public enum Instruction
     {
@@ -50,6 +53,11 @@
         public static bool IsRenderable(this Instruction instruction)
         {
             return instruction != Instruction.None && instruction != Instruction.Wait;
+        }
+
+        public static IEnumerable<Instruction> ToRotationInstructions(this IEnumerable<HexRotation> rotations)
+        {
+            return rotations.Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise);
         }
     }
 }
