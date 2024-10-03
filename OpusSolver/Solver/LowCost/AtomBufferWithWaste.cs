@@ -1,5 +1,4 @@
 ﻿using OpusSolver.Solver.ElementGenerators;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -38,7 +37,7 @@ namespace OpusSolver.Solver.LowCost
 
             if (bufferInfo.MultiAtom || bufferInfo.WastesAtoms)
             {
-                new Glyph(this, new(1, 1), HexRotation.R180, GlyphType.Bonding);
+                new Glyph(this, new(1, 1), HexRotation.R300, GlyphType.Bonding);
             }
         }
 
@@ -59,21 +58,121 @@ namespace OpusSolver.Solver.LowCost
             // If necessary, move the atom further down the atom chain so that all the atoms that need to be restored
             // before it come after it.
             var elementToStore = m_bufferInfo.Elements[id];
-            var elementsToReorder = m_storedElements.Where(s => s.RestoreOrder.HasValue && (!elementToStore.RestoreOrder.HasValue || elementToStore.RestoreOrder > s.RestoreOrder));
+            var elementsToReorder = m_storedElements.Where(s => s.RestoreOrder.HasValue && (!elementToStore.RestoreOrder.HasValue || elementToStore.RestoreOrder > s.RestoreOrder)).ToList();
             if (elementsToReorder.Any())
             {
+                const int MaxOutOfOrderAtoms = 2;
+                if (elementsToReorder.Count > MaxOutOfOrderAtoms)
+                {
+                    throw new SolverException($"{nameof(AtomBufferWithWaste)} can't handle more than {MaxOutOfOrderAtoms} out-of-order atoms (solution requires {elementsToReorder.Count}).");
+                }
+
+                if (elementsToReorder.Count == 2)
+                {
+                    // These instructions will reverse the order of the first 3 elements in the chain (including the new one).
+                    // e.g. If the chain contains ABCD and we're adding Z, this will end up with BAZCD. Later on we swap the
+                    // first two elements to end up with ABZCD.
+
+                    // Move the chain onto the unbonder to unbonded the first atom
+                    Writer.Write(m_arm, [
+                        Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.RotateClockwise,
+                        Instruction.Grab,
+                        Instruction.PivotCounterclockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise,
+                        Instruction.Drop
+                    ]);
+
+                    // Shuffle the unbonded atom and the new one clockwise by one
+                    Writer.Write(m_arm, [Instruction.RotateClockwise, Instruction.Grab, Instruction.RotateClockwise, Instruction.Drop, Instruction.RotateCounterclockwise]);
+                    Writer.Write(m_arm, [Instruction.RotateCounterclockwise, Instruction.Grab, Instruction.RotateClockwise, Instruction.Drop, Instruction.RotateCounterclockwise]);
+
+                    // Move the remaining chain onto the unbonder to unbonded another atom
+                    Writer.Write(m_arm, [
+                        Instruction.RotateCounterclockwise,
+                        Instruction.Grab,
+                        Instruction.RotateClockwise, Instruction.PivotCounterclockwise,
+                        Instruction.Drop
+                    ]);
+
+                    // Move the rest of the chain back onto the bonder
+                    Writer.Write(m_arm, [
+                        Instruction.RotateCounterclockwise,
+                        Instruction.Grab,
+                        Instruction.PivotClockwise, Instruction.RotateCounterclockwise, Instruction.PivotClockwise,
+                        Instruction.Drop
+                    ]);
+
+                    // Bond the new atom to the front of the chain
+                    Writer.Write(m_arm, [
+                        Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise,
+                        Instruction.Grab,
+                        Instruction.RotateClockwise, Instruction.PivotCounterclockwise, Instruction.RotateClockwise,
+                        Instruction.Drop
+                    ]);
+
+                    // Bond the first unbonded atom to the front of the chain
+                    Writer.Write(m_arm, [
+                        Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise,
+                        Instruction.Grab,
+                        Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise, Instruction.RotateClockwise,
+                        Instruction.Drop
+                    ]);
+
+                    // Move the second unbonded atom to the grab position
+                    Writer.Write(m_arm, [
+                        Instruction.RotateClockwise, Instruction.RotateClockwise,
+                        Instruction.Grab,
+                        Instruction.RotateClockwise,
+                        Instruction.Drop
+                    ]);
+                }
+
+                // These instructions will reverse the order of the first 2 elements in the chain (including the new one).
+                // e.g. If the chain contains ABCD and we're adding Z, this will end up with AZBCD
+
+                // Move the chain onto the unbonder to unbonded the first atom
+                Writer.Write(m_arm, [
+                    Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.RotateClockwise,
+                    Instruction.Grab,
+                    Instruction.PivotCounterclockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise,
+                    Instruction.Drop
+                ]);
+
+                // Move the rest of the chain back onto the bonder
+                Writer.Write(m_arm, [
+                    Instruction.RotateCounterclockwise,
+                    Instruction.Grab,
+                    Instruction.PivotClockwise, Instruction.RotateCounterclockwise, Instruction.PivotClockwise,
+                    Instruction.Drop
+                ]);
+
+                // Bond the new atom to the front of the chain
+                Writer.Write(m_arm, [
+                    Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise,
+                    Instruction.Grab,
+                    Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise, Instruction.RotateClockwise,
+                    Instruction.Drop
+                ]);
+
+                // Bond the previously unbonded atom to the front of the chain
+                Writer.Write(m_arm, [
+                    Instruction.RotateClockwise, Instruction.RotateClockwise,
+                    Instruction.Grab,
+                    Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise, Instruction.RotateClockwise,
+                    Instruction.Reset
+                ]);
+
                 var insertBefore = elementsToReorder.First();
                 int insertPosition = m_storedElements.IndexOf(insertBefore);
                 m_storedElements.Insert(insertPosition, elementToStore);
             }
             else
             {
+                // Bond the atom to the waste chain
+                Writer.AdjustTime(-1);
+                Writer.WriteGrabResetAction(m_arm, [Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise, Instruction.RotateClockwise]);
+
                 m_storedElements.Add(elementToStore);
             }
-
-            // Bond the atom to the waste chain
-            Writer.AdjustTime(-1);
-            Writer.WriteGrabResetAction(m_arm, [Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise]);
         }
 
         public override void Generate(Element element, int id)
@@ -84,28 +183,36 @@ namespace OpusSolver.Solver.LowCost
             // the grab for the main arm if possible.
             Writer.NewFragment();
 
-            var restoredElement = m_storedElements.Single(s => s.Index == id);
-            if (m_storedElements.Count == 1 && !m_bufferInfo.WastesAtoms)
+            // TODO: Doesn't work with NewFragment (collision)
+            // Does work without it
+            // Does work if we manually remove the gaps in the program
+
+            var restoredElement = m_storedElements.Last();
+            if (restoredElement.Index != id)
             {
-                Writer.Write(m_arm, [Instruction.RotateClockwise, Instruction.RotateClockwise]);
-                Writer.WriteGrabResetAction(m_arm, [Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise]);
-                ArmArea.GrabAtoms(new AtomCollection(element, GrabPosition, this));
+                throw new SolverException($"Trying to restore atom {id} but atom {restoredElement.Index} is currently at the start of the queue.");
             }
-            else
-            {
-                Writer.Write(m_arm, [Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.Grab, Instruction.RotateClockwise, Instruction.PivotCounterclockwise,
-                    Instruction.RotateClockwise, Instruction.PivotCounterclockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise]);
 
-                // Move the unbonded atom to the grab position
-                Writer.Write(m_arm, [Instruction.RotateClockwise, Instruction.Drop]);
+            // Move the chain onto the unbonder
+            Writer.Write(m_arm, [
+                Instruction.RotateClockwise, Instruction.RotateClockwise, Instruction.RotateClockwise,
+                Instruction.Grab,
+                Instruction.PivotCounterclockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise, Instruction.RotateClockwise, Instruction.PivotCounterclockwise
+            ]);
 
-                // Move the remaining chain back onto the bonder
-                Writer.Write(m_arm, [Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise, Instruction.Grab,
-                    Instruction.PivotClockwise, Instruction.RotateCounterclockwise, Instruction.PivotClockwise, Instruction.RotateCounterclockwise, Instruction.Reset], updateTime: false);
+            // Move the unbonded atom to the grab position
+            Writer.Write(m_arm, [Instruction.RotateClockwise, Instruction.Drop]);
 
-                Writer.AdjustTime(-1);
-                ArmArea.GrabAtoms(new AtomCollection(element, GrabPosition, this));
-            }
+            // Move the remaining chain back onto the bonder
+            Writer.Write(m_arm, [
+                Instruction.RotateCounterclockwise, Instruction.RotateCounterclockwise,
+                Instruction.Grab,
+                Instruction.PivotClockwise, Instruction.RotateCounterclockwise, Instruction.PivotClockwise,
+                Instruction.Reset
+            ], updateTime: false);
+
+            Writer.AdjustTime(-1);
+            ArmArea.GrabAtoms(new AtomCollection(element, GrabPosition, this));
 
             m_storedElements.Remove(restoredElement);
         }
