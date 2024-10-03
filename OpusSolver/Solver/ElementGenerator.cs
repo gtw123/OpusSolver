@@ -35,6 +35,12 @@ namespace OpusSolver.Solver
 
         public bool HasPendingElement(Element element) => m_pendingElements.Any(e => e.Element == element);
 
+        /// <summary>
+        /// Specifies whether passthrough commands must always be generated for this generator, even if
+        /// an element is being stored directly in a buffer.
+        /// </summary>
+        public virtual bool AlwaysRequiresPassthrough => false;
+
         protected ElementGenerator(CommandSequence commandSequence, SolutionPlan plan, ElementBuffer elementBuffer = null)
         {
             CommandSequence = commandSequence;
@@ -67,6 +73,14 @@ namespace OpusSolver.Solver
                 if (ElementBuffer == null)
                 {
                     throw new SolverException(Invariant($"Requested to generate one of {string.Join(", ", possibleElements)} but instead generated {generated}."));
+                }
+
+                for (var generator = ElementBuffer.Parent; generator != this && generator != null; generator = generator.Parent)
+                {
+                    if (generator.AlwaysRequiresPassthrough)
+                    {
+                        CommandSequence.Add(CommandType.PassThrough, generated, generator);
+                    }
                 }
 
                 ElementBuffer.StoreElement(generated);

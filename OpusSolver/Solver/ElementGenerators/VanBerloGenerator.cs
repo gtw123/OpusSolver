@@ -13,6 +13,11 @@ namespace OpusSolver.Solver.ElementGenerators
         {
         }
 
+        // We need to always generate passthrough commands for this generator, so that the
+        // atom generator will know whether it needs to rotate the wheel to salt so that the
+        // passed-through salt atom doesn't get converted into something else.
+        public override bool AlwaysRequiresPassthrough => true;
+
         protected override bool CanGenerateElement(Element element)
         {
             return Recipe.HasAvailableReactions(ReactionType.VanBerlo, outputElement: element);
