@@ -8,6 +8,7 @@ namespace OpusSolver.Solver.LowCost.Input
     public abstract class MoleculeDisassembler : SolverComponent
     {
         public ArmArea ArmArea { get; private set; }
+        public ArmController ArmController => ArmArea.ArmController;
         public GridState GridState => ArmArea.GridState;
         public Molecule Molecule { get; protected set; }
 

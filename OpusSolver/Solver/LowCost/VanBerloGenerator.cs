@@ -34,9 +34,9 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(DuplicatorTransform, this);
+            ArmController.MoveGrabberTo(DuplicatorTransform, this);
             m_controller.RotateToElement(element);
-            ArmArea.GrabbedAtoms.GetAtomAtTransformedPosition(DuplicatorTransform.Position, this).Element = element;
+            ArmController.GrabbedAtoms.GetAtomAtTransformedPosition(DuplicatorTransform.Position, this).Element = element;
         }
 
         public override void PassThrough(Element element)

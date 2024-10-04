@@ -31,7 +31,7 @@ namespace OpusSolver.Solver.LowCost.Output
 
         public override void EndSolution()
         {
-            ArmArea.ResetArm();
+            ArmController.ResetArm();
         }
 
         public override void OptimizeParts()

@@ -29,8 +29,8 @@ namespace OpusSolver.Solver.LowCost.Input
         public override void GrabMolecule()
         {
             Writer.NewFragment();
-            ArmArea.MoveGrabberTo(InputTransform, this);
-            ArmArea.GrabAtoms(CreateAtomCollection(), removeFromGrid: false);
+            ArmController.MoveGrabberTo(InputTransform, this);
+            ArmController.GrabAtoms(CreateAtomCollection(), removeFromGrid: false);
         }
 
         private AtomCollection CreateAtomCollection()

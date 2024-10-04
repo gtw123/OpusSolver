@@ -5,6 +5,7 @@ namespace OpusSolver.Solver.LowCost
     public abstract class LowCostAtomGenerator : AtomGenerator
     {
         public ArmArea ArmArea { get; private set; }
+        public ArmController ArmController => ArmArea.ArmController;
         public GridState GridState => ArmArea.GridState;
 
         /// <summary>

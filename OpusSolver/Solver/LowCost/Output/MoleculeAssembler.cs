@@ -8,6 +8,7 @@ namespace OpusSolver.Solver.LowCost.Output
     public abstract class MoleculeAssembler : SolverComponent
     {
         public ArmArea ArmArea { get; private set; }
+        public ArmController ArmController => ArmArea.ArmController;
         public GridState GridState => ArmArea.GridState;
 
         /// <summary>

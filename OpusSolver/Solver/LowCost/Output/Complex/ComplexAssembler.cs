@@ -148,44 +148,44 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 if (isBondingUpsideDown)
                 {
                     // Stash the new atom "behind" the previously dropped atoms
-                    ArmArea.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
-                    var newAtom = ArmArea.DropAtoms();
+                    ArmController.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
+                    var newAtom = ArmController.DropAtoms();
 
                     // Grab the previously dropped atoms
-                    ArmArea.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
-                    ArmArea.GrabAtoms(assembledAtoms);
+                    ArmController.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
+                    ArmController.GrabAtoms(assembledAtoms);
 
                     // Move them down to the lower bonder position
-                    ArmArea.MoveGrabberTo(UpperBonderPosition, this);
-                    ArmArea.MoveGrabberTo(LowerBonderPosition, this);
+                    ArmController.MoveGrabberTo(UpperBonderPosition, this);
+                    ArmController.MoveGrabberTo(LowerBonderPosition, this);
 
                     // Rotate them to prepare for the bond
                     var targetRotation = op.MoleculeRotation + HexRotation.R180;
                     var requiredPivot = targetRotation - assembledAtoms.WorldTransform.Rotation;
-                    ArmArea.PivotBy(requiredPivot, rotateClockwiseIf180Degrees: true);
-                    ArmArea.DropAtoms();
+                    ArmController.PivotBy(requiredPivot, rotateClockwiseIf180Degrees: true);
+                    ArmController.DropAtoms();
 
                     // Grab the previously dropped new atom and move it to the upper bonder position
-                    ArmArea.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
-                    ArmArea.GrabAtoms(newAtom);
-                    ArmArea.MoveGrabberTo(UpperBonderPosition, this);
+                    ArmController.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
+                    ArmController.GrabAtoms(newAtom);
+                    ArmController.MoveGrabberTo(UpperBonderPosition, this);
 
                     // Bond it to the other atoms
-                    ArmArea.BondAtomsTo(assembledAtoms);
+                    ArmController.BondAtomsTo(assembledAtoms);
                 }
                 else
                 {
                     if (opIndex == 0)
                     {
-                        ArmArea.MoveGrabberTo(UpperBonderPosition, this);
-                        assembledAtoms = ArmArea.GrabbedAtoms;
+                        ArmController.MoveGrabberTo(UpperBonderPosition, this);
+                        assembledAtoms = ArmController.GrabbedAtoms;
                         assembledAtoms.WorldTransform.Rotation = op.MoleculeRotation;
                     }
                     else
                     {
-                        ArmArea.MoveGrabberTo(LowerBonderPosition, this);
-                        ArmArea.BondAtomsTo(assembledAtoms);
-                        ArmArea.MoveGrabberTo(UpperBonderPosition, this);
+                        ArmController.MoveGrabberTo(LowerBonderPosition, this);
+                        ArmController.BondAtomsTo(assembledAtoms);
+                        ArmController.MoveGrabberTo(UpperBonderPosition, this);
                     }
                 }
 
@@ -193,14 +193,14 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 {
                     var output = m_outputs[builder.Product.ID];
                     var targetRotation = op.MoleculeRotation + output.Pivot;
-                    ArmArea.PivotBy(targetRotation - assembledAtoms.WorldTransform.Rotation);
-                    ArmArea.MoveGrabberTo(output.GrabberTransform, this);
-                    ArmArea.DropAtoms(addToGrid: false);
+                    ArmController.PivotBy(targetRotation - assembledAtoms.WorldTransform.Rotation);
+                    ArmController.MoveGrabberTo(output.GrabberTransform, this);
+                    ArmController.DropAtoms(addToGrid: false);
                 }
                 else
                 {
                     var targetRotation = op.MoleculeRotation + op.RotationToNext;
-                    if (ArmArea.TryPivotBy(targetRotation - assembledAtoms.WorldTransform.Rotation))
+                    if (ArmController.TryPivotBy(targetRotation - assembledAtoms.WorldTransform.Rotation))
                     {
                         isBondingUpsideDown = false;
                     }
@@ -208,12 +208,12 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     {
                         // Rotate/pivot the molecule so that we can move the next atom behind it
                         var targetRotation2 = op.MoleculeRotation - HexRotation.R120;
-                        ArmArea.PivotBy(targetRotation2 - assembledAtoms.WorldTransform.Rotation);
-                        ArmArea.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
+                        ArmController.PivotBy(targetRotation2 - assembledAtoms.WorldTransform.Rotation);
+                        ArmController.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
                         isBondingUpsideDown = true;
                     }
 
-                    ArmArea.DropAtoms();
+                    ArmController.DropAtoms();
                 }
 
                 yield return null;

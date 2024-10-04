@@ -52,8 +52,8 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(GrabPosition, this);
-            ArmArea.DropAtoms(addToGrid: false);
+            ArmController.MoveGrabberTo(GrabPosition, this);
+            ArmController.DropAtoms(addToGrid: false);
 
             // If necessary, move the atom further down the atom chain so that all the atoms that need to be restored
             // before it come after it.
@@ -177,7 +177,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(GrabPosition, this);
+            ArmController.MoveGrabberTo(GrabPosition, this);
 
             // Create a new fragment so that the drop instructions for the buffer arm will automatically line up with
             // the grab for the main arm if possible.
@@ -212,7 +212,7 @@ namespace OpusSolver.Solver.LowCost
             ], updateTime: false);
 
             Writer.AdjustTime(-1);
-            ArmArea.GrabAtoms(new AtomCollection(element, GrabPosition, this));
+            ArmController.GrabAtoms(new AtomCollection(element, GrabPosition, this));
 
             m_storedElements.Remove(restoredElement);
         }

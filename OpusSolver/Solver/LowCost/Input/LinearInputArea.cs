@@ -52,16 +52,16 @@ namespace OpusSolver.Solver.LowCost.Input
             if (m_pendingAtoms == null)
             {
                 m_disassembler.GrabMolecule();
-                ArmArea.MoveGrabberTo(OuterUnbonderPosition, this);
+                ArmController.MoveGrabberTo(OuterUnbonderPosition, this);
             }
             else
             {
-                ArmArea.MoveGrabberTo(OuterUnbonderPosition, this);
-                ArmArea.GrabAtoms(m_pendingAtoms);
+                ArmController.MoveGrabberTo(OuterUnbonderPosition, this);
+                ArmController.GrabAtoms(m_pendingAtoms);
             }
 
-            ArmArea.MoveGrabberTo(InnerUnbonderPosition, this);
-            m_pendingAtoms = ArmArea.RemoveAllExceptGrabbedAtom();
+            ArmController.MoveGrabberTo(InnerUnbonderPosition, this);
+            m_pendingAtoms = ArmController.RemoveAllExceptGrabbedAtom();
             if (m_pendingAtoms.Atoms.Count == 0)
             {
                 m_pendingAtoms = null;

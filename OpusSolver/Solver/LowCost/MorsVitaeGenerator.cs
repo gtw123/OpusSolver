@@ -28,14 +28,14 @@ namespace OpusSolver.Solver.LowCost
         {
             if (!m_hasSalt)
             {
-                ArmArea.MoveGrabberTo(SaltInput1Transform, this);
-                ArmArea.DropAtoms();
+                ArmController.MoveGrabberTo(SaltInput1Transform, this);
+                ArmController.DropAtoms();
                 m_hasSalt = true;
             }
             else
             {
-                ArmArea.MoveGrabberTo(SaltInput2Transform, this);
-                ArmArea.DropAtoms(addToGrid: false);
+                ArmController.MoveGrabberTo(SaltInput2Transform, this);
+                ArmController.DropAtoms(addToGrid: false);
                 GridState.UnregisterAtom(SaltInput1Transform.Position, this);
 
                 GridState.RegisterAtom(MorsOutputTransform.Position, Element.Mors, this);
@@ -54,8 +54,8 @@ namespace OpusSolver.Solver.LowCost
                 _ => throw new SolverException($"{nameof(MorsVitaeGenerator)} can only generate Mors and Vitae but {element} was requested.")
             };
 
-            ArmArea.MoveGrabberTo(transform, this);
-            ArmArea.GrabAtoms(new AtomCollection(element, transform, this));
+            ArmController.MoveGrabberTo(transform, this);
+            ArmController.GrabAtoms(new AtomCollection(element, transform, this));
         }
     }
 }

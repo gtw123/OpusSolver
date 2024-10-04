@@ -18,8 +18,8 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(DisposalTransform, this);
-            ArmArea.DropAtoms(addToGrid: false);
+            ArmController.MoveGrabberTo(DisposalTransform, this);
+            ArmController.DropAtoms(addToGrid: false);
         }
     }
 }

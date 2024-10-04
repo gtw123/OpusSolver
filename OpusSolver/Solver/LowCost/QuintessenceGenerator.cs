@@ -29,8 +29,8 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(InputTransforms[m_cardinalCount], this);
-            ArmArea.DropAtoms();
+            ArmController.MoveGrabberTo(InputTransforms[m_cardinalCount], this);
+            ArmController.DropAtoms();
 
             m_cardinalCount++;
             if (m_cardinalCount == 4)
@@ -47,8 +47,8 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(OutputTransform, this);
-            ArmArea.GrabAtoms(new AtomCollection(element, OutputTransform, this));
+            ArmController.MoveGrabberTo(OutputTransform, this);
+            ArmController.GrabAtoms(new AtomCollection(element, OutputTransform, this));
         }
     }
 }

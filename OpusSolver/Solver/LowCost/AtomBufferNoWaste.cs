@@ -65,8 +65,8 @@ namespace OpusSolver.Solver.LowCost
             if (elementsToReorder.Any() && elementsToReorder.Count == m_storedAtoms.Count)
             {
                 // As an optimization we can just rotate this atom clockwise to put it at the end of the queue
-                ArmArea.MoveGrabberTo(GrabPosition, this);
-                ArmArea.DropAtoms(addToGrid: false);
+                ArmController.MoveGrabberTo(GrabPosition, this);
+                ArmController.DropAtoms(addToGrid: false);
 
                 Writer.Write(m_arm, Instruction.Grab);
                 var targetDir = m_storedAtoms.EnumerateCounterclockwise(startFrom: NextAtomDirection).Last().Key + HexRotation.R60;
@@ -105,8 +105,8 @@ namespace OpusSolver.Solver.LowCost
                 }
             }
 
-            ArmArea.MoveGrabberTo(GrabPosition, this);
-            ArmArea.DropAtoms(addToGrid: false);
+            ArmController.MoveGrabberTo(GrabPosition, this);
+            ArmController.DropAtoms(addToGrid: false);
 
             Writer.Write(m_arm, currentArmRot.CalculateDeltaRotationsTo(GrabDirection).ToRotationInstructions());
             Writer.Write(m_arm, Instruction.Grab);
@@ -118,7 +118,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(GrabPosition, this);
+            ArmController.MoveGrabberTo(GrabPosition, this);
 
             // Create a new fragment so that the drop instructions for the buffer arm will automatically line up with
             // the grab for the main arm if possible.
@@ -128,7 +128,7 @@ namespace OpusSolver.Solver.LowCost
             m_storedAtoms.Remove(NextAtomDirection);
 
             Writer.AdjustTime(-1);
-            ArmArea.GrabAtoms(new AtomCollection(element, GrabPosition, this));
+            ArmController.GrabAtoms(new AtomCollection(element, GrabPosition, this));
 
             Writer.NewFragment();
 

@@ -47,8 +47,8 @@ namespace OpusSolver.Solver.LowCost
         public override void Consume(Element element, int id)
         {
             var transform = m_hasInputAtom ? Input2Transform : Input1Transform;
-            ArmArea.MoveGrabberTo(transform, this);
-            ArmArea.DropAtoms();
+            ArmController.MoveGrabberTo(transform, this);
+            ArmController.DropAtoms();
 
             if (m_hasInputAtom)
             {
@@ -65,23 +65,23 @@ namespace OpusSolver.Solver.LowCost
                     var storageLocation = m_storageLocations[metalIndex];
                     if (storageLocation.Atom == null)
                     {
-                        ArmArea.MoveGrabberTo(OutputTransform, this);
+                        ArmController.MoveGrabberTo(OutputTransform, this);
                         storageLocation.Atom = new AtomCollection(newMetal, OutputTransform, this);
-                        ArmArea.GrabAtoms(storageLocation.Atom);
-                        ArmArea.MoveGrabberTo(storageLocation.Transform, this);
-                        ArmArea.DropAtoms();
+                        ArmController.GrabAtoms(storageLocation.Atom);
+                        ArmController.MoveGrabberTo(storageLocation.Transform, this);
+                        ArmController.DropAtoms();
                         break;
                     }
 
-                    ArmArea.MoveGrabberTo(storageLocation.Transform, this);
-                    ArmArea.GrabAtoms(storageLocation.Atom);
-                    ArmArea.MoveGrabberTo(Input2Transform, this);
-                    ArmArea.DropAtoms();
+                    ArmController.MoveGrabberTo(storageLocation.Transform, this);
+                    ArmController.GrabAtoms(storageLocation.Atom);
+                    ArmController.MoveGrabberTo(Input2Transform, this);
+                    ArmController.DropAtoms();
 
-                    ArmArea.MoveGrabberTo(OutputTransform, this);
-                    ArmArea.GrabAtoms(new AtomCollection(newMetal, OutputTransform, this));
-                    ArmArea.MoveGrabberTo(Input1Transform, this);
-                    ArmArea.DropAtoms();
+                    ArmController.MoveGrabberTo(OutputTransform, this);
+                    ArmController.GrabAtoms(new AtomCollection(newMetal, OutputTransform, this));
+                    ArmController.MoveGrabberTo(Input1Transform, this);
+                    ArmController.DropAtoms();
 
                     GridState.UnregisterAtom(Input1Transform.Position, this);
                     GridState.UnregisterAtom(Input2Transform.Position, this);
@@ -98,8 +98,8 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmArea.MoveGrabberTo(OutputTransform, this);
-            ArmArea.GrabAtoms(new AtomCollection(element, OutputTransform, this));
+            ArmController.MoveGrabberTo(OutputTransform, this);
+            ArmController.GrabAtoms(new AtomCollection(element, OutputTransform, this));
         }
     }
 }
