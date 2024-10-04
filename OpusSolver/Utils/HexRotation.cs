@@ -9,7 +9,7 @@ namespace OpusSolver
     /// Represents a rotation on the hex grid, where a positive rotation represents a counterclockwise rotation.
     /// When interpreted as a direction, a rotation of 0 is in the direction of the positive X axis.
     /// </summary>
-    public readonly struct HexRotation : IEquatable<HexRotation>, IComparable<HexRotation>
+    public readonly record struct HexRotation : IEquatable<HexRotation>, IComparable<HexRotation>
     {
         private readonly int m_angle;
 
@@ -44,31 +44,6 @@ namespace OpusSolver
         public HexRotation Rotate180()
         {
             return new HexRotation((m_angle + Count / 2) % Count);
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is HexRotation rotation && Equals(rotation);
-        }
-
-        public bool Equals(HexRotation other)
-        {
-            return m_angle == other.m_angle;
-        }
-
-        public override int GetHashCode()
-        {
-            return m_angle.GetHashCode();
-        }
-
-        public static bool operator ==(HexRotation left, HexRotation right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(HexRotation left, HexRotation right)
-        {
-            return !(left == right);
         }
 
         public static HexRotation operator +(HexRotation left, HexRotation right)

@@ -2,7 +2,7 @@
 
 namespace OpusSolver
 {
-    public struct Transform2D
+    public record struct Transform2D
     {
         public Vector2 Position;
         public HexRotation Rotation;
@@ -13,32 +13,37 @@ namespace OpusSolver
             Rotation = rotation;
         }
 
-        public Vector2 Apply(Vector2 vec)
+        public readonly Vector2 Apply(Vector2 vec)
         {
             return Position + vec.RotateBy(Rotation);
         }
 
-        public HexRotation Apply(HexRotation rotation)
+        public readonly HexRotation Apply(HexRotation rotation)
         {
             return Rotation + rotation;
         }
 
-        public Transform2D Apply(Transform2D transform)
+        public readonly Transform2D Apply(Transform2D transform)
         {
             return new Transform2D(Apply(transform.Position), Apply(transform.Rotation));
         }
 
-        public Transform2D RotateAbout(Vector2 point, HexRotation rotation)
+        public readonly Transform2D OffsetBy(Vector2 offset)
+        {
+            return new Transform2D(Position + offset, Rotation);
+        }
+
+        public readonly Transform2D RotateAbout(Vector2 point, HexRotation rotation)
         {
             return new Transform2D(Position.RotateAbout(point, rotation), Rotation + rotation);
         }
 
-        public Transform2D Inverse()
+        public readonly Transform2D Inverse()
         {
             return new Transform2D(-Position.RotateBy(-Rotation), -Rotation);
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return Invariant($"({Position}, {Rotation})");
         }

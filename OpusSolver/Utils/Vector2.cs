@@ -3,7 +3,7 @@ using static System.FormattableString;
 
 namespace OpusSolver
 {
-    public struct Vector2
+    public record struct Vector2
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields")]
         public int X;
@@ -14,32 +14,6 @@ namespace OpusSolver
         {
             X = x;
             Y = y;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Vector2))
-            {
-                return false;
-            }
-
-            Vector2 v = (Vector2)obj;
-            return X == v.X && Y == v.Y;
-        }
-
-        public override int GetHashCode()
-        {
-            return X * 65536 + Y;
-        }
-
-        public static bool operator ==(Vector2 v1, Vector2 v2)
-        {
-            return v1.Equals(v2);
-        }
-
-        public static bool operator !=(Vector2 v1, Vector2 v2)
-        {
-            return !v1.Equals(v2);
         }
 
         public static Vector2 operator +(Vector2 v1, Vector2 v2)
@@ -67,32 +41,32 @@ namespace OpusSolver
             return v.Multiply(scale);
         }
 
-        public Vector2 Add(Vector2 other)
+        public readonly Vector2 Add(Vector2 other)
         {
             return new Vector2(X + other.X, Y + other.Y);
         }
 
-        public Vector2 Add(int x, int y)
+        public readonly Vector2 Add(int x, int y)
         {
             return new Vector2(X + x, Y + y);
         }
 
-        public Vector2 Subtract(Vector2 other)
+        public readonly Vector2 Subtract(Vector2 other)
         {
             return new Vector2(X - other.X, Y - other.Y);
         }
 
-        public Vector2 Subtract(int x, int y)
+        public readonly Vector2 Subtract(int x, int y)
         {
             return new Vector2(X - x, Y - y);
         }
 
-        public Vector2 Multiply(int scale)
+        public readonly Vector2 Multiply(int scale)
         {
             return new Vector2(X * scale, Y * scale);
         }
 
-        public Vector2 RotateBy(HexRotation rotation)
+        public readonly Vector2 RotateBy(HexRotation rotation)
         {
             return rotation.IntValue switch
             {
@@ -106,27 +80,27 @@ namespace OpusSolver
             };
         }
 
-        public Vector2 RotateAbout(Vector2 point, HexRotation rotation)
+        public readonly Vector2 RotateAbout(Vector2 point, HexRotation rotation)
         {
             return (this - point).RotateBy(rotation) + point;
         }
 
-        public Vector2 Rotate60Counterclockwise()
+        public readonly Vector2 Rotate60Counterclockwise()
         {
             return new Vector2(-Y, X + Y);
         }
 
-        public Vector2 Rotate60Clockwise()
+        public readonly Vector2 Rotate60Clockwise()
         {
             return new Vector2(X + Y, -X);
         }
 
-        public Vector2 Rotate180()
+        public readonly Vector2 Rotate180()
         {
             return new Vector2(-X, -Y);
         }
 
-        public Vector2 OffsetInDirection(HexRotation direction, int length)
+        public readonly Vector2 OffsetInDirection(HexRotation direction, int length)
         {
             return direction.IntValue switch
             {
@@ -140,7 +114,7 @@ namespace OpusSolver
             };
         }
 
-        public HexRotation? ToRotation()
+        public readonly HexRotation? ToRotation()
         {
             if (Y == 0)
             {
@@ -163,7 +137,7 @@ namespace OpusSolver
         /// <summary>
         /// Returns the hexagonal Manhattan distance between this vector and another vector.
         /// </summary>
-        public int DistanceBetween(Vector2 other)
+        public readonly int DistanceBetween(Vector2 other)
         {
             var diff = other - this;
             if (Math.Sign(diff.X) == Math.Sign(diff.Y))
@@ -176,7 +150,7 @@ namespace OpusSolver
             }
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return Invariant($"({X}, {Y})");
         }
