@@ -23,7 +23,7 @@ namespace OpusSolver.Solver.LowCost
             m_collisionDetector = collisionDetector;
         }
 
-        private record class ArmPosition(int TrackIndex, HexRotation Rotation);
+        private record class ArmState(int TrackIndex, HexRotation Rotation);
 
         public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform, AtomCollection grabbedAtoms, bool allowCalcification)
         {
@@ -37,98 +37,98 @@ namespace OpusSolver.Solver.LowCost
                 throw new SolverException($"Ending position {endTransform.Position} is not on the track.");
             }
 
-            var startPosition = new ArmPosition(startTrackIndex, startTransform.Rotation);
-            var endPosition = new ArmPosition(endTrackIndex, endTransform.Rotation);
-            var path = FindShortestPath(startPosition, endPosition, grabbedAtoms, allowCalcification);
+            var startState = new ArmState(startTrackIndex, startTransform.Rotation);
+            var endState = new ArmState(endTrackIndex, endTransform.Rotation);
+            var path = FindShortestPath(startState, endState, grabbedAtoms, allowCalcification);
 
-            return GetInstructionsForPath(startPosition, path);
+            return GetInstructionsForPath(startState, path);
         }
 
-        private Transform2D ArmPositionToGrabberTransform(ArmPosition armPos)
+        private Transform2D GetGrabberTransform(ArmState armState)
         {
-            var armGridPos = m_trackCells[armPos.TrackIndex];
-            return new Transform2D(armGridPos + new Vector2(m_armLength, 0).RotateBy(armPos.Rotation), armPos.Rotation);
+            var armGridPos = m_trackCells[armState.TrackIndex];
+            return new Transform2D(armGridPos + new Vector2(m_armLength, 0).RotateBy(armState.Rotation), armState.Rotation);
         }
 
         /// <summary>
         /// Finds the shortest "path" to move/rotate an arm from one position to another.
         /// Uses the Uniform Cost Search algorithm.
         /// </summary>
-        private IEnumerable<ArmPosition> FindShortestPath(ArmPosition startPosition, ArmPosition endPosition, AtomCollection grabbedAtoms, bool allowCalcification)
+        private IEnumerable<ArmState> FindShortestPath(ArmState startState, ArmState endState, AtomCollection grabbedAtoms, bool allowCalcification)
         {
-            var previousPosition = new Dictionary<ArmPosition, ArmPosition> { { startPosition, null } };
-            var costs = new Dictionary<ArmPosition, int> { { startPosition, 0 } };
-            var queue = new PriorityQueue<ArmPosition, int>();
-            queue.Enqueue(startPosition, 0);
+            var previousState = new Dictionary<ArmState, ArmState> { { startState, null } };
+            var costs = new Dictionary<ArmState, int> { { startState, 0 } };
+            var queue = new PriorityQueue<ArmState, int>();
+            queue.Enqueue(startState, 0);
 
-            var startGrabberTransform = ArmPositionToGrabberTransform(startPosition);
+            var startGrabberTransform = GetGrabberTransform(startState);
             var grabberToAtomsTransform = startGrabberTransform.Inverse().Apply(grabbedAtoms?.WorldTransform ?? new Transform2D());
 
-            ArmPosition currentPosition = null;
-            void AddNeighbor(ArmPosition neighbor)
+            ArmState currentState = null;
+            void AddNeighbor(ArmState neighbor)
             {
-                int newCost = costs[currentPosition] + 1;
+                int newCost = costs[currentState] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    if (grabbedAtoms == null || IsMovementAllowed(currentPosition, neighbor, grabbedAtoms, grabberToAtomsTransform, allowCalcification))
+                    if (grabbedAtoms == null || IsMovementAllowed(currentState, neighbor, grabbedAtoms, grabberToAtomsTransform, allowCalcification))
                     {
                         costs[neighbor] = newCost;
-                        int heuristic = Math.Abs(endPosition.TrackIndex - neighbor.TrackIndex) + endPosition.Rotation.DistanceTo(neighbor.Rotation);
+                        int heuristic = Math.Abs(endState.TrackIndex - neighbor.TrackIndex) + endState.Rotation.DistanceTo(neighbor.Rotation);
                         queue.Enqueue(neighbor, newCost + heuristic);
-                        previousPosition[neighbor] = currentPosition;
+                        previousState[neighbor] = currentState;
                     }
                 }
             }
 
             while (queue.Count > 0)
             {
-                currentPosition = queue.Dequeue();
-                if (currentPosition == endPosition)
+                currentState = queue.Dequeue();
+                if (currentState == endState)
                 {
                     break;
                 }
 
-                if (currentPosition.TrackIndex < m_trackCells.Count - 1)
+                if (currentState.TrackIndex < m_trackCells.Count - 1)
                 {
-                    AddNeighbor(new ArmPosition(currentPosition.TrackIndex + 1, currentPosition.Rotation));
+                    AddNeighbor(new ArmState(currentState.TrackIndex + 1, currentState.Rotation));
                 }
                 else if (m_isLoopingTrack)
                 {
-                    AddNeighbor(new ArmPosition(0, currentPosition.Rotation));
+                    AddNeighbor(new ArmState(0, currentState.Rotation));
                 }
 
-                if (currentPosition.TrackIndex > 0)
+                if (currentState.TrackIndex > 0)
                 {
-                    AddNeighbor(new ArmPosition(currentPosition.TrackIndex - 1, currentPosition.Rotation));
+                    AddNeighbor(new ArmState(currentState.TrackIndex - 1, currentState.Rotation));
                 }
                 else if (m_isLoopingTrack)
                 {
-                    AddNeighbor(new ArmPosition(m_trackCells.Count - 1, currentPosition.Rotation));
+                    AddNeighbor(new ArmState(m_trackCells.Count - 1, currentState.Rotation));
                 }
 
-                AddNeighbor(new ArmPosition(currentPosition.TrackIndex, currentPosition.Rotation.Rotate60Counterclockwise()));
-                AddNeighbor(new ArmPosition(currentPosition.TrackIndex, currentPosition.Rotation.Rotate60Clockwise()));
+                AddNeighbor(new ArmState(currentState.TrackIndex, currentState.Rotation.Rotate60Counterclockwise()));
+                AddNeighbor(new ArmState(currentState.TrackIndex, currentState.Rotation.Rotate60Clockwise()));
             }
 
-            if (currentPosition != endPosition)
+            if (currentState != endState)
             {
-                throw new SolverException($"Cannot find path from {startPosition} to {endPosition}.");
+                throw new SolverException($"Cannot find path from {startState} to {endState}.");
             }
 
-            var path = new List<ArmPosition>();
-            while (currentPosition != startPosition)
+            var path = new List<ArmState>();
+            while (currentState != startState)
             {
-                path.Add(currentPosition);
-                currentPosition = previousPosition[currentPosition];
+                path.Add(currentState);
+                currentState = previousState[currentState];
             }
 
             return Enumerable.Reverse(path);
         }
 
-        private bool IsMovementAllowed(ArmPosition currentPosition, ArmPosition targetPosition, AtomCollection grabbedAtoms,
+        private bool IsMovementAllowed(ArmState currentState, ArmState targetState, AtomCollection grabbedAtoms,
             Transform2D grabberToAtomsTransform, bool allowCalcification)
         {
-            var targetAtomsTransform = ArmPositionToGrabberTransform(targetPosition).Apply(grabberToAtomsTransform);
+            var targetAtomsTransform = GetGrabberTransform(targetState).Apply(grabberToAtomsTransform);
             foreach (var (atom, pos) in grabbedAtoms.GetTransformedAtomPositions(targetAtomsTransform))
             {
                 if (m_gridState.GetAtom(pos) != null)
@@ -142,16 +142,16 @@ namespace OpusSolver.Solver.LowCost
                 }
             }
 
-            var deltaRot = targetPosition.Rotation - currentPosition.Rotation;
+            var deltaRot = targetState.Rotation - currentState.Rotation;
             if (deltaRot != HexRotation.R0)
             {
-                if (currentPosition.TrackIndex != targetPosition.TrackIndex)
+                if (currentState.TrackIndex != targetState.TrackIndex)
                 {
                     throw new SolverException("Cannot move and rotate atoms at the same time.");
                 }
 
-                var currentAtomsTransform = ArmPositionToGrabberTransform(currentPosition).Apply(grabberToAtomsTransform);
-                var armPos = m_trackCells[currentPosition.TrackIndex];
+                var currentAtomsTransform = GetGrabberTransform(currentState).Apply(grabberToAtomsTransform);
+                var armPos = m_trackCells[currentState.TrackIndex];
                 if (m_collisionDetector.WillAtomsCollideWhileRotating(grabbedAtoms, currentAtomsTransform, armPos, deltaRot))
                 {
                     return false;
@@ -161,23 +161,23 @@ namespace OpusSolver.Solver.LowCost
             return true;
         }
 
-        private IEnumerable<Instruction> GetInstructionsForPath(ArmPosition startPosition, IEnumerable<ArmPosition> path)
+        private IEnumerable<Instruction> GetInstructionsForPath(ArmState startState, IEnumerable<ArmState> path)
         {
             var instructions = new List<Instruction>();
 
-            var previousPos = startPosition;
-            foreach (var pos in path)
+            var previousState = startState;
+            foreach (var state in path)
             {
-                int trackDelta = pos.TrackIndex - previousPos.TrackIndex;
+                int trackDelta = state.TrackIndex - previousState.TrackIndex;
                 if (trackDelta != 0)
                 {
                     if (m_isLoopingTrack)
                     {
-                        if (pos.TrackIndex == 0 && previousPos.TrackIndex == m_trackCells.Count - 1)
+                        if (state.TrackIndex == 0 && previousState.TrackIndex == m_trackCells.Count - 1)
                         {
                             trackDelta = 1;
                         }
-                        else if (pos.TrackIndex == m_trackCells.Count - 1 && previousPos.TrackIndex == 0)
+                        else if (state.TrackIndex == m_trackCells.Count - 1 && previousState.TrackIndex == 0)
                         {
                             trackDelta = -1;
                         }
@@ -187,11 +187,11 @@ namespace OpusSolver.Solver.LowCost
                 }
                 else
                 {
-                    var deltaRots = previousPos.Rotation.CalculateDeltaRotationsTo(pos.Rotation);
+                    var deltaRots = previousState.Rotation.CalculateDeltaRotationsTo(state.Rotation);
                     instructions.AddRange(deltaRots.ToRotationInstructions());
                 }
 
-                previousPos = pos;
+                previousState = state;
             }
 
             return instructions;
