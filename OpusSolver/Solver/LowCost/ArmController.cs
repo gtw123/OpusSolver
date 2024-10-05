@@ -42,10 +42,10 @@ namespace OpusSolver.Solver.LowCost
         /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated the
         /// specified direction (in local coordinates of a specifed object).
         /// </summary>
-        /// <param name="grabberWorldTransform">The target position and rotation, in world coordinates</param>
+        /// <param name="grabberLocalTransform">The target position and rotation</param>
         /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
         /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
-        /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change the grabbed atom</param>
+        /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change a grabbed atom</param>
         public void MoveGrabberTo(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null, bool allowCalcification = false)
         {
             var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
@@ -66,6 +66,28 @@ namespace OpusSolver.Solver.LowCost
             }
 
             m_armTransform = targetTransform;
+        }
+
+        /// <summary>
+        /// Moves the main arm so that its grabbed molecule will at the specified transform.
+        /// </summary>
+        /// <param name="targetTarget">The target position and rotation of the molecule</param>
+        /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
+        /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change a grabbed atom</param>
+        public void MoveAtomsTo(Transform2D targetTransform, GameObject relativeToObj = null, bool allowCalcification = false)
+        {
+            if (m_grabbedAtoms == null)
+            {
+                throw new SolverException("Cannot move atoms when not holding any.");
+            }
+
+            targetTransform = relativeToObj?.GetWorldTransform().Apply(targetTransform) ?? targetTransform;
+
+            var (instructions, finalArmTransform) = m_armPathFinder.FindMoleculePath(m_armTransform, targetTransform, m_grabbedAtoms, allowCalcification);
+            m_writer.Write(m_mainArm, instructions);
+
+            m_grabbedAtoms.WorldTransform = targetTransform;
+            m_armTransform = finalArmTransform;
         }
 
         public void GrabAtoms(AtomCollection atoms, bool removeFromGrid = true)

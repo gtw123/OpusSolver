@@ -59,5 +59,10 @@ namespace OpusSolver
         {
             return rotations.Select(rot => rot == HexRotation.R60 ? Instruction.RotateCounterclockwise : Instruction.RotateClockwise);
         }
+
+        public static IEnumerable<Instruction> ToPivotInstructions(this IEnumerable<HexRotation> rotations)
+        {
+            return rotations.Select(rot => rot == HexRotation.R60 ? Instruction.PivotCounterclockwise : Instruction.PivotClockwise);
+        }
     }
 }

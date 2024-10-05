@@ -9,16 +9,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         private IEnumerable<MoleculeBuilder> m_builders;
         private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines;
 
-        private class Output
-        {
-            public Molecule Product;
-            public Transform2D OutputTransform;
-            public Transform2D GrabberTransform;
-            public HexRotation Pivot;
-        }
-
-        private readonly Dictionary<int, Output> m_outputs = new();
-        private Glyph m_bonder;
+        private readonly Dictionary<int, Product> m_outputs = new();
 
         public override int RequiredWidth => 2;
 
@@ -37,7 +28,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         {
             m_builders = builders;
             m_assembleCoroutines = builders.ToDictionary(b => b.Product.ID, b => new LoopingCoroutine<object>(() => Assemble(b)));
-            m_bonder = new Glyph(this, LowerBonderPosition.Position, BondingDirection - HexRotation.R180, GlyphType.Bonding);
+            new Glyph(this, LowerBonderPosition.Position, BondingDirection - HexRotation.R180, GlyphType.Bonding);
         }
 
         public override void BeginSolution()
@@ -61,13 +52,15 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 from pivot in possiblePivots
                 select (rotation, pivot)).ToList();
 
+            var outputTransforms = new Dictionary<int, Transform2D>();
+
             var builder1 = m_builders.First();
             foreach (var (rot1, pivot1) in rotationCases)
             {
-                var output1 = CalculateOutputTransform(builder1, rot1, pivot1);
+                var output1Transform = CalculateOutputTransform(builder1, rot1, pivot1);
 
                 // Check that none of the output atoms overlap any other atoms
-                var atomPositions = builder1.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output1.OutputTransform));
+                var atomPositions = builder1.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output1Transform));
                 if (atomPositions.Any(p => GridState.GetAtom(p) != null))
                 {
                     continue;
@@ -75,17 +68,17 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                 if (m_builders.Count() == 1)
                 {
-                    m_outputs[builder1.Product.ID] = output1;
+                    outputTransforms[builder1.Product.ID] = output1Transform;
                     break;
                 }
 
                 var builder2 = m_builders.Skip(1).Single();
                 foreach (var (rot2, pivot2) in rotationCases.Where(c => c.rotation != rot1))
                 {
-                    var output2 = CalculateOutputTransform(builder2, rot2, pivot2);
+                    var output2Transform = CalculateOutputTransform(builder2, rot2, pivot2);
 
                     // Check that none of the output atoms overlap any other atoms
-                    var atomPositions2 = builder2.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output2.OutputTransform));
+                    var atomPositions2 = builder2.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output2Transform));
                     if (atomPositions2.Any(p => GridState.GetAtom(p) != null))
                     {
                         continue;
@@ -97,36 +90,33 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                         continue;
                     }
 
-                    m_outputs[builder1.Product.ID] = output1;
-                    m_outputs[builder2.Product.ID] = output2;
+                    outputTransforms[builder1.Product.ID] = output1Transform;
+                    outputTransforms[builder2.Product.ID] = output2Transform;
                     break;
                 }
             }
 
-            var missingOutputs = m_builders.Select(b => b.Product.ID).Except(m_outputs.Keys);
+            var missingOutputs = m_builders.Select(b => b.Product.ID).Except(outputTransforms.Keys);
             if (missingOutputs.Any())
             {
                 throw new SolverException($"Could not find valid output positions for products.");
             }
 
-            foreach (var (id, output) in m_outputs)
+            foreach (var builder in m_builders)
             {
-                new Product(this, output.OutputTransform.Position, output.OutputTransform.Rotation, output.Product);
+                var outputTransform = outputTransforms[builder.Product.ID];
+                m_outputs[builder.Product.ID] = new Product(this, outputTransform.Position, outputTransform.Rotation, builder.Product);
             }
         }
 
-        private Output CalculateOutputTransform(MoleculeBuilder builder, HexRotation rotationFromBonderToOutput, HexRotation pivotToOutput)
+        private Transform2D CalculateOutputTransform(MoleculeBuilder builder, HexRotation rotationFromBonderToOutput, HexRotation pivotToOutput)
         {
             var finalOp = builder.Operations.Last();
             var moleculeTransform = new Transform2D(UpperBonderPosition.Position, finalOp.MoleculeRotation + pivotToOutput);
             moleculeTransform = moleculeTransform.Apply(new Transform2D(-finalOp.Atom.Position, HexRotation.R0));
 
             var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
-            var outputTransform = moleculeTransform.RotateAbout(armPos, rotationFromBonderToOutput);
-
-            var grabberTransform = UpperBonderPosition.RotateAbout(armPos, rotationFromBonderToOutput);
-
-            return new Output { Product = builder.Product, OutputTransform = outputTransform, GrabberTransform = grabberTransform, Pivot = pivotToOutput };
+            return moleculeTransform.RotateAbout(armPos, rotationFromBonderToOutput);
         }
 
         public override void AddAtom(Element element, int productID)
@@ -180,8 +170,8 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                         ArmController.MoveGrabberTo(UpperBonderPosition, this);
                         assembledAtoms = ArmController.GrabbedAtoms;
 
-                        // Adjust the atom position so it matches the target molecule but also update the transform
-                        // so that the single atom has the same world transform as before.
+                        // Adjust the atom position so it matches the corresponding target molecule, but also update
+                        // the transform so that the atom has the same world transform as before.
                         // TODO: Can we simplify this calculation?
                         assembledAtoms.WorldTransform.Position = assembledAtoms.WorldTransform.Apply(assembledAtoms.Atoms[0].Position) - op.Atom.Position.RotateBy(op.MoleculeRotation);
                         assembledAtoms.WorldTransform.Rotation = op.MoleculeRotation;
@@ -191,16 +181,18 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     {
                         ArmController.MoveGrabberTo(LowerBonderPosition, this);
                         ArmController.BondAtomsTo(assembledAtoms);
-                        ArmController.MoveGrabberTo(UpperBonderPosition, this);
+
+                        if (opIndex != operations.Count - 1)
+                        {
+                            // Move the grabbed atom up to make way for the next atom to bond.
+                            ArmController.MoveGrabberTo(UpperBonderPosition, this);
+                        }
                     }
                 }
 
                 if (opIndex == operations.Count - 1)
                 {
-                    var output = m_outputs[builder.Product.ID];
-                    var targetRotation = op.MoleculeRotation + output.Pivot;
-                    ArmController.PivotBy(targetRotation - assembledAtoms.WorldTransform.Rotation);
-                    ArmController.MoveGrabberTo(output.GrabberTransform, this);
+                    ArmController.MoveAtomsTo(m_outputs[builder.Product.ID].Transform, this);
                     ArmController.DropAtoms(addToGrid: false);
                 }
                 else
@@ -214,8 +206,10 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     {
                         // Rotate/pivot the molecule so that we can move the next atom behind it
                         var targetRotation2 = op.MoleculeRotation - HexRotation.R120;
-                        ArmController.PivotBy(targetRotation2 - assembledAtoms.WorldTransform.Rotation);
-                        ArmController.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
+                        var requiredPivot = targetRotation2 - assembledAtoms.WorldTransform.Rotation;
+                        var targetTransform = assembledAtoms.WorldTransform.RotateAbout(ArmController.GetGrabberPosition(), requiredPivot);
+                        targetTransform = targetTransform.RotateAbout(ArmController.ArmTransform.Position, HexRotation.R120);
+                        ArmController.MoveAtomsTo(targetTransform);
                         isBondingUpsideDown = true;
                     }
 
