@@ -179,7 +179,13 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     {
                         ArmController.MoveGrabberTo(UpperBonderPosition, this);
                         assembledAtoms = ArmController.GrabbedAtoms;
+
+                        // Adjust the atom position so it matches the target molecule but also update the transform
+                        // so that the single atom has the same world transform as before.
+                        // TODO: Can we simplify this calculation?
+                        assembledAtoms.WorldTransform.Position = assembledAtoms.WorldTransform.Apply(assembledAtoms.Atoms[0].Position) - op.Atom.Position.RotateBy(op.MoleculeRotation);
                         assembledAtoms.WorldTransform.Rotation = op.MoleculeRotation;
+                        assembledAtoms.Atoms[0].Position = op.Atom.Position;
                     }
                     else
                     {
