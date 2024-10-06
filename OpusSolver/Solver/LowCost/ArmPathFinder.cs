@@ -164,12 +164,25 @@ namespace OpusSolver.Solver.LowCost
                 }
 
                 // Rotate
-                AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Counterclockwise(), currentState.MoleculeTransform.RotateAbout(currentArmPos, HexRotation.R60)));
-                AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Clockwise(), currentState.MoleculeTransform.RotateAbout(currentArmPos, -HexRotation.R60)));
+                if (grabbedAtoms != null && grabbedAtoms.Atoms.Count > 1)
+                {
+                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Counterclockwise(), currentState.MoleculeTransform.RotateAbout(currentArmPos, HexRotation.R60)));
+                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Clockwise(), currentState.MoleculeTransform.RotateAbout(currentArmPos, -HexRotation.R60)));
+                }
+                else
+                {
+                    // Adjust only the position of the molecule transform, not the rotation too, because the molecule (if any) is symmetric
+                    // and so we don't need to consider two different molecule rotations as different states.
+                    var newTransform = new Transform2D(currentState.MoleculeTransform.Position.RotateAbout(currentArmPos, HexRotation.R60), currentState.MoleculeTransform.Rotation);
+                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Counterclockwise(), newTransform));
 
+                    newTransform = new Transform2D(currentState.MoleculeTransform.Position.RotateAbout(currentArmPos, -HexRotation.R60), currentState.MoleculeTransform.Rotation);
+                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Clockwise(), newTransform));
+                }
+
+                // Pivot
                 if (searchParams.AllowPivot && grabbedAtoms != null && grabbedAtoms.Atoms.Count > 1)
                 {
-                    // Pivot
                     var grabberPosition = GetGrabberPosition(currentState);
                     AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation, currentState.MoleculeTransform.RotateAbout(grabberPosition, HexRotation.R60)));
                     AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation, currentState.MoleculeTransform.RotateAbout(grabberPosition, -HexRotation.R60)));
