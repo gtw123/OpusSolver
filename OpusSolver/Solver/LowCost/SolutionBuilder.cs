@@ -154,9 +154,17 @@ namespace OpusSolver.Solver.LowCost
         {
             foreach (var obj in GetAllObjects())
             {
-                if (obj is Glyph glyph)
+                switch (obj)
                 {
-                    m_armArea.GridState.RegisterGlyph(glyph);
+                    case Glyph glyph:
+                        m_armArea.GridState.RegisterGlyph(glyph);
+                        break;
+                    case Reagent reagent:
+                        m_armArea.GridState.RegisterReagent(reagent);
+                        break;
+                    case Track track:
+                        m_armArea.GridState.RegisterTrack(track);
+                        break;
                 }
             }
         }

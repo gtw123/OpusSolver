@@ -8,6 +8,8 @@ namespace OpusSolver.Solver
     {
         private Dictionary<Vector2, Element?> m_atoms = new();
         private Dictionary<Vector2, Glyph> m_glyphs = new();
+        private Dictionary<Vector2, Reagent> m_reagents = new();
+        private Dictionary<Vector2, Track> m_tracks = new();
 
         public void RegisterAtom(Vector2 position, Element? element, GameObject relativeToObj)
         {
@@ -67,6 +69,22 @@ namespace OpusSolver.Solver
             }
         }
 
+        public void RegisterReagent(Reagent reagent)
+        {
+            var transform = reagent.GetWorldTransform();
+            foreach (var pos in reagent.Molecule.Atoms.Select(a => transform.Apply(a.Position)))
+            {
+                m_reagents[pos] = reagent;
+            }
+        }
+
+        public void RegisterTrack(Track track)
+        {
+            foreach (var pos in track.GetAllPathCells())
+            {
+                m_tracks[pos] = track;
+            }
+        }
 
         public Element? GetAtom(Vector2 position)
         {
