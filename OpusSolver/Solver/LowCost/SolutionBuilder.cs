@@ -62,6 +62,8 @@ namespace OpusSolver.Solver.LowCost
 
             var requiredAccessPoints = Enumerable.Reverse(m_atomGenerators).SelectMany(g => g.RequiredAccessPoints.Select(p => g.GetWorldTransform().Apply(p)));
             m_armArea.CreateComponents(requiredAccessPoints);
+
+            RegisterObjectsOnGrid();
         }
 
         private LowCostAtomGenerator CreateAtomGenerator(ElementGenerator elementGenerator, Transform2D transform)
@@ -146,6 +148,17 @@ namespace OpusSolver.Solver.LowCost
         public IEnumerable<GameObject> GetAllObjects()
         {
             return m_armArea.GetAllObjects();
+        }
+
+        private void RegisterObjectsOnGrid()
+        {
+            foreach (var obj in GetAllObjects())
+            {
+                if (obj is Glyph glyph)
+                {
+                    m_armArea.GridState.RegisterGlyph(glyph);
+                }
+            }
         }
     }
 }

@@ -200,7 +200,7 @@ namespace OpusSolver.Solver.LowCost
                     return false;
                 }
 
-                if (!allowCalcification && PeriodicTable.Cardinals.Contains(atom.Element) && m_gridState.GetGlyph(pos) == GlyphType.Calcification)
+                if (!allowCalcification && PeriodicTable.Cardinals.Contains(atom.Element) && m_gridState.GetGlyph(pos)?.Type == GlyphType.Calcification)
                 {
                     return false;
                 }
