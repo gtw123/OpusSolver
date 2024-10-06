@@ -46,18 +46,20 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             }
 
             var possibleRotations = new[] { HexRotation.R60, HexRotation.R120 };
-            var possiblePivots = new[] { HexRotation.R0, -HexRotation.R60 };
+            var possiblePivots = HexRotation.All;
+            var possiblePositions = new[] { UpperBonderPosition.Position, LowerBonderPosition.Position };
             var rotationCases = (
                 from rotation in possibleRotations
                 from pivot in possiblePivots
-                select (rotation, pivot)).ToList();
+                from position in possiblePositions
+                select (rotation, pivot, position)).ToList();
 
             var outputTransforms = new Dictionary<int, Transform2D>();
 
             var builder1 = m_builders.First();
-            foreach (var (rot1, pivot1) in rotationCases)
+            foreach (var (rot1, pivot1, pos1) in rotationCases)
             {
-                var output1Transform = CalculateOutputTransform(builder1, rot1, pivot1);
+                var output1Transform = CalculateOutputTransform(builder1, rot1, pivot1, pos1);
 
                 // Check that none of the output atoms overlap any other atoms
                 var atomPositions = builder1.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output1Transform));
@@ -73,9 +75,9 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 }
 
                 var builder2 = m_builders.Skip(1).Single();
-                foreach (var (rot2, pivot2) in rotationCases.Where(c => c.rotation != rot1))
+                foreach (var (rot2, pivot2, pos2) in rotationCases)
                 {
-                    var output2Transform = CalculateOutputTransform(builder2, rot2, pivot2);
+                    var output2Transform = CalculateOutputTransform(builder2, rot2, pivot2, pos2);
 
                     // Check that none of the output atoms overlap any other atoms
                     var atomPositions2 = builder2.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output2Transform));
@@ -109,13 +111,13 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             }
         }
 
-        private Transform2D CalculateOutputTransform(MoleculeBuilder builder, HexRotation rotationFromBonderToOutput, HexRotation pivotToOutput)
+        private Transform2D CalculateOutputTransform(MoleculeBuilder builder, HexRotation rotationFromBonderToOutput, HexRotation pivotToOutput, Vector2 position)
         {
             var finalOp = builder.Operations.Last();
-            var moleculeTransform = new Transform2D(UpperBonderPosition.Position, finalOp.MoleculeRotation + pivotToOutput);
+            var moleculeTransform = new Transform2D(position, finalOp.MoleculeRotation + pivotToOutput);
             moleculeTransform = moleculeTransform.Apply(new Transform2D(-finalOp.Atom.Position, HexRotation.R0));
 
-            var armPos = UpperBonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
+            var armPos = position - new Vector2(ArmArea.ArmLength, 0);
             return moleculeTransform.RotateAbout(armPos, rotationFromBonderToOutput);
         }
 
