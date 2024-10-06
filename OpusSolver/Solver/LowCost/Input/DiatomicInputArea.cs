@@ -193,9 +193,8 @@ namespace OpusSolver.Solver.LowCost.Input
                 if (grabbedAtom.Element == element)
                 {
                     // Keep hold of the atom we've currently got
-                    var otherAtom = atoms.GetAtomAtTransformedPosition(otherAtomPosition.Position, this);
-                    atoms.RemoveAtom(otherAtom);
-                    m_unbondedAtom.Element = otherAtom.Element;
+                    var removedAtoms = ArmController.RemoveAllExceptGrabbedAtom();
+                    m_unbondedAtom.Element = removedAtoms.Atoms.Single().Element;
                     m_unbondedAtom.Transform = otherAtomPosition;
                     GridState.RegisterAtom(otherAtomPosition.Position, m_unbondedAtom.Element, this);
                 }
