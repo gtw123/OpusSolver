@@ -165,6 +165,7 @@ namespace OpusSolver.Solver.LowCost
                     case Track track:
                         m_armArea.GridState.RegisterTrack(track);
                         break;
+                    // TODO: Register arms too
                 }
             }
         }

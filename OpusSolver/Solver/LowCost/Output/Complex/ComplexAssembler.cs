@@ -61,7 +61,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                 // Check that none of the output atoms overlap any other atoms
                 var atomPositions = builder1.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output1Transform));
-                if (atomPositions.Any(p => GridState.GetAtom(p) != null))
+                if (atomPositions.Any(p => GridState.CellContainsAnyObject(p)))
                 {
                     continue;
                 }
@@ -79,7 +79,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                     // Check that none of the output atoms overlap any other atoms
                     var atomPositions2 = builder2.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output2Transform));
-                    if (atomPositions2.Any(p => GridState.GetAtom(p) != null))
+                    if (atomPositions2.Any(p => GridState.CellContainsAnyObject(p)))
                     {
                         continue;
                     }

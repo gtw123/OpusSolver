@@ -97,5 +97,13 @@ namespace OpusSolver.Solver
         {
             return m_glyphs.TryGetValue(position, out var glyph) ? glyph : null;
         }
+
+        /// <summary>
+        /// Checks whether the specified grid cell contains a game object such as a glyph, reagent or track.
+        /// Ignores atoms.
+        public bool CellContainsAnyObject(Vector2 position)
+        {
+            return m_glyphs.ContainsKey(position) || m_reagents.ContainsKey(position) || m_tracks.ContainsKey(position);
+        }
     }
 }
