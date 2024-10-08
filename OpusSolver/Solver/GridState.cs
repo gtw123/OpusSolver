@@ -41,29 +41,7 @@ namespace OpusSolver.Solver
 
         public void RegisterGlyph(Glyph glyph)
         {
-            var glyphType = glyph.Type;
-
-            var cells = new List<Vector2> { new(0, 0) };
-            cells.AddRange(glyphType switch
-            {
-                GlyphType.Bonding => [new(1, 0)],
-                GlyphType.MultiBonding => [new(1, 0), new(0, -1), new(-1, 1)],
-                GlyphType.TriplexBonding => [new(1, 0), new(0, 1)],
-                GlyphType.Unbonding => [new(1, 0)],
-                GlyphType.Calcification => [],
-                GlyphType.Duplication => [new(1, 0)],
-                GlyphType.Projection => [new(1, 0)],
-                GlyphType.Purification => [new(1, 0), new(0, 1)],
-                GlyphType.Animismus => [new(1, 0), new(0, 1), new(1, -1)],
-                GlyphType.Disposal => [new(1, 0), new(0, 1), new(-1, 1), new(-1, 0), new(0, -1), new(1, -1)],
-                GlyphType.Equilibrium => [],
-                GlyphType.Unification => [new(0, 1), new(-1, 1), new(0, -1), new(1, -1)],
-                GlyphType.Dispersion => [new(1, 0), new(1, -1), new(0, -1), new(-1, 0)],
-                _ => throw new InvalidOperationException($"Unknown glyph type {glyphType}.")
-            });
-
-            var transform = glyph.GetWorldTransform();
-            foreach (var pos in cells.Select(c => transform.Apply(c)))
+            foreach (var pos in glyph.GetWorldCells())
             {
                 m_glyphs[pos] = glyph;
             }
