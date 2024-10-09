@@ -77,8 +77,7 @@ namespace OpusSolver.Solver.LowCost
         /// <param name="grabberLocalTransform">The target position and rotation</param>
         /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
         /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
-        /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change a grabbed atom</param>
-        public void MoveGrabberTo(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null, bool allowCalcification = false)
+        public void MoveGrabberTo(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null, ArmMovementOptions options = null)
         {
             var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
 
@@ -88,7 +87,7 @@ namespace OpusSolver.Solver.LowCost
                 targetArmTransform.Rotation += armRotationOffset.Value;
             }
 
-            var instructions = m_armPathFinder.FindPath(m_armTransform, targetArmTransform, m_grabbedAtoms, allowCalcification);
+            var instructions = m_armPathFinder.FindPath(m_armTransform, targetArmTransform, m_grabbedAtoms, options ?? new ArmMovementOptions());
             m_writer.Write(m_mainArm, instructions);
 
             if (m_grabbedAtoms != null)
@@ -104,8 +103,7 @@ namespace OpusSolver.Solver.LowCost
         /// </summary>
         /// <param name="targetTarget">The target position and rotation of the molecule</param>
         /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
-        /// <param name="allowCalcification">Whether the arm is allowed to pass over a glyph of calcification if it'll change a grabbed atom</param>
-        public void MoveAtomsTo(Transform2D targetTransform, GameObject relativeToObj = null, bool allowCalcification = false)
+        public void MoveAtomsTo(Transform2D targetTransform, GameObject relativeToObj = null, ArmMovementOptions options = null)
         {
             if (m_grabbedAtoms == null)
             {
@@ -114,7 +112,7 @@ namespace OpusSolver.Solver.LowCost
 
             targetTransform = relativeToObj?.GetWorldTransform().Apply(targetTransform) ?? targetTransform;
 
-            var (instructions, finalArmTransform) = m_armPathFinder.FindMoleculePath(m_armTransform, targetTransform, m_grabbedAtoms, allowCalcification);
+            var (instructions, finalArmTransform) = m_armPathFinder.FindMoleculePath(m_armTransform, targetTransform, m_grabbedAtoms, options ?? new ArmMovementOptions());
             m_writer.Write(m_mainArm, instructions);
 
             m_grabbedAtoms.WorldTransform = targetTransform;

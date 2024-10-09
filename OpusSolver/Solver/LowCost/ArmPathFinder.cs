@@ -28,11 +28,10 @@ namespace OpusSolver.Solver.LowCost
         private record class SearchParams(
             Func<ArmState, bool> IsAtTarget,
             Func<ArmState, int> CalculateHeuristic,
-            bool AllowPivot,
-            bool AllowCalcification
+            bool AllowPivot
         );
 
-        public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform, AtomCollection grabbedAtoms, bool allowCalcification)
+        public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform, AtomCollection grabbedAtoms, ArmMovementOptions options)
         {
             if (!m_trackCellsToIndexes.TryGetValue(startTransform.Position, out var startTrackIndex))
             {
@@ -49,8 +48,8 @@ namespace OpusSolver.Solver.LowCost
             bool IsAtTarget(ArmState state) => state.TrackIndex == endTrackIndex && state.ArmRotation == endTransform.Rotation;
             int CalculateDistanceHeuristic(ArmState state) => Math.Abs(endTrackIndex - state.TrackIndex) + endTransform.Rotation.DistanceTo(state.ArmRotation);
 
-            var searchParams = new SearchParams(IsAtTarget, CalculateDistanceHeuristic, false, allowCalcification);
-            var path = FindShortestPath(startState, grabbedAtoms, searchParams);
+            var searchParams = new SearchParams(IsAtTarget, CalculateDistanceHeuristic, AllowPivot: false);
+            var path = FindShortestPath(startState, grabbedAtoms, searchParams, options);
             if (path == null)
             {
                 throw new SolverException($"Cannot find path from {startTransform} to {endTransform}.");
@@ -60,7 +59,7 @@ namespace OpusSolver.Solver.LowCost
         }
 
         public (IEnumerable<Instruction> instructions, Transform2D finalArmTransform)
-            FindMoleculePath(Transform2D startArmTransform, Transform2D endMoleculeTransform, AtomCollection grabbedAtoms, bool allowCalcification)
+            FindMoleculePath(Transform2D startArmTransform, Transform2D endMoleculeTransform, AtomCollection grabbedAtoms, ArmMovementOptions options)
         {
             if (grabbedAtoms == null)
             {
@@ -74,20 +73,38 @@ namespace OpusSolver.Solver.LowCost
 
             var startState = new ArmState(startTrackIndex, startArmTransform.Rotation, grabbedAtoms.WorldTransform);
 
-            bool IsAtTarget(ArmState state) => state.MoleculeTransform == endMoleculeTransform;
-            
-            int CalculateDistanceHeuristic(ArmState state)
+            bool IsAtTarget(ArmState state)
             {
-                // Logically we'd include both the distance and rotation here, but empirical testing shows that
-                // using rotation only gives a shorter path (although it means we end up checking more states).
-                // TODO: Figure out why this is and if there's a better heuristic we could use. (It could be
-                // because the arm can only move along the track, not in arbitrary directions, but we don't
-                // know in advance which track location will end up being closest to the end molecule position.)
-                return /*endMoleculeTransform.Position.DistanceBetween(neighbor.MoleculeTransform.Position) + */ endMoleculeTransform.Rotation.DistanceTo(state.MoleculeTransform.Rotation);
+                if (grabbedAtoms.Atoms.Count > 1)
+                {
+                    return state.MoleculeTransform == endMoleculeTransform;
+                }
+                else
+                {
+                    // Ignore rotation for monoatomic molecules since they're completely symmetrical
+                    return state.MoleculeTransform.Position == endMoleculeTransform.Position;
+                }
             }
 
-            var searchParams = new SearchParams(IsAtTarget, CalculateDistanceHeuristic, true, allowCalcification);
-            var path = FindShortestPath(startState, grabbedAtoms, searchParams);
+            int CalculateDistanceHeuristic(ArmState state)
+            {
+                if (grabbedAtoms.Atoms.Count > 1)
+                {
+                    // Logically we'd include both the distance and rotation here, but empirical testing shows that
+                    // using rotation only gives a shorter path (although it means we end up checking more states).
+                    // TODO: Figure out why this is and if there's a better heuristic we could use. (It could be
+                    // because the arm can only move along the track, not in arbitrary directions, but we don't
+                    // know in advance which track location will end up being closest to the end molecule position.)
+                    return endMoleculeTransform.Rotation.DistanceTo(state.MoleculeTransform.Rotation);
+                }
+                else
+                {
+                    return endMoleculeTransform.Position.DistanceBetween(state.MoleculeTransform.Position);
+                }
+            }
+
+            var searchParams = new SearchParams(IsAtTarget, CalculateDistanceHeuristic, AllowPivot: true);
+            var path = FindShortestPath(startState, grabbedAtoms, searchParams, options);
             if (path == null)
             {
                 throw new SolverException($"Cannot find path from {startArmTransform} to {endMoleculeTransform}.");
@@ -110,7 +127,7 @@ namespace OpusSolver.Solver.LowCost
         /// Finds the shortest "path" to move/rotate an arm from one position to another.
         /// Uses the Uniform Cost Search algorithm.
         /// </summary>
-        private IEnumerable<ArmState> FindShortestPath(ArmState startState, AtomCollection grabbedAtoms, SearchParams searchParams)
+        private IEnumerable<ArmState> FindShortestPath(ArmState startState, AtomCollection grabbedAtoms, SearchParams searchParams, ArmMovementOptions options)
         {
             var previousState = new Dictionary<ArmState, ArmState> { { startState, null } };
             var costs = new Dictionary<ArmState, int> { { startState, 0 } };
@@ -123,7 +140,7 @@ namespace OpusSolver.Solver.LowCost
                 int newCost = costs[currentState] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    if (grabbedAtoms == null || IsMovementAllowed(currentState, neighbor, grabbedAtoms, searchParams.AllowCalcification))
+                    if (grabbedAtoms == null || IsMovementAllowed(currentState, neighbor, grabbedAtoms, options))
                     {
                         costs[neighbor] = newCost;
                         queue.Enqueue(neighbor, newCost + searchParams.CalculateHeuristic(neighbor));
@@ -204,7 +221,7 @@ namespace OpusSolver.Solver.LowCost
             return Enumerable.Reverse(path);
         }
 
-        private bool IsMovementAllowed(ArmState currentState, ArmState targetState, AtomCollection grabbedAtoms, bool allowCalcification)
+        private bool IsMovementAllowed(ArmState currentState, ArmState targetState, AtomCollection grabbedAtoms, ArmMovementOptions options)
         {
             foreach (var (atom, pos) in grabbedAtoms.GetTransformedAtomPositions(targetState.MoleculeTransform))
             {
@@ -213,9 +230,41 @@ namespace OpusSolver.Solver.LowCost
                     return false;
                 }
 
-                if (!allowCalcification && PeriodicTable.Cardinals.Contains(atom.Element) && m_gridState.GetGlyph(pos)?.Type == GlyphType.Calcification)
+                if (!options.AllowCalcification && PeriodicTable.Cardinals.Contains(atom.Element) && m_gridState.GetGlyph(pos)?.Type == GlyphType.Calcification)
                 {
                     return false;
+                }
+
+                var glyph = m_gridState.GetGlyph(pos);
+                if (glyph != null && glyph.Type == GlyphType.Bonding)
+                {
+                    // Check what's on top of the other cell of the bonder (if anything)
+                    var bonderCells = glyph.GetWorldCells();
+                    var otherPos = bonderCells[0] != pos ? bonderCells[0] : bonderCells[1];
+                    if (m_gridState.GetAtom(otherPos) != null)
+                    {
+                        // A static atom is on the other cell of the bonder
+                        if (!options.AllowExternalBonds)
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        var moleculeInverse = targetState.MoleculeTransform.Inverse();
+                        var otherAtomPos = moleculeInverse.Apply(otherPos);
+                        var otherAtom = grabbedAtoms.GetAtom(otherAtomPos);
+                        if (otherAtom != null)
+                        {
+                            // Another atom within the molecule is on the other cell of the bonder.
+                            // Check if these atoms are *not* already bonded.
+                            var bondDir = (otherAtomPos - moleculeInverse.Apply(pos)).ToRotation() ?? throw new InvalidOperationException($"Expected bonder cells {pos} and {otherPos} to be adjacent.");
+                            if (atom.Bonds[bondDir] == BondType.None && !options.AllowInternalBonds)
+                            {
+                                return false;
+                            }
+                        }
+                    }
                 }
             }
 

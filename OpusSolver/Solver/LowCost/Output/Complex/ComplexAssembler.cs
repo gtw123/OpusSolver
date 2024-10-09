@@ -159,7 +159,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     // Grab the previously dropped new atom and move it to the upper bonder position
                     ArmController.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
                     ArmController.GrabAtoms(newAtom);
-                    ArmController.MoveGrabberTo(UpperBonderPosition, this);
+                    ArmController.MoveGrabberTo(UpperBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
 
                     // Bond it to the other atoms
                     ArmController.BondAtomsTo(assembledAtoms, m_bonder);
@@ -180,7 +180,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     }
                     else
                     {
-                        ArmController.MoveGrabberTo(LowerBonderPosition, this);
+                        ArmController.MoveGrabberTo(LowerBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
                         ArmController.BondAtomsTo(assembledAtoms, m_bonder);
 
                         if (opIndex != operations.Count - 1)
