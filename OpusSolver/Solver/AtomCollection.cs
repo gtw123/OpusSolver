@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver
@@ -45,8 +46,34 @@ namespace OpusSolver.Solver
         {
             if (!m_atoms.Remove(atom))
             {
-                throw new System.ArgumentException("Cannot remove an atom that is not part of this AtomCollection.");
+                throw new ArgumentException("Cannot remove an atom that is not part of this AtomCollection.");
             }
+        }
+
+        public void AddBond(Vector2 atom1Pos, Vector2 atom2Pos)
+        {
+            var atom1 = GetAtom(atom1Pos) ?? throw new ArgumentException($"No atom found at {atom1Pos}.");
+            var atom2 = GetAtom(atom2Pos) ?? throw new ArgumentException($"No atom found at {atom2Pos}.");
+
+            if (atom1Pos.DistanceBetween(atom2Pos) != 1)
+            {
+                throw new ArgumentException($"Can't create bonds between non-adjacent atoms {atom1Pos} and {atom2Pos}.");
+            }
+
+            var bondDir1 = (atom2Pos - atom1Pos).ToRotation() ?? throw new InvalidOperationException($"Can't determine bond direction.");
+            if (atom1.Bonds[bondDir1] != BondType.None)
+            {
+                throw new InvalidOperationException($"Atom at {atom1Pos} already has a bond to {atom2Pos}.");
+            }
+
+            var bondDir2 = bondDir1 + HexRotation.R180;
+            if (atom2.Bonds[bondDir2] != BondType.None)
+            {
+                throw new InvalidOperationException($"Atom at {atom2Pos} already has a bond to {atom1Pos}.");
+            }
+
+            atom1.Bonds[bondDir1] = BondType.Single;
+            atom2.Bonds[bondDir2] = BondType.Single;
         }
 
         public IEnumerable<(Atom atom, Vector2 position)> GetWorldAtomPositions()

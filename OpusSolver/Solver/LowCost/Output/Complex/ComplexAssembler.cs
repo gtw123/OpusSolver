@@ -8,6 +8,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
     {
         private IEnumerable<MoleculeBuilder> m_builders;
         private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines;
+        private readonly Glyph m_bonder;
 
         private readonly Dictionary<int, Product> m_outputs = new();
 
@@ -28,7 +29,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         {
             m_builders = builders;
             m_assembleCoroutines = builders.ToDictionary(b => b.Product.ID, b => new LoopingCoroutine<object>(() => Assemble(b)));
-            new Glyph(this, LowerBonderPosition.Position, BondingDirection - HexRotation.R180, GlyphType.Bonding);
+            m_bonder = new Glyph(this, LowerBonderPosition.Position, BondingDirection - HexRotation.R180, GlyphType.Bonding);
         }
 
         public override void BeginSolution()
@@ -163,7 +164,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     ArmController.MoveGrabberTo(UpperBonderPosition, this);
 
                     // Bond it to the other atoms
-                    ArmController.BondAtomsTo(assembledAtoms);
+                    ArmController.BondAtomsTo(assembledAtoms, m_bonder);
                 }
                 else
                 {
@@ -182,7 +183,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     else
                     {
                         ArmController.MoveGrabberTo(LowerBonderPosition, this);
-                        ArmController.BondAtomsTo(assembledAtoms);
+                        ArmController.BondAtomsTo(assembledAtoms, m_bonder);
 
                         if (opIndex != operations.Count - 1)
                         {

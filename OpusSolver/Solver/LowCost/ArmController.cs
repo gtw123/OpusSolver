@@ -132,19 +132,33 @@ namespace OpusSolver.Solver.LowCost
             return atoms;
         }
 
-        public void BondAtomsTo(AtomCollection bondToAtoms)
+        /// <summary>
+        /// Bonds the grabbed atoms to another collection of atoms. The grabbed atoms will be added
+        /// to that collection.
+        /// </summary>
+        public void BondAtomsTo(AtomCollection bondToAtoms, Glyph bonder)
         {
             if (m_grabbedAtoms == null)
             {
                 throw new SolverException("Cannot bond atoms when not holding any.");
             }
 
+            if (bonder.Type != GlyphType.Bonding)
+            {
+                throw new SolverException($"{nameof(BondAtomsTo)} currently supports single bonders only.");
+            }
+
             m_gridState.UnregisterAtoms(bondToAtoms);
+
+            var bondToAtomsInverse = bondToAtoms.WorldTransform.Inverse();
             foreach (var (atom, pos) in m_grabbedAtoms.GetWorldAtomPositions())
             {
-                atom.Position = bondToAtoms.WorldTransform.Inverse().Apply(pos);
+                atom.Position = bondToAtomsInverse.Apply(pos);
                 bondToAtoms.AddAtom(atom);
             }
+
+            var bonderCells = bonder.GetWorldCells();
+            bondToAtoms.AddBond(bondToAtomsInverse.Apply(bonderCells[0]), bondToAtomsInverse.Apply(bonderCells[1]));
 
             m_grabbedAtoms = bondToAtoms;
         }
