@@ -28,13 +28,13 @@ namespace OpusSolver.Solver.LowCost
         {
             if (!m_hasSalt)
             {
-                ArmController.MoveGrabberTo(SaltInput1Transform, this);
+                ArmController.MoveAtomsTo(SaltInput1Transform, this);
                 ArmController.DropAtoms();
                 m_hasSalt = true;
             }
             else
             {
-                ArmController.MoveGrabberTo(SaltInput2Transform, this);
+                ArmController.MoveAtomsTo(SaltInput2Transform, this);
                 ArmController.DropAtoms(addToGrid: false);
                 GridState.UnregisterAtom(SaltInput1Transform.Position, this);
 

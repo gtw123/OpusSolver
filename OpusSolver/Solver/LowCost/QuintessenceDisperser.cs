@@ -29,7 +29,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmController.MoveGrabberTo(InputTransform, this);
+            ArmController.MoveAtomsTo(InputTransform, this);
             ArmController.DropAtoms(addToGrid: false);
 
             foreach (var cardinal in PeriodicTable.Cardinals)

@@ -27,13 +27,13 @@ namespace OpusSolver.Solver.LowCost
         {
             if (m_currentMetal == null)
             {
-                ArmController.MoveGrabberTo(MetalTransform, this);
+                ArmController.MoveAtomsTo(MetalTransform, this);
                 ArmController.DropAtoms();
                 m_currentMetal = element;
             }
             else
             {
-                ArmController.MoveGrabberTo(QuicksilverTransform, this);
+                ArmController.MoveAtomsTo(QuicksilverTransform, this);
                 ArmController.DropAtoms(addToGrid: false);
                 m_currentMetal++;
                 GridState.RegisterAtom(MetalTransform.Position, m_currentMetal, this);

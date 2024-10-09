@@ -52,7 +52,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmController.MoveGrabberTo(GrabPosition, this);
+            ArmController.MoveAtomsTo(GrabPosition, this);
             ArmController.DropAtoms(addToGrid: false);
 
             // If necessary, move the atom further down the atom chain so that all the atoms that need to be restored

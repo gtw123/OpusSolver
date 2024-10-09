@@ -29,7 +29,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmController.MoveGrabberTo(InputTransforms[m_cardinalCount], this);
+            ArmController.MoveAtomsTo(InputTransforms[m_cardinalCount], this);
             ArmController.DropAtoms();
 
             m_cardinalCount++;
