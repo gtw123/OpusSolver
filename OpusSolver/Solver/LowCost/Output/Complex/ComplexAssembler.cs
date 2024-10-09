@@ -148,14 +148,12 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     ArmController.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
                     ArmController.GrabAtoms(assembledAtoms);
 
-                    // Move them down to the lower bonder position
-                    ArmController.MoveGrabberTo(UpperBonderPosition, this);
-                    ArmController.MoveGrabberTo(LowerBonderPosition, this);
-
-                    // Rotate them to prepare for the bond
+                    // Move them down to the lower bonder position and rotate them to prepare for the bond
+                    var targetMoleculeTransform = ArmController.GetAtomsTransformForGrabberTransform(LowerBonderPosition, this);
                     var targetRotation = op.MoleculeRotation + HexRotation.R180;
-                    var requiredPivot = targetRotation - assembledAtoms.WorldTransform.Rotation;
-                    ArmController.PivotBy(requiredPivot, rotateClockwiseIf180Degrees: true);
+                    var requiredPivot = targetRotation - targetMoleculeTransform.Rotation;
+                    targetMoleculeTransform = targetMoleculeTransform.RotateAbout(GetWorldTransform().Apply(LowerBonderPosition.Position), requiredPivot);
+                    ArmController.MoveAtomsTo(targetMoleculeTransform);
                     ArmController.DropAtoms();
 
                     // Grab the previously dropped new atom and move it to the upper bonder position

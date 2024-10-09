@@ -39,6 +39,38 @@ namespace OpusSolver.Solver.LowCost
         public Vector2 GetGrabberPosition() => m_armTransform.Apply(new Vector2(ArmLength, 0));
 
         /// <summary>
+        /// Calculates what the world transform of the grabbed atoms would be if the grabber was moved from its
+        /// current transform to the specified transform.
+        /// </summary>
+        public Transform2D GetAtomsTransformForGrabberTransform(Transform2D grabberLocalTransform, GameObject relativeToObj = null)
+        {
+            if (m_grabbedAtoms == null)
+            {
+                throw new SolverException("Cannot calculate atoms transform when not holding any atoms.");
+            }
+
+            var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
+            var targetArmTransform = GrabberTransformToArmTransform(grabberWorldTransform);
+            return GetAtomsTransformForArmTransform(targetArmTransform);
+        }
+
+        /// <summary>
+        /// Calculates what the world transform of the grabbed atoms would be if the arm was moved from its
+        /// current transform to the specified transform.
+        /// </summary>
+        public Transform2D GetAtomsTransformForArmTransform(Transform2D armLocalTransform, GameObject relativeToObj = null)
+        {
+            if (m_grabbedAtoms == null)
+            {
+                throw new SolverException("Cannot calculate atoms transform when not holding any atoms.");
+            }
+
+            var targetArmTransform = relativeToObj?.GetWorldTransform().Apply(armLocalTransform) ?? armLocalTransform;
+            var relativeTransform = targetArmTransform.Apply(m_armTransform.Inverse());
+            return relativeTransform.Apply(m_grabbedAtoms.WorldTransform);
+        }
+
+        /// <summary>
         /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated the
         /// specified direction (in local coordinates of a specifed object).
         /// </summary>
@@ -50,22 +82,21 @@ namespace OpusSolver.Solver.LowCost
         {
             var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
 
-            var targetTransform = GrabberTransformToArmTransform(grabberWorldTransform);
+            var targetArmTransform = GrabberTransformToArmTransform(grabberWorldTransform);
             if (armRotationOffset != null)
             {
-                targetTransform.Rotation += armRotationOffset.Value;
+                targetArmTransform.Rotation += armRotationOffset.Value;
             }
 
-            var instructions = m_armPathFinder.FindPath(m_armTransform, targetTransform, m_grabbedAtoms, allowCalcification);
+            var instructions = m_armPathFinder.FindPath(m_armTransform, targetArmTransform, m_grabbedAtoms, allowCalcification);
             m_writer.Write(m_mainArm, instructions);
 
             if (m_grabbedAtoms != null)
             {
-                var relativeTransform = targetTransform.Apply(m_armTransform.Inverse());
-                m_grabbedAtoms.WorldTransform = relativeTransform.Apply(m_grabbedAtoms.WorldTransform);
+                m_grabbedAtoms.WorldTransform = GetAtomsTransformForArmTransform(targetArmTransform);
             }
 
-            m_armTransform = targetTransform;
+            m_armTransform = targetArmTransform;
         }
 
         /// <summary>

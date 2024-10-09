@@ -93,7 +93,7 @@ namespace OpusSolver.Solver.LowCost
                 throw new SolverException($"Cannot find path from {startArmTransform} to {endMoleculeTransform}.");
             }
 
-            return (GetInstructionsForPath(startState, path), GetArmTransform(path.Last()));
+            return (GetInstructionsForPath(startState, path), GetArmTransform(path.LastOrDefault() ?? startState));
         }
 
         private Vector2 GetGrabberPosition(ArmState armState)
