@@ -42,7 +42,7 @@ namespace OpusSolver.Solver.LowCost
         /// Calculates what the world transform of the grabbed atoms would be if the grabber was moved from its
         /// current transform to the specified transform.
         /// </summary>
-        public Transform2D GetAtomsTransformForGrabberTransform(Transform2D grabberLocalTransform, GameObject relativeToObj = null)
+        public Transform2D GetAtomsTransformForGrabberTransform(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null)
         {
             if (m_grabbedAtoms == null)
             {
@@ -51,14 +51,14 @@ namespace OpusSolver.Solver.LowCost
 
             var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
             var targetArmTransform = GrabberTransformToArmTransform(grabberWorldTransform);
-            return GetAtomsTransformForArmTransform(targetArmTransform);
+            return GetAtomsTransformForArmTransform(targetArmTransform, armRotationOffset: armRotationOffset);
         }
 
         /// <summary>
         /// Calculates what the world transform of the grabbed atoms would be if the arm was moved from its
         /// current transform to the specified transform.
         /// </summary>
-        public Transform2D GetAtomsTransformForArmTransform(Transform2D armLocalTransform, GameObject relativeToObj = null)
+        public Transform2D GetAtomsTransformForArmTransform(Transform2D armLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null)
         {
             if (m_grabbedAtoms == null)
             {
@@ -66,6 +66,11 @@ namespace OpusSolver.Solver.LowCost
             }
 
             var targetArmTransform = relativeToObj?.GetWorldTransform().Apply(armLocalTransform) ?? armLocalTransform;
+            if (armRotationOffset != null)
+            {
+                targetArmTransform.Rotation += armRotationOffset.Value;
+            }
+
             var relativeTransform = targetArmTransform.Apply(m_armTransform.Inverse());
             return relativeTransform.Apply(m_grabbedAtoms.WorldTransform);
         }

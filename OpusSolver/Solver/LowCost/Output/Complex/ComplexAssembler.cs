@@ -141,7 +141,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 if (isBondingUpsideDown)
                 {
                     // Stash the new atom "behind" the previously dropped atoms
-                    ArmController.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
+                    ArmController.MoveAtomsTo(ArmController.GetAtomsTransformForGrabberTransform(LowerBonderPosition, this, armRotationOffset: HexRotation.R120));
                     var newAtom = ArmController.DropAtoms();
 
                     // Grab the previously dropped atoms
@@ -159,16 +159,16 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     // Grab the previously dropped new atom and move it to the upper bonder position
                     ArmController.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
                     ArmController.GrabAtoms(newAtom);
-                    ArmController.MoveGrabberTo(UpperBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
 
                     // Bond it to the other atoms
+                    ArmController.MoveAtomsTo(ArmController.GetAtomsTransformForGrabberTransform(UpperBonderPosition, this), options: new ArmMovementOptions { AllowExternalBonds = true });
                     ArmController.BondAtomsTo(assembledAtoms, m_bonder);
                 }
                 else
                 {
                     if (opIndex == 0)
                     {
-                        ArmController.MoveGrabberTo(UpperBonderPosition, this);
+                        ArmController.MoveAtomsTo(UpperBonderPosition, this);
                         assembledAtoms = ArmController.GrabbedAtoms;
 
                         // Adjust the atom position so it matches the corresponding target molecule, but also update
@@ -180,7 +180,8 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     }
                     else
                     {
-                        ArmController.MoveGrabberTo(LowerBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
+                        ArmController.MoveAtomsTo(ArmController.GetAtomsTransformForGrabberTransform(LowerBonderPosition, this),
+                            options: new ArmMovementOptions { AllowExternalBonds = true });
                         ArmController.BondAtomsTo(assembledAtoms, m_bonder);
 
                         if (opIndex != operations.Count - 1)
