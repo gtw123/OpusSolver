@@ -87,7 +87,7 @@ namespace OpusSolver.Solver.LowCost
                 targetArmTransform.Rotation += armRotationOffset.Value;
             }
 
-            var instructions = m_armPathFinder.FindPath(m_armTransform, targetArmTransform, m_grabbedAtoms, options ?? new ArmMovementOptions());
+            var instructions = m_armPathFinder.FindArmPath(m_armTransform, targetArmTransform, m_grabbedAtoms, options ?? new ArmMovementOptions());
             m_writer.Write(m_mainArm, instructions);
 
             if (m_grabbedAtoms != null)

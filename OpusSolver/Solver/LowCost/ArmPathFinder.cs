@@ -31,7 +31,7 @@ namespace OpusSolver.Solver.LowCost
             bool AllowPivot
         );
 
-        public IEnumerable<Instruction> FindPath(Transform2D startTransform, Transform2D endTransform, AtomCollection grabbedAtoms, ArmMovementOptions options)
+        public IEnumerable<Instruction> FindArmPath(Transform2D startTransform, Transform2D endTransform, AtomCollection grabbedAtoms, ArmMovementOptions options)
         {
             if (!m_trackCellsToIndexes.TryGetValue(startTransform.Position, out var startTrackIndex))
             {
