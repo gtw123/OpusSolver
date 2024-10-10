@@ -46,7 +46,19 @@ namespace OpusSolver.Solver.LowCost
             var startState = new ArmState(startTrackIndex, startTransform.Rotation, grabbedAtoms?.WorldTransform ?? new Transform2D());
 
             bool IsAtTarget(ArmState state) => state.TrackIndex == endTrackIndex && state.ArmRotation == endTransform.Rotation;
-            int CalculateDistanceHeuristic(ArmState state) => Math.Abs(endTrackIndex - state.TrackIndex) + endTransform.Rotation.DistanceTo(state.ArmRotation);
+
+            int CalculateTrackDistance(int index1, int index2)
+            {
+                int distance = Math.Abs(index1 - index2);
+                if (m_isLoopingTrack)
+                {
+                    // On a looping track it may be shorter to go backwards and wraparound
+                    distance = Math.Min(distance, m_trackCells.Count - distance);
+                }
+                return distance;
+            }
+
+            int CalculateDistanceHeuristic(ArmState state) => CalculateTrackDistance(endTrackIndex, state.TrackIndex) + endTransform.Rotation.DistanceTo(state.ArmRotation);
 
             var searchParams = new SearchParams(IsAtTarget, CalculateDistanceHeuristic, AllowPivot: false);
             var path = FindShortestPath(startState, grabbedAtoms, searchParams, options);
