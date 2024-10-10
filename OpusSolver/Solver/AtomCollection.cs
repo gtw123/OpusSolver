@@ -86,10 +86,16 @@ namespace OpusSolver.Solver
             return Atoms.Select(a => (a, transform.Apply(a.Position)));
         }
 
-        public Atom GetAtomAtTransformedPosition(Vector2 position, GameObject relativeToObj = null)
+        public Atom GetAtomAtWorldPosition(Vector2 position, GameObject relativeToObj = null)
         {
             var worldPos = relativeToObj?.GetWorldTransform().Apply(position) ?? position;
             return GetAtom(WorldTransform.Inverse().Apply(worldPos));
+        }
+
+        public Atom GetAtomAtTransformedPosition(Transform2D transform, Vector2 position, GameObject relativeToObj = null)
+        {
+            var worldPos = relativeToObj?.GetWorldTransform().Apply(position) ?? position;
+            return GetAtom(transform.Inverse().Apply(worldPos));
         }
     }
 }

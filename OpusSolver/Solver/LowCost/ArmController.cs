@@ -205,7 +205,7 @@ namespace OpusSolver.Solver.LowCost
             }
 
             var grabberPosition = GetGrabberPosition();
-            var grabbedAtom = m_grabbedAtoms.GetAtomAtTransformedPosition(grabberPosition);
+            var grabbedAtom = m_grabbedAtoms.GetAtomAtWorldPosition(grabberPosition);
 
             m_grabbedAtoms.RemoveAtom(grabbedAtom);
             var droppedAtoms = m_grabbedAtoms;

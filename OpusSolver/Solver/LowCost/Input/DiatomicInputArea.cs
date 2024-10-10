@@ -170,7 +170,7 @@ namespace OpusSolver.Solver.LowCost.Input
                     // re-register the input atoms after we've dropped and then picked up atoms on top of the input.
                     disassembler.RegisterInputAtoms();
 
-                    if (ArmController.GrabbedAtoms.GetAtomAtTransformedPosition(ArmController.GetGrabberPosition()).Element == element)
+                    if (ArmController.GrabbedAtoms.GetAtomAtWorldPosition(ArmController.GetGrabberPosition()).Element == element)
                     {
                         ArmController.PivotClockwise();
                     }
@@ -189,7 +189,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 m_unbondedAtom = new StoredAtom { MoleculeID = id };
 
                 var atoms = ArmController.GrabbedAtoms;
-                var grabbedAtom = atoms.GetAtomAtTransformedPosition(targetGrabberPosition.Position, this);
+                var grabbedAtom = atoms.GetAtomAtWorldPosition(targetGrabberPosition.Position, this);
                 if (grabbedAtom.Element == element)
                 {
                     // Keep hold of the atom we've currently got

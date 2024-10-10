@@ -36,7 +36,7 @@ namespace OpusSolver.Solver.LowCost
         {
             ArmController.MoveAtomsTo(DuplicatorTransform, this);
             m_controller.RotateToElement(element);
-            ArmController.GrabbedAtoms.GetAtomAtTransformedPosition(DuplicatorTransform.Position, this).Element = element;
+            ArmController.GrabbedAtoms.GetAtomAtWorldPosition(DuplicatorTransform.Position, this).Element = element;
         }
 
         public override void PassThrough(Element element)
