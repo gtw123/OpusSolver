@@ -153,7 +153,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                     // Grab the previously dropped new atom and bond it to the assembled molecule
                     ArmController.SetMoleculeToGrab(newAtom);
-                    ArmController.MoveGrabberTo(UpperBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
+                    ArmController.MoveMoleculeTo(UpperBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
                     ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
                 }
                 else
