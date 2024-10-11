@@ -54,8 +54,7 @@ namespace OpusSolver.Solver.LowCost
                 _ => throw new SolverException($"{nameof(MorsVitaeGenerator)} can only generate Mors and Vitae but {element} was requested.")
             };
 
-            ArmController.MoveGrabberTo(transform, this);
-            ArmController.GrabAtoms(new AtomCollection(element, transform, this));
+            ArmController.SetAtomsToGrab(new AtomCollection(element, transform, this));
         }
     }
 }

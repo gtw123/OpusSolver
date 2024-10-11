@@ -47,8 +47,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmController.MoveGrabberTo(OutputTransform, this);
-            ArmController.GrabAtoms(new AtomCollection(element, OutputTransform, this));
+            ArmController.SetAtomsToGrab(new AtomCollection(element, OutputTransform, this));
         }
     }
 }

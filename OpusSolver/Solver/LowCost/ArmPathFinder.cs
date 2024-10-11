@@ -23,12 +23,13 @@ namespace OpusSolver.Solver.LowCost
             m_collisionDetector = collisionDetector;
         }
 
-        private record class ArmState(int TrackIndex, HexRotation ArmRotation, Transform2D MoleculeTransform);
+        private record class ArmState(int TrackIndex, HexRotation ArmRotation, Transform2D MoleculeTransform, bool AreAtomsGrabbed);
 
         private record class SearchParams(
             Func<ArmState, bool> IsAtTarget,
             Func<ArmState, int> CalculateHeuristic,
-            bool AllowPivot
+            bool AllowPivot,
+            bool AllowGrabDrop
         );
 
         public IEnumerable<Instruction> FindArmPath(Transform2D startTransform, Transform2D endTransform, AtomCollection grabbedAtoms, ArmMovementOptions options)
@@ -43,9 +44,9 @@ namespace OpusSolver.Solver.LowCost
                 throw new SolverException($"Ending position {endTransform.Position} is not on the track.");
             }
 
-            var startState = new ArmState(startTrackIndex, startTransform.Rotation, grabbedAtoms?.WorldTransform ?? new Transform2D());
+            var startState = new ArmState(startTrackIndex, startTransform.Rotation, grabbedAtoms?.WorldTransform ?? new Transform2D(), grabbedAtoms != null);
 
-            bool IsAtTarget(ArmState state) => state.TrackIndex == endTrackIndex && state.ArmRotation == endTransform.Rotation;
+            bool IsAtTarget(ArmState state) => state.TrackIndex == endTrackIndex && state.ArmRotation == endTransform.Rotation && state.AreAtomsGrabbed == (grabbedAtoms != null);
 
             int CalculateTrackDistance(int index1, int index2)
             {
@@ -60,7 +61,7 @@ namespace OpusSolver.Solver.LowCost
 
             int CalculateDistanceHeuristic(ArmState state) => CalculateTrackDistance(endTrackIndex, state.TrackIndex) + endTransform.Rotation.DistanceTo(state.ArmRotation);
 
-            var searchParams = new SearchParams(IsAtTarget, CalculateDistanceHeuristic, AllowPivot: false);
+            var searchParams = new SearchParams(IsAtTarget, CalculateDistanceHeuristic, AllowPivot: false, AllowGrabDrop: false);
             var path = FindShortestPath(startState, grabbedAtoms, searchParams, options);
             if (path == null)
             {
@@ -71,7 +72,7 @@ namespace OpusSolver.Solver.LowCost
         }
 
         public (IEnumerable<Instruction> instructions, Transform2D finalArmTransform)
-            FindMoleculePath(Transform2D startArmTransform, Transform2D endMoleculeTransform, AtomCollection grabbedAtoms, ArmMovementOptions options)
+            FindMoleculePath(Transform2D startArmTransform, Transform2D endMoleculeTransform, AtomCollection grabbedAtoms, bool areAtomsGrabbed, ArmMovementOptions options)
         {
             if (grabbedAtoms == null)
             {
@@ -83,10 +84,15 @@ namespace OpusSolver.Solver.LowCost
                 throw new SolverException($"Starting position {startArmTransform.Position} is not on the track.");
             }
 
-            var startState = new ArmState(startTrackIndex, startArmTransform.Rotation, grabbedAtoms.WorldTransform);
+            var startState = new ArmState(startTrackIndex, startArmTransform.Rotation, grabbedAtoms.WorldTransform, areAtomsGrabbed);
 
             bool IsAtTarget(ArmState state)
             {
+                if (!state.AreAtomsGrabbed)
+                {
+                    return false;
+                }
+
                 if (grabbedAtoms.Atoms.Count > 1)
                 {
                     return state.MoleculeTransform == endMoleculeTransform;
@@ -100,6 +106,7 @@ namespace OpusSolver.Solver.LowCost
 
             int CalculateDistanceHeuristic(ArmState state)
             {
+                int result;
                 if (grabbedAtoms.Atoms.Count > 1)
                 {
                     // Logically we'd include both the distance and rotation here, but empirical testing shows that
@@ -107,15 +114,22 @@ namespace OpusSolver.Solver.LowCost
                     // TODO: Figure out why this is and if there's a better heuristic we could use. (It could be
                     // because the arm can only move along the track, not in arbitrary directions, but we don't
                     // know in advance which track location will end up being closest to the end molecule position.)
-                    return endMoleculeTransform.Rotation.DistanceTo(state.MoleculeTransform.Rotation);
+                    result = endMoleculeTransform.Rotation.DistanceTo(state.MoleculeTransform.Rotation);
                 }
                 else
                 {
-                    return endMoleculeTransform.Position.DistanceBetween(state.MoleculeTransform.Position);
+                    result = endMoleculeTransform.Position.DistanceBetween(state.MoleculeTransform.Position);
                 }
+
+                if (!state.AreAtomsGrabbed)
+                {
+                    result++;
+                }
+
+                return result;
             }
 
-            var searchParams = new SearchParams(IsAtTarget, CalculateDistanceHeuristic, AllowPivot: true);
+            var searchParams = new SearchParams(IsAtTarget, CalculateDistanceHeuristic, AllowPivot: true, AllowGrabDrop: true);
             var path = FindShortestPath(startState, grabbedAtoms, searchParams, options);
             if (path == null)
             {
@@ -152,7 +166,7 @@ namespace OpusSolver.Solver.LowCost
                 int newCost = costs[currentState] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    if (grabbedAtoms == null || IsMovementAllowed(currentState, neighbor, grabbedAtoms, options))
+                    if (grabbedAtoms == null || !neighbor.AreAtomsGrabbed || IsMovementAllowed(currentState, neighbor, grabbedAtoms, options))
                     {
                         costs[neighbor] = newCost;
                         queue.Enqueue(neighbor, newCost + searchParams.CalculateHeuristic(neighbor));
@@ -169,52 +183,97 @@ namespace OpusSolver.Solver.LowCost
                     break;
                 }
 
-                var currentArmPos = m_trackCells[currentState.TrackIndex];
-                if (currentState.TrackIndex < m_trackCells.Count - 1)
+                if (currentState.AreAtomsGrabbed)
                 {
-                    var newArmPos = m_trackCells[currentState.TrackIndex + 1];
-                    AddNeighbor(new ArmState(currentState.TrackIndex + 1, currentState.ArmRotation, currentState.MoleculeTransform.OffsetBy(newArmPos - currentArmPos)));
-                }
-                else if (m_isLoopingTrack)
-                {
-                    var newArmPos = m_trackCells[0];
-                    AddNeighbor(new ArmState(0, currentState.ArmRotation, currentState.MoleculeTransform.OffsetBy(newArmPos - currentArmPos)));
-                }
+                    var currentArmPos = m_trackCells[currentState.TrackIndex];
+                    if (currentState.TrackIndex < m_trackCells.Count - 1)
+                    {
+                        var newArmPos = m_trackCells[currentState.TrackIndex + 1];
+                        AddNeighbor(new ArmState(currentState.TrackIndex + 1, currentState.ArmRotation, currentState.MoleculeTransform.OffsetBy(newArmPos - currentArmPos), currentState.AreAtomsGrabbed));
+                    }
+                    else if (m_isLoopingTrack)
+                    {
+                        var newArmPos = m_trackCells[0];
+                        AddNeighbor(new ArmState(0, currentState.ArmRotation, currentState.MoleculeTransform.OffsetBy(newArmPos - currentArmPos), currentState.AreAtomsGrabbed));
+                    }
 
-                if (currentState.TrackIndex > 0)
-                {
-                    var newArmPos = m_trackCells[currentState.TrackIndex - 1];
-                    AddNeighbor(new ArmState(currentState.TrackIndex - 1, currentState.ArmRotation, currentState.MoleculeTransform.OffsetBy(newArmPos - currentArmPos)));
-                }
-                else if (m_isLoopingTrack)
-                {
-                    var newArmPos = m_trackCells[m_trackCells.Count - 1];
-                    AddNeighbor(new ArmState(m_trackCells.Count - 1, currentState.ArmRotation, currentState.MoleculeTransform.OffsetBy(newArmPos - currentArmPos)));
-                }
+                    if (currentState.TrackIndex > 0)
+                    {
+                        var newArmPos = m_trackCells[currentState.TrackIndex - 1];
+                        AddNeighbor(new ArmState(currentState.TrackIndex - 1, currentState.ArmRotation, currentState.MoleculeTransform.OffsetBy(newArmPos - currentArmPos), currentState.AreAtomsGrabbed));
+                    }
+                    else if (m_isLoopingTrack)
+                    {
+                        var newArmPos = m_trackCells[m_trackCells.Count - 1];
+                        AddNeighbor(new ArmState(m_trackCells.Count - 1, currentState.ArmRotation, currentState.MoleculeTransform.OffsetBy(newArmPos - currentArmPos), currentState.AreAtomsGrabbed));
+                    }
 
-                // Rotate
-                if (grabbedAtoms != null && grabbedAtoms.Atoms.Count > 1)
-                {
-                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Counterclockwise(), currentState.MoleculeTransform.RotateAbout(currentArmPos, HexRotation.R60)));
-                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Clockwise(), currentState.MoleculeTransform.RotateAbout(currentArmPos, -HexRotation.R60)));
+                    // Rotate
+                    if (grabbedAtoms.Atoms.Count > 1)
+                    {
+                        AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Counterclockwise(), currentState.MoleculeTransform.RotateAbout(currentArmPos, HexRotation.R60), currentState.AreAtomsGrabbed));
+                        AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Clockwise(), currentState.MoleculeTransform.RotateAbout(currentArmPos, -HexRotation.R60), currentState.AreAtomsGrabbed));
+                    }
+                    else
+                    {
+                        // Adjust only the position of the molecule transform, not the rotation too, because the molecule (if any) is symmetric
+                        // and so we don't need to consider two different molecule rotations as different states.
+                        var newTransform = new Transform2D(currentState.MoleculeTransform.Position.RotateAbout(currentArmPos, HexRotation.R60), currentState.MoleculeTransform.Rotation);
+                        AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Counterclockwise(), newTransform, currentState.AreAtomsGrabbed));
+
+                        newTransform = new Transform2D(currentState.MoleculeTransform.Position.RotateAbout(currentArmPos, -HexRotation.R60), currentState.MoleculeTransform.Rotation);
+                        AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Clockwise(), newTransform, currentState.AreAtomsGrabbed));
+                    }
+
+                    // Pivot
+                    if (searchParams.AllowPivot && grabbedAtoms.Atoms.Count > 1)
+                    {
+                        var grabberPosition = GetGrabberPosition(currentState);
+                        AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation, currentState.MoleculeTransform.RotateAbout(grabberPosition, HexRotation.R60), currentState.AreAtomsGrabbed));
+                        AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation, currentState.MoleculeTransform.RotateAbout(grabberPosition, -HexRotation.R60), currentState.AreAtomsGrabbed));
+                    }
+
+                    // Drop the molecule
+                    if (searchParams.AllowGrabDrop)
+                    {
+                        AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation, currentState.MoleculeTransform, AreAtomsGrabbed: false));
+                    }
                 }
                 else
                 {
-                    // Adjust only the position of the molecule transform, not the rotation too, because the molecule (if any) is symmetric
-                    // and so we don't need to consider two different molecule rotations as different states.
-                    var newTransform = new Transform2D(currentState.MoleculeTransform.Position.RotateAbout(currentArmPos, HexRotation.R60), currentState.MoleculeTransform.Rotation);
-                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Counterclockwise(), newTransform));
+                    // No atoms are grabbed, so don't update any molecule transforms
+                    if (currentState.TrackIndex < m_trackCells.Count - 1)
+                    {
+                        AddNeighbor(new ArmState(currentState.TrackIndex + 1, currentState.ArmRotation, currentState.MoleculeTransform, currentState.AreAtomsGrabbed));
+                    }
+                    else if (m_isLoopingTrack)
+                    {
+                        AddNeighbor(new ArmState(0, currentState.ArmRotation, currentState.MoleculeTransform, currentState.AreAtomsGrabbed));
+                    }
 
-                    newTransform = new Transform2D(currentState.MoleculeTransform.Position.RotateAbout(currentArmPos, -HexRotation.R60), currentState.MoleculeTransform.Rotation);
-                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Clockwise(), newTransform));
-                }
+                    if (currentState.TrackIndex > 0)
+                    {
+                        AddNeighbor(new ArmState(currentState.TrackIndex - 1, currentState.ArmRotation, currentState.MoleculeTransform, currentState.AreAtomsGrabbed));
+                    }
+                    else if (m_isLoopingTrack)
+                    {
+                        AddNeighbor(new ArmState(m_trackCells.Count - 1, currentState.ArmRotation, currentState.MoleculeTransform, currentState.AreAtomsGrabbed));
+                    }
 
-                // Pivot
-                if (searchParams.AllowPivot && grabbedAtoms != null && grabbedAtoms.Atoms.Count > 1)
-                {
-                    var grabberPosition = GetGrabberPosition(currentState);
-                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation, currentState.MoleculeTransform.RotateAbout(grabberPosition, HexRotation.R60)));
-                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation, currentState.MoleculeTransform.RotateAbout(grabberPosition, -HexRotation.R60)));
+                    // Rotate
+                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Counterclockwise(), currentState.MoleculeTransform, currentState.AreAtomsGrabbed));
+                    AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation.Rotate60Clockwise(), currentState.MoleculeTransform, currentState.AreAtomsGrabbed));
+
+                    // Grab
+                    if (searchParams.AllowGrabDrop && grabbedAtoms != null)
+                    {
+                        // Check if there's an atom of the molecule to pick up here
+                        var grabberPosition = GetGrabberPosition(currentState);
+                        if (grabbedAtoms.GetAtomAtTransformedPosition(currentState.MoleculeTransform, grabberPosition) != null)
+                        {
+                            AddNeighbor(new ArmState(currentState.TrackIndex, currentState.ArmRotation, currentState.MoleculeTransform, AreAtomsGrabbed: true));
+                        }
+                    }
                 }
             }
 
@@ -235,6 +294,13 @@ namespace OpusSolver.Solver.LowCost
 
         private bool IsMovementAllowed(ArmState currentState, ArmState targetState, AtomCollection grabbedAtoms, ArmMovementOptions options)
         {
+            if (currentState.TrackIndex == targetState.TrackIndex && currentState.MoleculeTransform == targetState.MoleculeTransform)
+            {
+                // If the arm and atoms aren't moving, there's nothing to check. This includes the case where we're picking up
+                // or dropping atoms.
+                return true;
+            }
+
             foreach (var (atom, pos) in grabbedAtoms.GetTransformedAtomPositions(targetState.MoleculeTransform))
             {
                 if (m_gridState.GetAtom(pos) != null)
@@ -341,6 +407,10 @@ namespace OpusSolver.Solver.LowCost
                 {
                     var deltaRots = previousState.MoleculeTransform.Rotation.CalculateDeltaRotationsTo(state.MoleculeTransform.Rotation);
                     instructions.AddRange(deltaRots.ToPivotInstructions());
+                }
+                else if (state.AreAtomsGrabbed != previousState.AreAtomsGrabbed)
+                {
+                    instructions.Add(state.AreAtomsGrabbed ? Instruction.Grab : Instruction.Drop);
                 }
                 else
                 {

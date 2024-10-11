@@ -65,21 +65,18 @@ namespace OpusSolver.Solver.LowCost
                     var storageLocation = m_storageLocations[metalIndex];
                     if (storageLocation.Atom == null)
                     {
-                        ArmController.MoveGrabberTo(OutputTransform, this);
                         storageLocation.Atom = new AtomCollection(newMetal, OutputTransform, this);
-                        ArmController.GrabAtoms(storageLocation.Atom);
+                        ArmController.SetAtomsToGrab(storageLocation.Atom);
                         ArmController.MoveAtomsTo(storageLocation.Transform, this);
                         ArmController.DropAtoms();
                         break;
                     }
 
-                    ArmController.MoveGrabberTo(storageLocation.Transform, this);
-                    ArmController.GrabAtoms(storageLocation.Atom);
+                    ArmController.SetAtomsToGrab(storageLocation.Atom);
                     ArmController.MoveAtomsTo(Input2Transform, this);
                     ArmController.DropAtoms();
 
-                    ArmController.MoveGrabberTo(OutputTransform, this);
-                    ArmController.GrabAtoms(new AtomCollection(newMetal, OutputTransform, this));
+                    ArmController.SetAtomsToGrab(new AtomCollection(newMetal, OutputTransform, this));
                     ArmController.MoveAtomsTo(Input1Transform, this);
                     ArmController.DropAtoms();
 
@@ -98,8 +95,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmController.MoveGrabberTo(OutputTransform, this);
-            ArmController.GrabAtoms(new AtomCollection(element, OutputTransform, this));
+            ArmController.SetAtomsToGrab(new AtomCollection(element, OutputTransform, this));
         }
     }
 }

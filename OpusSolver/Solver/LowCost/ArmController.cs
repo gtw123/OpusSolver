@@ -13,6 +13,7 @@ namespace OpusSolver.Solver.LowCost
 
         private Transform2D m_armTransform;
         private AtomCollection m_grabbedAtoms;
+        private AtomCollection m_atomsToGrab;
 
         public Transform2D ArmTransform => m_armTransform;
         public AtomCollection GrabbedAtoms => m_grabbedAtoms;
@@ -37,6 +38,11 @@ namespace OpusSolver.Solver.LowCost
         }
 
         public Vector2 GetGrabberPosition() => m_armTransform.Apply(new Vector2(ArmLength, 0));
+
+        public Transform2D GetRotatedGrabberTransform(Transform2D grabberTransform, HexRotation armRotationOffset)
+        {
+            return grabberTransform.RotateAbout(grabberTransform.Position - new Vector2(ArmLength, 0), armRotationOffset);
+        }
 
         /// <summary>
         /// Calculates what the world transform of the grabbed atoms would be if the grabber was moved from its
@@ -75,8 +81,18 @@ namespace OpusSolver.Solver.LowCost
             return relativeTransform.Apply(m_grabbedAtoms.WorldTransform);
         }
 
+        public void SetAtomsToGrab(AtomCollection atoms)
+        {
+            if (m_grabbedAtoms != null)
+            {
+                throw new SolverException("Cannot set atoms to grab when already holding some.");
+            }
+
+            m_atomsToGrab = atoms;
+        }
+
         /// <summary>
-        /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated the
+        /// Moves the main arm so that its grabber will be at the specified position and the arm will rotated in the
         /// specified direction (in local coordinates of a specifed object).
         /// </summary>
         /// <param name="grabberLocalTransform">The target position and rotation</param>
@@ -85,6 +101,18 @@ namespace OpusSolver.Solver.LowCost
         public void MoveGrabberTo(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null, ArmMovementOptions options = null)
         {
             var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
+
+            if (m_atomsToGrab != null)
+            {
+                if (m_atomsToGrab.Atoms.Count != 1)
+                {
+                    // If there's more than one atom then it's ambiguous where it's supposed to be moved to
+                    throw new SolverException("Cannot call MoveGrabberTo with more than one atom to grab. Use MoveAtomsTo instead.");
+                }
+
+                MoveAtomsTo(grabberWorldTransform, options: options);
+                return;
+            }
 
             var targetArmTransform = GrabberTransformToArmTransform(grabberWorldTransform);
             if (armRotationOffset != null)
@@ -110,18 +138,27 @@ namespace OpusSolver.Solver.LowCost
         /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
         public void MoveAtomsTo(Transform2D targetTransform, GameObject relativeToObj = null, ArmMovementOptions options = null)
         {
-            if (m_grabbedAtoms == null)
+            if (m_grabbedAtoms == null && m_atomsToGrab == null)
             {
-                throw new SolverException("Cannot move atoms when not holding any.");
+                throw new SolverException("Cannot move atoms when not holding any or SetAtomsToGrab has not been called.");
             }
 
             targetTransform = relativeToObj?.GetWorldTransform().Apply(targetTransform) ?? targetTransform;
 
-            var (instructions, finalArmTransform) = m_armPathFinder.FindMoleculePath(m_armTransform, targetTransform, m_grabbedAtoms, options ?? new ArmMovementOptions());
+            var atomsToMove = m_grabbedAtoms ?? m_atomsToGrab;
+            bool alreadyGrabbed = m_grabbedAtoms != null;
+            if (!alreadyGrabbed)
+            {
+                m_gridState.UnregisterAtoms(atomsToMove);
+            }
+
+            var (instructions, finalArmTransform) = m_armPathFinder.FindMoleculePath(m_armTransform, targetTransform, atomsToMove, alreadyGrabbed, options ?? new ArmMovementOptions());
             m_writer.Write(m_mainArm, instructions);
 
+            m_grabbedAtoms = atomsToMove;
             m_grabbedAtoms.WorldTransform = targetTransform;
             m_armTransform = finalArmTransform;
+            m_atomsToGrab = null;
         }
 
         public void GrabAtoms(AtomCollection atoms, bool removeFromGrid = true)
@@ -143,6 +180,7 @@ namespace OpusSolver.Solver.LowCost
             }
 
             m_grabbedAtoms = atoms;
+            m_atomsToGrab = null;
             m_writer.Write(m_mainArm, Instruction.Grab);
         }
 
@@ -303,6 +341,8 @@ namespace OpusSolver.Solver.LowCost
                 m_gridState.RegisterAtoms(m_grabbedAtoms);
                 m_grabbedAtoms = null;
             }
+
+            m_atomsToGrab = null;
         }
     }
 }

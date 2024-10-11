@@ -141,7 +141,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 if (isBondingUpsideDown)
                 {
                     // Stash the new atom "behind" the previously dropped atoms
-                    ArmController.MoveAtomsTo(ArmController.GetAtomsTransformForGrabberTransform(LowerBonderPosition, this, armRotationOffset: HexRotation.R120));
+                    ArmController.MoveAtomsTo(ArmController.GetRotatedGrabberTransform(LowerBonderPosition, HexRotation.R120), this);
                     var newAtom = ArmController.DropAtoms();
 
                     // Grab the previously dropped atoms
@@ -180,8 +180,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     }
                     else
                     {
-                        ArmController.MoveAtomsTo(ArmController.GetAtomsTransformForGrabberTransform(LowerBonderPosition, this),
-                            options: new ArmMovementOptions { AllowExternalBonds = true });
+                        ArmController.MoveAtomsTo(LowerBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
                         ArmController.BondAtomsTo(assembledAtoms, m_bonder);
 
                         if (opIndex != operations.Count - 1)
