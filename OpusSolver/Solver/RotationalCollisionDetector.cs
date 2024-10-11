@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver
@@ -61,7 +62,7 @@ namespace OpusSolver.Solver
         /// <returns>True if any of the atoms will collide; false otherwise</returns>
         public bool WillAtomsCollideWhileRotating(AtomCollection atoms, Transform2D currentAtomsTransform, Vector2 armPosition, HexRotation deltaRotation)
         {
-            return atoms.GetTransformedAtomPositions(currentAtomsTransform).Any(p => WillAtomCollide(p.position, armPosition, armPosition, deltaRotation));
+            return WillAtomsCollide(atoms.GetTransformedAtomPositions(currentAtomsTransform), armPosition, armPosition, deltaRotation);
         }
 
         /// <summary>
@@ -76,10 +77,16 @@ namespace OpusSolver.Solver
         /// <returns>True if any of the atoms will collide; false otherwise</returns>
         public bool WillAtomsCollideWhilePivoting(AtomCollection atoms, Transform2D currentAtomsTransform, Vector2 armPosition, Vector2 grabberPosition, HexRotation deltaRotation)
         {
-            return atoms.GetTransformedAtomPositions(currentAtomsTransform).Any(p => WillAtomCollide(p.position, armPosition, grabberPosition, deltaRotation));
+            return WillAtomsCollide(atoms.GetTransformedAtomPositions(currentAtomsTransform), armPosition, grabberPosition, deltaRotation);
         }
 
-        private bool WillAtomCollide(Vector2 atomPos, Vector2 armPosition, Vector2 rotationCenter, HexRotation deltaRotation)
+        private bool WillAtomsCollide(IEnumerable<(Atom atom, Vector2 position)> atomPositions, Vector2 armPosition, Vector2 rotationCenter, HexRotation deltaRotation)
+        {
+            var collidableAtomPositions = m_gridState.GetAllCollidableAtomPositions(atomPositions.Select(p => p.position)).ToArray();
+            return atomPositions.Any(p => WillAtomCollide(p.position, armPosition, rotationCenter, deltaRotation, collidableAtomPositions));
+        }
+
+        private bool WillAtomCollide(Vector2 atomPos, Vector2 armPosition, Vector2 rotationCenter, HexRotation deltaRotation, IEnumerable<Vector2> collidableAtomPositions)
         {
             if (deltaRotation != HexRotation.R60 && deltaRotation != HexRotation.R300)
             {
@@ -122,7 +129,7 @@ namespace OpusSolver.Solver
                 return false;
             }
 
-            if (m_gridState.GetAllAtomPositions().Any(pos => WillAtomCollideWithObject(pos, AtomRadius)))
+            if (collidableAtomPositions.Any(pos => WillAtomCollideWithObject(pos, AtomRadius)))
             {
                 return true;
             }

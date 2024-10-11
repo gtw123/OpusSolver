@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver.Solver
@@ -49,8 +48,7 @@ namespace OpusSolver.Solver
 
         public void RegisterReagent(Reagent reagent)
         {
-            var transform = reagent.GetWorldTransform();
-            foreach (var pos in reagent.Molecule.Atoms.Select(a => transform.Apply(a.Position)))
+            foreach (var pos in reagent.GetWorldCells())
             {
                 m_reagents[pos] = reagent;
             }
@@ -69,7 +67,19 @@ namespace OpusSolver.Solver
             return m_atoms.TryGetValue(position, out var element) ? element : null;
         }
 
-        public IEnumerable<Vector2> GetAllAtomPositions() => m_atoms.Keys;
+        /// <summary>
+        /// Gets the locations of all atoms in the grid, including static atoms and atoms from reagents,
+        /// but excluding suppressed reagents.
+        /// </summary>
+        public IEnumerable<Vector2> GetAllCollidableAtomPositions(IEnumerable<Vector2> grabbedAtoms)
+        {
+            // Find all the reagents that have atoms on top of them, then get all their cells
+            var coveredReagentPositions = m_reagents.Keys.Intersect(m_atoms.Keys.Concat(grabbedAtoms));
+            var suppressedReagents = coveredReagentPositions.Select(p => m_reagents[p]).Distinct();
+            var suppressedReagentPositions = suppressedReagents.SelectMany(r => r.GetWorldCells());
+
+            return m_atoms.Keys.Concat(m_reagents.Keys).Except(suppressedReagentPositions);
+        }
 
         public Glyph GetGlyph(Vector2 position)
         {

@@ -301,9 +301,11 @@ namespace OpusSolver.Solver.LowCost
                 return true;
             }
 
+            var collidableAtomPositions = new HashSet<Vector2>(m_gridState.GetAllCollidableAtomPositions(moleculeToMove.GetTransformedAtomPositions(currentState.MoleculeTransform).Select(p => p.position)));
+
             foreach (var (atom, pos) in moleculeToMove.GetTransformedAtomPositions(targetState.MoleculeTransform))
             {
-                if (m_gridState.GetAtom(pos) != null)
+                if (collidableAtomPositions.Contains(pos))
                 {
                     return false;
                 }

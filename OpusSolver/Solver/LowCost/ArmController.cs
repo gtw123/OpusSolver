@@ -125,7 +125,7 @@ namespace OpusSolver.Solver.LowCost
             m_moleculeToGrab = null;
         }
 
-        public void GrabMolecule(AtomCollection molecule, bool removeFromGrid = true)
+        public void GrabMolecule(AtomCollection molecule)
         {
             if (m_grabbedMolecule != null)
             {
@@ -138,10 +138,7 @@ namespace OpusSolver.Solver.LowCost
                 throw new SolverException($"Cannot grab a molecule as no atom is located at the current grabber position {grabberPosition}.");
             }
 
-            if (removeFromGrid)
-            {
-                m_gridState.UnregisterMolecule(molecule);
-            }
+            m_gridState.UnregisterMolecule(molecule);
 
             m_grabbedMolecule = molecule;
             m_moleculeToGrab = null;

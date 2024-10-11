@@ -166,10 +166,6 @@ namespace OpusSolver.Solver.LowCost.Input
                     transform.Position.X -= 1;
                     ArmController.MoveGrabberTo(transform, this);
 
-                    // Because we don't currently handle input suppression automatically, we need to manually
-                    // re-register the input atoms after we've dropped and then picked up atoms on top of the input.
-                    disassembler.RegisterInputAtoms();
-
                     if (ArmController.GrabbedMolecule.GetAtomAtWorldPosition(ArmController.GetGrabberPosition()).Element == element)
                     {
                         ArmController.PivotClockwise();

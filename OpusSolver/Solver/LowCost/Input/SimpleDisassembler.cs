@@ -21,26 +21,16 @@ namespace OpusSolver.Solver.LowCost.Input
             new Reagent(this, moleculeTransform.Position, moleculeTransform.Rotation, molecule);
         }
 
-        public override void BeginSolution()
-        {
-            RegisterInputAtoms();
-        }
-
         public override void GrabMolecule()
         {
             Writer.NewFragment();
             ArmController.MoveGrabberTo(InputTransform, this);
-            ArmController.GrabMolecule(CreateAtomCollection(), removeFromGrid: false);
+            ArmController.GrabMolecule(CreateAtomCollection());
         }
 
         private AtomCollection CreateAtomCollection()
         {
             return new AtomCollection(Molecule, MoleculeTransform, this);
-        }
-
-        public override void RegisterInputAtoms()
-        {
-            GridState.RegisterMolecule(CreateAtomCollection());
         }
     }
 }
