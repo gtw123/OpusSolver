@@ -28,14 +28,12 @@ namespace OpusSolver.Solver.LowCost
         {
             if (!m_hasSalt)
             {
-                ArmController.MoveMoleculeTo(SaltInput1Transform, this);
-                ArmController.DropMolecule();
+                ArmController.DropMoleculeAt(SaltInput1Transform, this);
                 m_hasSalt = true;
             }
             else
             {
-                ArmController.MoveMoleculeTo(SaltInput2Transform, this);
-                ArmController.DropMolecule(addToGrid: false);
+                ArmController.DropMoleculeAt(SaltInput2Transform, this, addToGrid: false);
                 GridState.UnregisterAtom(SaltInput1Transform.Position, this);
 
                 GridState.RegisterAtom(MorsOutputTransform.Position, Element.Mors, this);

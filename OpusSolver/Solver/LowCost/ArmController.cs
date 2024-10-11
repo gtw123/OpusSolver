@@ -96,7 +96,7 @@ namespace OpusSolver.Solver.LowCost
         }
 
         /// <summary>
-        /// Moves the main arm so that its grabbed molecule will at the specified transform.
+        /// Moves the main arm so that its grabbed molecule will be at the specified transform.
         /// </summary>
         /// <param name="targetTarget">The target position and rotation of the molecule</param>
         /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
@@ -166,6 +166,15 @@ namespace OpusSolver.Solver.LowCost
             m_writer.Write(m_mainArm, Instruction.Drop);
 
             return molecule;
+        }
+
+        /// <summary>
+        /// Moves the grabbed molecule to the specified transform and then drops it.
+        /// </summary>
+        public AtomCollection DropMoleculeAt(Transform2D targetTransform, GameObject relativeToObj = null, bool addToGrid = true)
+        {
+            MoveMoleculeTo(targetTransform, relativeToObj);
+            return DropMolecule(addToGrid);
         }
 
         /// <summary>

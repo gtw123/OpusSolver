@@ -27,14 +27,12 @@ namespace OpusSolver.Solver.LowCost
         {
             if (m_currentMetal == null)
             {
-                ArmController.MoveMoleculeTo(MetalTransform, this);
-                ArmController.DropMolecule();
+                ArmController.DropMoleculeAt(MetalTransform, this);
                 m_currentMetal = element;
             }
             else
             {
-                ArmController.MoveMoleculeTo(QuicksilverTransform, this);
-                ArmController.DropMolecule(addToGrid: false);
+                ArmController.DropMoleculeAt(QuicksilverTransform, this, addToGrid: false);
                 m_currentMetal++;
                 GridState.RegisterAtom(MetalTransform.Position, m_currentMetal, this);
             }

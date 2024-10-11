@@ -65,8 +65,7 @@ namespace OpusSolver.Solver.LowCost
             if (elementsToReorder.Any() && elementsToReorder.Count == m_storedAtoms.Count)
             {
                 // As an optimization we can just rotate this atom clockwise to put it at the end of the queue
-                ArmController.MoveMoleculeTo(GrabPosition, this);
-                ArmController.DropMolecule(addToGrid: false);
+                ArmController.DropMoleculeAt(GrabPosition, this, addToGrid: false);
 
                 Writer.Write(m_arm, Instruction.Grab);
                 var targetDir = m_storedAtoms.EnumerateCounterclockwise(startFrom: NextAtomDirection).Last().Key + HexRotation.R60;
@@ -105,8 +104,7 @@ namespace OpusSolver.Solver.LowCost
                 }
             }
 
-            ArmController.MoveMoleculeTo(GrabPosition, this);
-            ArmController.DropMolecule(addToGrid: false);
+            ArmController.DropMoleculeAt(GrabPosition, this, addToGrid: false);
 
             Writer.Write(m_arm, currentArmRot.CalculateDeltaRotationsTo(GrabDirection).ToRotationInstructions());
             Writer.Write(m_arm, Instruction.Grab);

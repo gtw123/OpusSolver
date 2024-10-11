@@ -141,8 +141,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 if (isBondingUpsideDown)
                 {
                     // Stash the new atom "behind" the previously dropped molecule
-                    ArmController.MoveMoleculeTo(ArmController.GetRotatedGrabberTransform(LowerBonderPosition, HexRotation.R120), this);
-                    var newAtom = ArmController.DropMolecule();
+                    var newAtom = ArmController.DropMoleculeAt(ArmController.GetRotatedGrabberTransform(LowerBonderPosition, HexRotation.R120), this);
 
                     // Grab the previously dropped molecule and move it so that the previous atom is on the bonder and the molecule is
                     // rotated 180 degrees from where it's meant to be.
@@ -150,8 +149,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     var previousAtom = operations[opIndex - 1].Atom;
                     var targetTransform = new Transform2D(LowerBonderPosition.Position - previousAtom.Position, HexRotation.R0);
                     targetTransform = targetTransform.RotateAbout(LowerBonderPosition.Position, op.MoleculeRotation + HexRotation.R180);
-                    ArmController.MoveMoleculeTo(targetTransform, this);
-                    ArmController.DropMolecule();
+                    ArmController.DropMoleculeAt(targetTransform, this);
 
                     // Grab the previously dropped new atom and bond it to the assembled molecule
                     ArmController.SetMoleculeToGrab(newAtom);
@@ -187,8 +185,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                 if (opIndex == operations.Count - 1)
                 {
-                    ArmController.MoveMoleculeTo(m_outputs[builder.Product.ID].Transform, this);
-                    ArmController.DropMolecule(addToGrid: false);
+                    ArmController.DropMoleculeAt(m_outputs[builder.Product.ID].Transform, this, addToGrid: false);
                 }
                 else
                 {

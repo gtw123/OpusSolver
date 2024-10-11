@@ -59,8 +59,7 @@ namespace OpusSolver.Solver.LowCost.Output
         public override void AddAtom(Element element, int productID)
         {
             var output = m_outputs[productID];
-            ArmController.MoveMoleculeTo(output.Transform, this);
-            ArmController.DropMolecule(addToGrid: false);
+            ArmController.DropMoleculeAt(output.Transform, this, addToGrid: false);
         }
     }
 }
