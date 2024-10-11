@@ -144,24 +144,18 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     ArmController.MoveMoleculeTo(ArmController.GetRotatedGrabberTransform(LowerBonderPosition, HexRotation.R120), this);
                     var newAtom = ArmController.DropMolecule();
 
-                    // Grab the previously dropped molecule
-                    ArmController.MoveGrabberTo(UpperBonderPosition, this, armRotationOffset: HexRotation.R120);
-                    ArmController.GrabMolecule(assembledMolecule);
-
-                    // Move them down to the lower bonder position and rotate them to prepare for the bond
-                    var targetMoleculeTransform = ArmController.GetMoleculeTransformForGrabberTransform(LowerBonderPosition, this);
-                    var targetRotation = op.MoleculeRotation + HexRotation.R180;
-                    var requiredPivot = targetRotation - targetMoleculeTransform.Rotation;
-                    targetMoleculeTransform = targetMoleculeTransform.RotateAbout(GetWorldTransform().Apply(LowerBonderPosition.Position), requiredPivot);
-                    ArmController.MoveMoleculeTo(targetMoleculeTransform);
+                    // Grab the previously dropped molecule and move it so that the previous atom is on the bonder and the molecule is
+                    // rotated 180 degrees from where it's meant to be.
+                    ArmController.SetMoleculeToGrab(assembledMolecule);
+                    var previousAtom = operations[opIndex - 1].Atom;
+                    var targetTransform = new Transform2D(LowerBonderPosition.Position - previousAtom.Position, HexRotation.R0);
+                    targetTransform = targetTransform.RotateAbout(LowerBonderPosition.Position, op.MoleculeRotation + HexRotation.R180);
+                    ArmController.MoveMoleculeTo(targetTransform, this);
                     ArmController.DropMolecule();
 
-                    // Grab the previously dropped new atom and move it to the upper bonder position
-                    ArmController.MoveGrabberTo(LowerBonderPosition, this, armRotationOffset: HexRotation.R120);
-                    ArmController.GrabMolecule(newAtom);
-
-                    // Bond it to the assembled molecule
-                    ArmController.MoveMoleculeTo(ArmController.GetMoleculeTransformForGrabberTransform(UpperBonderPosition, this), options: new ArmMovementOptions { AllowExternalBonds = true });
+                    // Grab the previously dropped new atom and bond it to the assembled molecule
+                    ArmController.SetMoleculeToGrab(newAtom);
+                    ArmController.MoveGrabberTo(UpperBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
                     ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
                 }
                 else

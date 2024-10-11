@@ -44,43 +44,6 @@ namespace OpusSolver.Solver.LowCost
             return grabberTransform.RotateAbout(grabberTransform.Position - new Vector2(ArmLength, 0), armRotationOffset);
         }
 
-        /// <summary>
-        /// Calculates what the world transform of the grabbed molecule would be if the grabber was moved from its
-        /// current transform to the specified transform.
-        /// </summary>
-        public Transform2D GetMoleculeTransformForGrabberTransform(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null)
-        {
-            if (m_grabbedMolecule == null)
-            {
-                throw new SolverException("Cannot calculate molecule transform when not holding a molecule.");
-            }
-
-            var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
-            var targetArmTransform = GrabberTransformToArmTransform(grabberWorldTransform);
-            return GetMoleculeTransformForArmTransform(targetArmTransform, armRotationOffset: armRotationOffset);
-        }
-
-        /// <summary>
-        /// Calculates what the world transform of the grabbed molecule would be if the arm was moved from its
-        /// current transform to the specified transform.
-        /// </summary>
-        public Transform2D GetMoleculeTransformForArmTransform(Transform2D armLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null)
-        {
-            if (m_grabbedMolecule == null)
-            {
-                throw new SolverException("Cannot calculate molecule transform when not holding a molecule.");
-            }
-
-            var targetArmTransform = relativeToObj?.GetWorldTransform().Apply(armLocalTransform) ?? armLocalTransform;
-            if (armRotationOffset != null)
-            {
-                targetArmTransform.Rotation += armRotationOffset.Value;
-            }
-
-            var relativeTransform = targetArmTransform.Apply(m_armTransform.Inverse());
-            return relativeTransform.Apply(m_grabbedMolecule.WorldTransform);
-        }
-
         public void SetMoleculeToGrab(AtomCollection molecule)
         {
             if (m_grabbedMolecule != null)
@@ -125,7 +88,8 @@ namespace OpusSolver.Solver.LowCost
 
             if (m_grabbedMolecule != null)
             {
-                m_grabbedMolecule.WorldTransform = GetMoleculeTransformForArmTransform(targetArmTransform);
+                var relativeTransform = targetArmTransform.Apply(m_armTransform.Inverse());
+                m_grabbedMolecule.WorldTransform = relativeTransform.Apply(m_grabbedMolecule.WorldTransform);
             }
 
             m_armTransform = targetArmTransform;
