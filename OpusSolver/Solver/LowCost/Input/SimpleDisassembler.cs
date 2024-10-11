@@ -30,7 +30,7 @@ namespace OpusSolver.Solver.LowCost.Input
         {
             Writer.NewFragment();
             ArmController.MoveGrabberTo(InputTransform, this);
-            ArmController.GrabAtoms(CreateAtomCollection(), removeFromGrid: false);
+            ArmController.GrabMolecule(CreateAtomCollection(), removeFromGrid: false);
         }
 
         private AtomCollection CreateAtomCollection()
@@ -40,7 +40,7 @@ namespace OpusSolver.Solver.LowCost.Input
 
         public override void RegisterInputAtoms()
         {
-            GridState.RegisterAtoms(CreateAtomCollection());
+            GridState.RegisterMolecule(CreateAtomCollection());
         }
     }
 }

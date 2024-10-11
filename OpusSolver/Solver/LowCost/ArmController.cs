@@ -12,11 +12,11 @@ namespace OpusSolver.Solver.LowCost
         private readonly ArmPathFinder m_armPathFinder;
 
         private Transform2D m_armTransform;
-        private AtomCollection m_grabbedAtoms;
-        private AtomCollection m_atomsToGrab;
+        private AtomCollection m_grabbedMolecule;
+        private AtomCollection m_moleculeToGrab;
 
         public Transform2D ArmTransform => m_armTransform;
-        public AtomCollection GrabbedAtoms => m_grabbedAtoms;
+        public AtomCollection GrabbedMolecule => m_grabbedMolecule;
 
         private int ArmLength => m_mainArm.Extension;
 
@@ -45,30 +45,30 @@ namespace OpusSolver.Solver.LowCost
         }
 
         /// <summary>
-        /// Calculates what the world transform of the grabbed atoms would be if the grabber was moved from its
+        /// Calculates what the world transform of the grabbed molecule would be if the grabber was moved from its
         /// current transform to the specified transform.
         /// </summary>
-        public Transform2D GetAtomsTransformForGrabberTransform(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null)
+        public Transform2D GetMoleculeTransformForGrabberTransform(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null)
         {
-            if (m_grabbedAtoms == null)
+            if (m_grabbedMolecule == null)
             {
-                throw new SolverException("Cannot calculate atoms transform when not holding any atoms.");
+                throw new SolverException("Cannot calculate molecule transform when not holding a molecule.");
             }
 
             var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
             var targetArmTransform = GrabberTransformToArmTransform(grabberWorldTransform);
-            return GetAtomsTransformForArmTransform(targetArmTransform, armRotationOffset: armRotationOffset);
+            return GetMoleculeTransformForArmTransform(targetArmTransform, armRotationOffset: armRotationOffset);
         }
 
         /// <summary>
-        /// Calculates what the world transform of the grabbed atoms would be if the arm was moved from its
+        /// Calculates what the world transform of the grabbed molecule would be if the arm was moved from its
         /// current transform to the specified transform.
         /// </summary>
-        public Transform2D GetAtomsTransformForArmTransform(Transform2D armLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null)
+        public Transform2D GetMoleculeTransformForArmTransform(Transform2D armLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null)
         {
-            if (m_grabbedAtoms == null)
+            if (m_grabbedMolecule == null)
             {
-                throw new SolverException("Cannot calculate atoms transform when not holding any atoms.");
+                throw new SolverException("Cannot calculate molecule transform when not holding a molecule.");
             }
 
             var targetArmTransform = relativeToObj?.GetWorldTransform().Apply(armLocalTransform) ?? armLocalTransform;
@@ -78,17 +78,17 @@ namespace OpusSolver.Solver.LowCost
             }
 
             var relativeTransform = targetArmTransform.Apply(m_armTransform.Inverse());
-            return relativeTransform.Apply(m_grabbedAtoms.WorldTransform);
+            return relativeTransform.Apply(m_grabbedMolecule.WorldTransform);
         }
 
-        public void SetAtomsToGrab(AtomCollection atoms)
+        public void SetMoleculeToGrab(AtomCollection molecule)
         {
-            if (m_grabbedAtoms != null)
+            if (m_grabbedMolecule != null)
             {
-                throw new SolverException("Cannot set atoms to grab when already holding some.");
+                throw new SolverException("Cannot set molecule to grab when already holding one.");
             }
 
-            m_atomsToGrab = atoms;
+            m_moleculeToGrab = molecule;
         }
 
         /// <summary>
@@ -102,15 +102,15 @@ namespace OpusSolver.Solver.LowCost
         {
             var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
 
-            if (m_atomsToGrab != null)
+            if (m_moleculeToGrab != null)
             {
-                if (m_atomsToGrab.Atoms.Count != 1)
+                if (m_moleculeToGrab.Atoms.Count != 1)
                 {
                     // If there's more than one atom then it's ambiguous where it's supposed to be moved to
-                    throw new SolverException("Cannot call MoveGrabberTo with more than one atom to grab. Use MoveAtomsTo instead.");
+                    throw new SolverException("Cannot call MoveGrabberTo with more than one atom to grab. Use MoveMoleculeTo instead.");
                 }
 
-                MoveAtomsTo(grabberWorldTransform, options: options);
+                MoveMoleculeTo(grabberWorldTransform, options: options);
                 return;
             }
 
@@ -120,12 +120,12 @@ namespace OpusSolver.Solver.LowCost
                 targetArmTransform.Rotation += armRotationOffset.Value;
             }
 
-            var instructions = m_armPathFinder.FindArmPath(m_armTransform, targetArmTransform, m_grabbedAtoms, options ?? new ArmMovementOptions());
+            var instructions = m_armPathFinder.FindArmPath(m_armTransform, targetArmTransform, m_grabbedMolecule, options ?? new ArmMovementOptions());
             m_writer.Write(m_mainArm, instructions);
 
-            if (m_grabbedAtoms != null)
+            if (m_grabbedMolecule != null)
             {
-                m_grabbedAtoms.WorldTransform = GetAtomsTransformForArmTransform(targetArmTransform);
+                m_grabbedMolecule.WorldTransform = GetMoleculeTransformForArmTransform(targetArmTransform);
             }
 
             m_armTransform = targetArmTransform;
@@ -136,94 +136,94 @@ namespace OpusSolver.Solver.LowCost
         /// </summary>
         /// <param name="targetTarget">The target position and rotation of the molecule</param>
         /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
-        public void MoveAtomsTo(Transform2D targetTransform, GameObject relativeToObj = null, ArmMovementOptions options = null)
+        public void MoveMoleculeTo(Transform2D targetTransform, GameObject relativeToObj = null, ArmMovementOptions options = null)
         {
-            if (m_grabbedAtoms == null && m_atomsToGrab == null)
+            if (m_grabbedMolecule == null && m_moleculeToGrab == null)
             {
-                throw new SolverException("Cannot move atoms when not holding any or SetAtomsToGrab has not been called.");
+                throw new SolverException("Cannot move molecule when not holding one or SetMoleculeToGrab has not been called.");
             }
 
             targetTransform = relativeToObj?.GetWorldTransform().Apply(targetTransform) ?? targetTransform;
 
-            var atomsToMove = m_grabbedAtoms ?? m_atomsToGrab;
-            bool alreadyGrabbed = m_grabbedAtoms != null;
+            var moleculeToMove = m_grabbedMolecule ?? m_moleculeToGrab;
+            bool alreadyGrabbed = m_grabbedMolecule != null;
             if (!alreadyGrabbed)
             {
-                m_gridState.UnregisterAtoms(atomsToMove);
+                m_gridState.UnregisterMolecule(moleculeToMove);
             }
 
-            var (instructions, finalArmTransform) = m_armPathFinder.FindMoleculePath(m_armTransform, targetTransform, atomsToMove, alreadyGrabbed, options ?? new ArmMovementOptions());
+            var (instructions, finalArmTransform) = m_armPathFinder.FindMoleculePath(m_armTransform, targetTransform, moleculeToMove, alreadyGrabbed, options ?? new ArmMovementOptions());
             m_writer.Write(m_mainArm, instructions);
 
-            m_grabbedAtoms = atomsToMove;
-            m_grabbedAtoms.WorldTransform = targetTransform;
+            m_grabbedMolecule = moleculeToMove;
+            m_grabbedMolecule.WorldTransform = targetTransform;
             m_armTransform = finalArmTransform;
-            m_atomsToGrab = null;
+            m_moleculeToGrab = null;
         }
 
-        public void GrabAtoms(AtomCollection atoms, bool removeFromGrid = true)
+        public void GrabMolecule(AtomCollection molecule, bool removeFromGrid = true)
         {
-            if (m_grabbedAtoms != null)
+            if (m_grabbedMolecule != null)
             {
-                throw new SolverException("Cannot grab atoms when already holding some.");
+                throw new SolverException("Cannot grab a molecule when already holding one.");
             }
             
             var grabberPosition = GetGrabberPosition();
-            if (!atoms.GetWorldAtomPositions().Where(p => p.position == grabberPosition).Any())
+            if (!molecule.GetWorldAtomPositions().Where(p => p.position == grabberPosition).Any())
             {
-                throw new SolverException($"Cannot grab atoms as no atom is located at the current grabber position {grabberPosition}.");
+                throw new SolverException($"Cannot grab a molecule as no atom is located at the current grabber position {grabberPosition}.");
             }
 
             if (removeFromGrid)
             {
-                m_gridState.UnregisterAtoms(atoms);
+                m_gridState.UnregisterMolecule(molecule);
             }
 
-            m_grabbedAtoms = atoms;
-            m_atomsToGrab = null;
+            m_grabbedMolecule = molecule;
+            m_moleculeToGrab = null;
             m_writer.Write(m_mainArm, Instruction.Grab);
         }
 
-        public AtomCollection DropAtoms(bool addToGrid = true)
+        public AtomCollection DropMolecule(bool addToGrid = true)
         {
-            if (m_grabbedAtoms == null)
+            if (m_grabbedMolecule == null)
             {
-                throw new SolverException("Cannot drop atoms when not holding any.");
+                throw new SolverException("Cannot drop a molecule when not holding one.");
             }
 
             if (addToGrid)
             {
-                m_gridState.RegisterAtoms(m_grabbedAtoms);
+                m_gridState.RegisterMolecule(m_grabbedMolecule);
             }
 
-            var atoms = m_grabbedAtoms;
-            m_grabbedAtoms = null;
+            var molecule = m_grabbedMolecule;
+            m_grabbedMolecule = null;
 
             m_writer.Write(m_mainArm, Instruction.Drop);
 
-            return atoms;
+            return molecule;
         }
 
         /// <summary>
-        /// Bonds the grabbed atoms to another collection of atoms. The grabbed atoms will be added
+        /// Bonds the grabbed molecule to another collection of atoms. The atoms from the grabbed molecule will be added
         /// to that collection.
         /// </summary>
-        public void BondAtomsTo(AtomCollection bondToAtoms, Glyph bonder)
+        public void BondMoleculeToAtoms(AtomCollection bondToAtoms, Glyph bonder)
         {
-            if (m_grabbedAtoms == null)
+            if (m_grabbedMolecule == null)
             {
-                throw new SolverException("Cannot bond atoms when not holding any.");
+                throw new SolverException("Cannot bond atoms when not holding a molecule.");
             }
 
             if (bonder.Type != GlyphType.Bonding)
             {
-                throw new SolverException($"{nameof(BondAtomsTo)} currently supports single bonders only.");
+                throw new SolverException($"{nameof(BondMoleculeToAtoms)} currently supports single bonders only.");
             }
 
-            m_gridState.UnregisterAtoms(bondToAtoms);
+            m_gridState.UnregisterMolecule(bondToAtoms);
 
             var bondToAtomsInverse = bondToAtoms.WorldTransform.Inverse();
-            foreach (var (atom, pos) in m_grabbedAtoms.GetWorldAtomPositions())
+            foreach (var (atom, pos) in m_grabbedMolecule.GetWorldAtomPositions())
             {
                 atom.Position = bondToAtomsInverse.Apply(pos);
                 bondToAtoms.AddAtom(atom);
@@ -232,24 +232,24 @@ namespace OpusSolver.Solver.LowCost
             var bonderCells = bonder.GetWorldCells();
             bondToAtoms.AddBond(bondToAtomsInverse.Apply(bonderCells[0]), bondToAtomsInverse.Apply(bonderCells[1]));
 
-            m_grabbedAtoms = bondToAtoms;
+            m_grabbedMolecule = bondToAtoms;
         }
 
         public AtomCollection RemoveAllExceptGrabbedAtom()
         {
-            if (m_grabbedAtoms == null)
+            if (m_grabbedMolecule == null)
             {
-                throw new SolverException("Cannot unbond atoms when not holding any.");
+                throw new SolverException("Cannot unbond atoms when not holding a molecule.");
             }
 
             var grabberPosition = GetGrabberPosition();
-            var grabbedAtom = m_grabbedAtoms.GetAtomAtWorldPosition(grabberPosition);
+            var grabbedAtom = m_grabbedMolecule.GetAtomAtWorldPosition(grabberPosition);
 
-            m_grabbedAtoms.RemoveAtom(grabbedAtom);
-            var droppedAtoms = m_grabbedAtoms;
-            m_gridState.RegisterAtoms(droppedAtoms);
+            m_grabbedMolecule.RemoveAtom(grabbedAtom);
+            var droppedAtoms = m_grabbedMolecule;
+            m_gridState.RegisterMolecule(droppedAtoms);
 
-            m_grabbedAtoms = new AtomCollection(grabbedAtom.Element, new Transform2D(grabberPosition, HexRotation.R0));
+            m_grabbedMolecule = new AtomCollection(grabbedAtom.Element, new Transform2D(grabberPosition, HexRotation.R0));
 
             return droppedAtoms;
         }
@@ -257,18 +257,18 @@ namespace OpusSolver.Solver.LowCost
         public void PivotClockwise()
         {
             m_writer.Write(m_mainArm, Instruction.PivotClockwise);
-            if (m_grabbedAtoms != null)
+            if (m_grabbedMolecule != null)
             {
-                m_grabbedAtoms.WorldTransform = m_grabbedAtoms.WorldTransform.RotateAbout(GetGrabberPosition(), -HexRotation.R60);
+                m_grabbedMolecule.WorldTransform = m_grabbedMolecule.WorldTransform.RotateAbout(GetGrabberPosition(), -HexRotation.R60);
             }
         }
 
         public void PivotCounterClockwise()
         {
             m_writer.Write(m_mainArm, Instruction.PivotCounterclockwise);
-            if (m_grabbedAtoms != null)
+            if (m_grabbedMolecule != null)
             {
-                m_grabbedAtoms.WorldTransform = m_grabbedAtoms.WorldTransform.RotateAbout(GetGrabberPosition(), HexRotation.R60);
+                m_grabbedMolecule.WorldTransform = m_grabbedMolecule.WorldTransform.RotateAbout(GetGrabberPosition(), HexRotation.R60);
             }
         }
 
@@ -279,9 +279,9 @@ namespace OpusSolver.Solver.LowCost
                 return;
             }
 
-            if (m_grabbedAtoms == null)
+            if (m_grabbedMolecule == null)
             {
-                throw new SolverException("Cannot pivot when not holding any atoms.");
+                throw new SolverException("Cannot pivot when not holding a molecule.");
             }
 
             foreach (var rot in HexRotation.R0.CalculateDeltaRotationsTo(deltaRot, rotateClockwiseIf180Degrees))
@@ -298,7 +298,7 @@ namespace OpusSolver.Solver.LowCost
         }
 
         /// <summary>
-        /// Attempts to pivot the currently held atoms by the specified amount, but only if this won't cause any collisions.
+        /// Attempts to pivot the currently held molecule by the specified amount, but only if this won't cause any collisions.
         /// </summary>
         /// <returns>True if the pivot was successful; false otherwise (in which case no instructions will be written)</returns>
         public bool TryPivotBy(HexRotation deltaRot, bool rotateClockwiseIf180Degrees = false)
@@ -308,22 +308,22 @@ namespace OpusSolver.Solver.LowCost
                 return true;
             }
 
-            if (m_grabbedAtoms == null)
+            if (m_grabbedMolecule == null)
             {
-                throw new SolverException("Cannot pivot when not holding any atoms.");
+                throw new SolverException("Cannot pivot when not holding a molecule.");
             }
 
-            var currentAtomsTransform = m_grabbedAtoms.WorldTransform;
-            var startRot = currentAtomsTransform.Rotation;
+            var currentMoleculeTransform = m_grabbedMolecule.WorldTransform;
+            var startRot = currentMoleculeTransform.Rotation;
             var grabberPosition = GetGrabberPosition();
             foreach (var pivot in startRot.CalculateDeltaRotationsTo(startRot + deltaRot, rotateClockwiseIf180Degrees))
             {
-                if (m_collisionDetector.WillAtomsCollideWhilePivoting(m_grabbedAtoms, currentAtomsTransform, m_armTransform.Position, grabberPosition, pivot))
+                if (m_collisionDetector.WillAtomsCollideWhilePivoting(m_grabbedMolecule, currentMoleculeTransform, m_armTransform.Position, grabberPosition, pivot))
                 {
                     return false;
                 }
 
-                currentAtomsTransform = currentAtomsTransform.RotateAbout(grabberPosition, pivot);
+                currentMoleculeTransform = currentMoleculeTransform.RotateAbout(grabberPosition, pivot);
             }
 
             PivotBy(deltaRot);
@@ -336,13 +336,13 @@ namespace OpusSolver.Solver.LowCost
             m_writer.Write(m_mainArm, Instruction.Reset);
             m_armTransform = m_mainArm.Transform;
 
-            if (m_grabbedAtoms != null)
+            if (m_grabbedMolecule != null)
             {
-                m_gridState.RegisterAtoms(m_grabbedAtoms);
-                m_grabbedAtoms = null;
+                m_gridState.RegisterMolecule(m_grabbedMolecule);
+                m_grabbedMolecule = null;
             }
 
-            m_atomsToGrab = null;
+            m_moleculeToGrab = null;
         }
     }
 }

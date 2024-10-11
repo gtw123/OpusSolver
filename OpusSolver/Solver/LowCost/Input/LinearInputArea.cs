@@ -57,7 +57,7 @@ namespace OpusSolver.Solver.LowCost.Input
             else
             {
                 ArmController.MoveGrabberTo(OuterUnbonderPosition, this);
-                ArmController.GrabAtoms(m_pendingAtoms);
+                ArmController.GrabMolecule(m_pendingAtoms);
             }
 
             ArmController.MoveGrabberTo(InnerUnbonderPosition, this);

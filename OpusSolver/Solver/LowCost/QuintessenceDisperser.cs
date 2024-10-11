@@ -29,8 +29,8 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmController.MoveAtomsTo(InputTransform, this);
-            ArmController.DropAtoms(addToGrid: false);
+            ArmController.MoveMoleculeTo(InputTransform, this);
+            ArmController.DropMolecule(addToGrid: false);
 
             foreach (var cardinal in PeriodicTable.Cardinals)
             {
@@ -40,7 +40,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmController.SetAtomsToGrab(new AtomCollection(element, OutputTransforms[element], this));
+            ArmController.SetMoleculeToGrab(new AtomCollection(element, OutputTransforms[element], this));
         }
     }
 }

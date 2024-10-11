@@ -29,8 +29,8 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmController.MoveAtomsTo(InputTransforms[m_cardinalCount], this);
-            ArmController.DropAtoms();
+            ArmController.MoveMoleculeTo(InputTransforms[m_cardinalCount], this);
+            ArmController.DropMolecule();
 
             m_cardinalCount++;
             if (m_cardinalCount == 4)
@@ -47,7 +47,7 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmController.SetAtomsToGrab(new AtomCollection(element, OutputTransform, this));
+            ArmController.SetMoleculeToGrab(new AtomCollection(element, OutputTransform, this));
         }
     }
 }

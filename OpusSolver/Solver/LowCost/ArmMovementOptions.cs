@@ -8,12 +8,12 @@
         public bool AllowCalcification;
 
         /// <summary>
-        /// Allow bonds to be created between the grabbed atoms and other atoms on the grid.
+        /// Allow bonds to be created between atoms in the grabbed molecule and other atoms on the grid.
         /// </summary>
         public bool AllowExternalBonds;
 
         /// <summary>
-        /// Allow bonds to be created between atoms within the grabbed atoms.
+        /// Allow bonds to be created between atoms within the grabbed molecule.
         /// </summary>
         public bool AllowInternalBonds;
     }

@@ -123,7 +123,7 @@ namespace OpusSolver.Solver.LowCost.Input
             {
                 // Use the stashed atom before dissassembling another molecule
                 ArmController.MoveGrabberTo(m_stashedAtom.Transform, this);
-                ArmController.GrabAtoms(new AtomCollection(m_stashedAtom.Element, m_stashedAtom.Transform, this));
+                ArmController.GrabMolecule(new AtomCollection(m_stashedAtom.Element, m_stashedAtom.Transform, this));
                 m_stashedAtom = null;
                 return;
             }
@@ -137,9 +137,9 @@ namespace OpusSolver.Solver.LowCost.Input
 
                 // Stash the atom temporarily so that we can disassemble another molecule
                 ArmController.MoveGrabberTo(m_unbondedAtom.Transform, this);
-                ArmController.GrabAtoms(new AtomCollection(m_unbondedAtom.Element, m_unbondedAtom.Transform, this));
+                ArmController.GrabMolecule(new AtomCollection(m_unbondedAtom.Element, m_unbondedAtom.Transform, this));
                 ArmController.MoveGrabberTo(m_stashPosition, this);
-                ArmController.DropAtoms();
+                ArmController.DropMolecule();
 
                 m_stashedAtom = m_unbondedAtom;
                 m_stashedAtom.Transform = m_stashPosition;
@@ -158,9 +158,9 @@ namespace OpusSolver.Solver.LowCost.Input
                     // TODO: Make ArmController understand how to pivot molecules automatically so that we can simplify this
                     ArmController.PivotClockwise();
                     ArmController.PivotClockwise();
-                    var tempAtoms = ArmController.DropAtoms();
+                    var tempMolecule = ArmController.DropMolecule();
                     ArmController.MoveGrabberTo(m_input2GrabPosition, this);
-                    ArmController.GrabAtoms(tempAtoms);
+                    ArmController.GrabMolecule(tempMolecule);
 
                     var transform = InnerUnbonderPosition;
                     transform.Position.X -= 1;
@@ -170,7 +170,7 @@ namespace OpusSolver.Solver.LowCost.Input
                     // re-register the input atoms after we've dropped and then picked up atoms on top of the input.
                     disassembler.RegisterInputAtoms();
 
-                    if (ArmController.GrabbedAtoms.GetAtomAtWorldPosition(ArmController.GetGrabberPosition()).Element == element)
+                    if (ArmController.GrabbedMolecule.GetAtomAtWorldPosition(ArmController.GetGrabberPosition()).Element == element)
                     {
                         ArmController.PivotClockwise();
                     }
@@ -188,8 +188,8 @@ namespace OpusSolver.Solver.LowCost.Input
 
                 m_unbondedAtom = new StoredAtom { MoleculeID = id };
 
-                var atoms = ArmController.GrabbedAtoms;
-                var grabbedAtom = atoms.GetAtomAtWorldPosition(targetGrabberPosition.Position, this);
+                var molecule = ArmController.GrabbedMolecule;
+                var grabbedAtom = molecule.GetAtomAtWorldPosition(targetGrabberPosition.Position, this);
                 if (grabbedAtom.Element == element)
                 {
                     // Keep hold of the atom we've currently got
@@ -201,18 +201,18 @@ namespace OpusSolver.Solver.LowCost.Input
                 else
                 {
                     // Drop the atom we're currently holding and pick up the other atom instead
-                    ArmController.DropAtoms();
+                    ArmController.DropMolecule();
                     m_unbondedAtom.Element = grabbedAtom.Element;
                     m_unbondedAtom.Transform = targetGrabberPosition;
                     ArmController.MoveGrabberTo(otherAtomPosition, this);
-                    ArmController.GrabAtoms(new AtomCollection(element, otherAtomPosition, this));
+                    ArmController.GrabMolecule(new AtomCollection(element, otherAtomPosition, this));
                 }
             }
             else
             {
                 // Grab the already unbonded atom
                 ArmController.MoveGrabberTo(m_unbondedAtom.Transform, this);
-                ArmController.GrabAtoms(new AtomCollection(m_unbondedAtom.Element, m_unbondedAtom.Transform, this));
+                ArmController.GrabMolecule(new AtomCollection(m_unbondedAtom.Element, m_unbondedAtom.Transform, this));
                 m_unbondedAtom = null;
             }
         }

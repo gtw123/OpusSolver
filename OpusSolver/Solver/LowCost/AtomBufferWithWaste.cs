@@ -52,8 +52,8 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmController.MoveAtomsTo(GrabPosition, this);
-            ArmController.DropAtoms(addToGrid: false);
+            ArmController.MoveMoleculeTo(GrabPosition, this);
+            ArmController.DropMolecule(addToGrid: false);
 
             // If necessary, move the atom further down the atom chain so that all the atoms that need to be restored
             // before it come after it.
@@ -212,7 +212,7 @@ namespace OpusSolver.Solver.LowCost
             ], updateTime: false);
 
             Writer.AdjustTime(-1);
-            ArmController.GrabAtoms(new AtomCollection(element, GrabPosition, this));
+            ArmController.GrabMolecule(new AtomCollection(element, GrabPosition, this));
 
             m_storedElements.Remove(restoredElement);
         }

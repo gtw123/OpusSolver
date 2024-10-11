@@ -23,17 +23,17 @@ namespace OpusSolver.Solver
             m_atoms.Remove(position);
         }
 
-        public void RegisterAtoms(AtomCollection atomCollection)
+        public void RegisterMolecule(AtomCollection molecule)
         {
-            foreach (var (atom, pos) in atomCollection.GetWorldAtomPositions())
+            foreach (var (atom, pos) in molecule.GetWorldAtomPositions())
             {
                 m_atoms[pos] = atom.Element;
             }
         }
 
-        public void UnregisterAtoms(AtomCollection atomCollection)
+        public void UnregisterMolecule(AtomCollection molecule)
         {
-            foreach (var (_, pos) in atomCollection.GetWorldAtomPositions())
+            foreach (var (_, pos) in molecule.GetWorldAtomPositions())
             {
                 m_atoms.Remove(pos);
             }

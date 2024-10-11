@@ -22,8 +22,8 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Generate(Element element, int id)
         {
-            ArmController.MoveAtomsTo(CalcifierTransform, this, options: new ArmMovementOptions { AllowCalcification = true });
-            ArmController.GrabbedAtoms.GetAtomAtWorldPosition(CalcifierTransform.Position, this).Element = Element.Salt;
+            ArmController.MoveMoleculeTo(CalcifierTransform, this, options: new ArmMovementOptions { AllowCalcification = true });
+            ArmController.GrabbedMolecule.GetAtomAtWorldPosition(CalcifierTransform.Position, this).Element = Element.Salt;
         }
     }
 }
