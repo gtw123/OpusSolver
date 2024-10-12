@@ -129,6 +129,13 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         private IEnumerable<object> Assemble(MoleculeBuilder builder)
         {
+            if (builder.Product.Atoms.Count() == 1)
+            {
+                // For single-atom products we can just drop it straight on the output, without needing to move it onto the bonder first.
+                ArmController.DropMoleculeAt(m_outputs[builder.Product.ID].Transform, this, addToGrid: false);
+                yield break;
+            }
+
             AtomCollection assembledMolecule = null;
 
             bool isBondingUpsideDown = false;
@@ -215,7 +222,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         public static bool IsProductCompatible(Molecule product)
         {
             // For now, only allow molecules with no branches or loops
-            return product.Atoms.All(a => a.BondCount <= 2) && product.Atoms.Count(a => a.BondCount == 1) == 2;
+            return product.Atoms.All(a => a.BondCount <= 2) && product.Atoms.Count(a => a.BondCount == 1) == 2 || product.Atoms.Count() == 1;
         }
 
         public static IEnumerable<MoleculeBuilder> CreateMoleculeBuilders(IEnumerable<Molecule> products)

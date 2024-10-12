@@ -75,6 +75,12 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         {
             var ops = orderedAtoms.Select(a => new Operation { Atom = a }).ToList();
 
+            if (orderedAtoms.Count == 1)
+            {
+                // Degenerate case
+                return ops;
+            }
+
             var currentRotation = HexRotation.R0;
             for (int i = 1; i < orderedAtoms.Count; i++)
             {
@@ -100,7 +106,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         private List<Atom> DetermineAtomOrder()
         {
-            var firstAtom = Product.Atoms.Where(a => a.BondCount == 1).MaxBy(a => a.Position.X);
+            var firstAtom = Product.Atoms.Where(a => a.BondCount <= 1).MaxBy(a => a.Position.X);
             var seenAtoms = new HashSet<Atom> { firstAtom };
 
             var orderedAtoms = new List<Atom>();
