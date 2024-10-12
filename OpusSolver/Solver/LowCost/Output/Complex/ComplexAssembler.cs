@@ -136,14 +136,24 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 yield break;
             }
 
-            AtomCollection assembledMolecule = null;
+            // Process the first atom
+            var operations = builder.Operations;
+            var op = operations[0];
+            var assembledMolecule = ArmController.DropMoleculeAt(UpperBonderPosition, this);
+
+            // Adjust the atom position so it matches the corresponding target molecule, but also update
+            // the transform so that the atom has the same world transform as before.
+            // TODO: Can we simplify this calculation?
+            assembledMolecule.WorldTransform.Position = assembledMolecule.WorldTransform.Apply(assembledMolecule.Atoms[0].Position) - op.Atom.Position.RotateBy(op.MoleculeRotation);
+            assembledMolecule.WorldTransform.Rotation = op.MoleculeRotation;
+            assembledMolecule.Atoms[0].Position = op.Atom.Position;
+            yield return null;
 
             bool isBondingUpsideDown = false;
 
-            var operations = builder.Operations;
-            for (int opIndex = 0; opIndex < operations.Count; opIndex++)
+            for (int opIndex = 1; opIndex < operations.Count; opIndex++)
             {
-                var op = operations[opIndex];
+                op = operations[opIndex];
 
                 if (isBondingUpsideDown)
                 {
@@ -153,7 +163,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     // Grab the previously dropped molecule and move it so that the previous atom is on the bonder and the molecule is
                     // rotated 180 degrees from where it's meant to be.
                     ArmController.SetMoleculeToGrab(assembledMolecule);
-                    var previousAtom = operations[opIndex - 1].Atom;
+                    var previousAtom = op.ParentAtom;
                     var targetTransform = new Transform2D(LowerBonderPosition.Position - previousAtom.Position, HexRotation.R0);
                     targetTransform = targetTransform.RotateAbout(LowerBonderPosition.Position, op.MoleculeRotation + HexRotation.R180);
                     ArmController.DropMoleculeAt(targetTransform, this);
@@ -163,40 +173,36 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     ArmController.MoveMoleculeTo(UpperBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
                     ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
                 }
-                else
+                else 
                 {
-                    if (opIndex == 0)
-                    {
-                        ArmController.MoveMoleculeTo(UpperBonderPosition, this);
-                        assembledMolecule = ArmController.GrabbedMolecule;
-
-                        // Adjust the atom position so it matches the corresponding target molecule, but also update
-                        // the transform so that the atom has the same world transform as before.
-                        // TODO: Can we simplify this calculation?
-                        assembledMolecule.WorldTransform.Position = assembledMolecule.WorldTransform.Apply(assembledMolecule.Atoms[0].Position) - op.Atom.Position.RotateBy(op.MoleculeRotation);
-                        assembledMolecule.WorldTransform.Rotation = op.MoleculeRotation;
-                        assembledMolecule.Atoms[0].Position = op.Atom.Position;
-                    }
-                    else
-                    {
-                        ArmController.MoveMoleculeTo(LowerBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
-                        ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
-
-                        if (opIndex != operations.Count - 1)
-                        {
-                            // Move the grabbed atom up to make way for the next atom to bond.
-                            ArmController.MoveGrabberTo(UpperBonderPosition, this);
-                        }
-                    }
+                    ArmController.MoveMoleculeTo(LowerBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
+                    ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
                 }
 
                 if (opIndex == operations.Count - 1)
                 {
                     ArmController.DropMoleculeAt(m_outputs[builder.Product.ID].Transform, this, addToGrid: false);
+                    yield return null;
+                    yield break;
+                }
+
+                var nextOp = operations[opIndex + 1];
+                if (nextOp.ParentAtom != op.Atom)
+                {
+                    var targetTransform = new Transform2D(UpperBonderPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
+                    targetTransform = targetTransform.RotateAbout(UpperBonderPosition.Position, nextOp.MoleculeRotation);
+                    ArmController.DropMoleculeAt(targetTransform, this);
                 }
                 else
                 {
-                    var targetRotation = op.MoleculeRotation + op.RotationToNext;
+                    if (!isBondingUpsideDown)
+                    {
+                        var targetTransform = new Transform2D(UpperBonderPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
+                        targetTransform = targetTransform.RotateAbout(UpperBonderPosition.Position, op.MoleculeRotation);
+                        ArmController.MoveMoleculeTo(targetTransform, this);
+                    }
+
+                    var targetRotation = nextOp.MoleculeRotation;
                     if (ArmController.TryPivotBy(targetRotation - assembledMolecule.WorldTransform.Rotation))
                     {
                         isBondingUpsideDown = false;
@@ -221,8 +227,45 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         public static bool IsProductCompatible(Molecule product)
         {
-            // For now, only allow molecules with no branches or loops
-            return product.Atoms.All(a => a.BondCount <= 2) && product.Atoms.Count(a => a.BondCount == 1) == 2 || product.Atoms.Count() == 1;
+            //return product.Atoms.All(a => a.BondCount <= 2) && product.Atoms.Count(a => a.BondCount == 1) == 2 || product.Atoms.Count() == 1;
+            // For now, only allow molecules with no bond loops
+            return !DoesMoleculeHaveBondCycles(product);
+        }
+
+        private static bool DoesMoleculeHaveBondCycles(Molecule molecule)
+        {
+            var seenAtoms = new HashSet<Atom>();
+
+            bool CheckForCycle(Atom currentAtom, Atom parent)
+            {
+                seenAtoms.Add(currentAtom);
+                foreach (var (_, bondedAtom) in molecule.GetAdjacentBondedAtoms(currentAtom.Position))
+                {
+                    if (!seenAtoms.Contains(bondedAtom))
+                    {
+                        if (CheckForCycle(bondedAtom, currentAtom))
+                        {
+                            return true;
+                        }
+                    }
+                    else if (bondedAtom != parent)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            foreach (var atom in molecule.Atoms)
+            {
+                if (!seenAtoms.Contains(atom) && CheckForCycle(atom, null))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static IEnumerable<MoleculeBuilder> CreateMoleculeBuilders(IEnumerable<Molecule> products)

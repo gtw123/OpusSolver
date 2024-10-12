@@ -145,6 +145,17 @@ namespace OpusSolver
                 || (offset.X == -offset.Y && Math.Abs(offset.X) == 1);
         }
 
+        public bool AreAtomsBonded(Atom atom1, Atom atom2)
+        {
+            if (!AreAtomsAdjacent(atom1, atom2))
+            {
+                return false;
+            }
+
+            var bondDir = (atom1.Position - atom2.Position).ToRotation().Value;
+            return atom2.Bonds[bondDir] != BondType.None;
+        }
+
         public IEnumerable<Atom> GetRow(int row)
         {
             return Enumerable.Range(0, Width).Select(x => GetAtom(new Vector2(x, row))).Where(a => a != null);
