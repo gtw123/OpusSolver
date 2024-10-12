@@ -16,8 +16,7 @@ namespace OpusSolver.Solver.LowCost.Input
 
         private class StoredAtom
         {
-            public Transform2D Transform;
-            public Element Element;
+            public AtomCollection Atoms;
             public int MoleculeID;
         }
 
@@ -122,8 +121,7 @@ namespace OpusSolver.Solver.LowCost.Input
             if (m_stashedAtom != null && m_stashedAtom.MoleculeID == id)
             {
                 // Use the stashed atom before dissassembling another molecule
-                ArmController.MoveGrabberTo(m_stashedAtom.Transform, this);
-                ArmController.GrabMolecule(new AtomCollection(m_stashedAtom.Element, m_stashedAtom.Transform, this));
+                ArmController.SetMoleculeToGrab(m_stashedAtom.Atoms);
                 m_stashedAtom = null;
                 return;
             }
@@ -136,79 +134,63 @@ namespace OpusSolver.Solver.LowCost.Input
                 }
 
                 // Stash the atom temporarily so that we can disassemble another molecule
-                ArmController.MoveGrabberTo(m_unbondedAtom.Transform, this);
-                ArmController.GrabMolecule(new AtomCollection(m_unbondedAtom.Element, m_unbondedAtom.Transform, this));
-                ArmController.MoveGrabberTo(m_stashPosition, this);
-                ArmController.DropMolecule();
+                ArmController.SetMoleculeToGrab(m_unbondedAtom.Atoms);
+                ArmController.DropMoleculeAt(m_stashPosition, this);
 
                 m_stashedAtom = m_unbondedAtom;
-                m_stashedAtom.Transform = m_stashPosition;
                 m_unbondedAtom = null;
             }
 
             if (m_unbondedAtom == null)
             {
-                disassembler.GrabMolecule();
-
-                var targetGrabberPosition = disassembler.MoleculeTransform.Rotation == HexRotation.R180 ? OuterUnbonderPosition : InnerUnbonderPosition;
-                var otherAtomPosition = disassembler.MoleculeTransform.Rotation == HexRotation.R180 ? InnerUnbonderPosition : OuterUnbonderPosition;
-
-                if (disassemblerInfo.Index == 1)
+                Transform2D targetTransform = new Transform2D(InnerUnbonderPosition.Position, HexRotation.R0);
+                if (disassemblerInfo.Index == 0)
                 {
-                    // TODO: Make ArmController understand how to pivot molecules automatically so that we can simplify this
-                    ArmController.PivotClockwise();
-                    ArmController.PivotClockwise();
-                    var tempMolecule = ArmController.DropMolecule();
-                    ArmController.MoveGrabberTo(m_input2GrabPosition, this);
-                    ArmController.GrabMolecule(tempMolecule);
-
-                    var transform = InnerUnbonderPosition;
-                    transform.Position.X -= 1;
-                    ArmController.MoveGrabberTo(transform, this);
-
-                    if (ArmController.GrabbedMolecule.GetAtomAtWorldPosition(ArmController.GetGrabberPosition()).Element == element)
+                    if (disassembler.MoleculeTransform.Rotation == HexRotation.R180)
                     {
-                        ArmController.PivotClockwise();
+                        targetTransform = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R180);
                     }
-                    else
+                }
+                else
+                {
+                    if (disassembler.GetAtomAtPosition(new Vector2(0, 0)).Element != element)
                     {
-                        ArmController.PivotCounterClockwise();
-                        ArmController.PivotCounterClockwise();
-                        targetGrabberPosition = OuterUnbonderPosition;
-                        otherAtomPosition = InnerUnbonderPosition;
+                        targetTransform = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R180);
                     }
                 }
 
-                // Move the molecule onto the unbonder
-                ArmController.MoveGrabberTo(targetGrabberPosition, this);
+                disassembler.GrabMolecule();
+                ArmController.MoveMoleculeTo(targetTransform, this);
+
+                var targetGrabberPosition = GetWorldTransform().Inverse().Apply(ArmController.GetGrabberPosition());
+                var otherAtomPosition = targetGrabberPosition == OuterUnbonderPosition.Position ? InnerUnbonderPosition : OuterUnbonderPosition;
 
                 m_unbondedAtom = new StoredAtom { MoleculeID = id };
 
                 var molecule = ArmController.GrabbedMolecule;
-                var grabbedAtom = molecule.GetAtomAtWorldPosition(targetGrabberPosition.Position, this);
+                var grabbedAtom = molecule.GetAtomAtWorldPosition(targetGrabberPosition, this);
                 if (grabbedAtom.Element == element)
                 {
                     // Keep hold of the atom we've currently got
                     var removedAtoms = ArmController.RemoveAllExceptGrabbedAtom();
-                    m_unbondedAtom.Element = removedAtoms.Atoms.Single().Element;
-                    m_unbondedAtom.Transform = otherAtomPosition;
-                    GridState.RegisterAtom(otherAtomPosition.Position, m_unbondedAtom.Element, this);
+                    m_unbondedAtom.Atoms = new AtomCollection(removedAtoms.Atoms.Single().Element, otherAtomPosition, this);
+                    GridState.RegisterMolecule(m_unbondedAtom.Atoms);
                 }
                 else
                 {
+                    // TODO: Simplify this to use RemoveAllExceptGrabbedAtom
+
                     // Drop the atom we're currently holding and pick up the other atom instead
                     ArmController.DropMolecule();
-                    m_unbondedAtom.Element = grabbedAtom.Element;
-                    m_unbondedAtom.Transform = targetGrabberPosition;
-                    ArmController.MoveGrabberTo(otherAtomPosition, this);
-                    ArmController.GrabMolecule(new AtomCollection(element, otherAtomPosition, this));
+
+                    m_unbondedAtom.Atoms = new AtomCollection(grabbedAtom.Element, new Transform2D(targetGrabberPosition, HexRotation.R0), this);
+                    ArmController.SetMoleculeToGrab(new AtomCollection(element, otherAtomPosition, this));
                 }
             }
             else
             {
                 // Grab the already unbonded atom
-                ArmController.MoveGrabberTo(m_unbondedAtom.Transform, this);
-                ArmController.GrabMolecule(new AtomCollection(m_unbondedAtom.Element, m_unbondedAtom.Transform, this));
+                ArmController.SetMoleculeToGrab(m_unbondedAtom.Atoms);
                 m_unbondedAtom = null;
             }
         }

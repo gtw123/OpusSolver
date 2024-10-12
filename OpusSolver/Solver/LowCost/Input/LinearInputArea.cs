@@ -38,10 +38,6 @@ namespace OpusSolver.Solver.LowCost.Input
             m_disassembler = new SimpleDisassembler(this, Writer, ArmArea, ReagentPosition, reagents.First(), new Transform2D());
         }
 
-        private void CreateDisassemblers(IEnumerable<Molecule> reagents)
-        {
-        }
-
         public override void BeginSolution()
         {
             m_disassembler.BeginSolution();
@@ -49,18 +45,19 @@ namespace OpusSolver.Solver.LowCost.Input
 
         public override void Generate(Element element, int id)
         {
+            var targetPosition = InnerUnbonderPosition.Position;
             if (m_pendingAtoms == null)
             {
                 m_disassembler.GrabMolecule();
-                ArmController.MoveGrabberTo(OuterUnbonderPosition, this);
             }
             else
             {
-                ArmController.MoveGrabberTo(OuterUnbonderPosition, this);
-                ArmController.GrabMolecule(m_pendingAtoms);
+                ArmController.SetMoleculeToGrab(m_pendingAtoms);
+                targetPosition -= m_pendingAtoms.Atoms[0].Position;
             }
 
-            ArmController.MoveGrabberTo(InnerUnbonderPosition, this);
+            ArmController.MoveMoleculeTo(new Transform2D(targetPosition, HexRotation.R0), this);
+
             m_pendingAtoms = ArmController.RemoveAllExceptGrabbedAtom();
             if (m_pendingAtoms.Atoms.Count == 0)
             {

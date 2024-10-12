@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace OpusSolver.Solver.LowCost.Input
 {
@@ -10,6 +11,8 @@ namespace OpusSolver.Solver.LowCost.Input
         private static readonly Transform2D InputTransform = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         public override IEnumerable<Transform2D> RequiredAccessPoints => [InputTransform];
 
+        private readonly Reagent m_reagent;
+
         public Transform2D MoleculeTransform { get; private set; }
 
         public SimpleDisassembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, Transform2D transform, Molecule molecule, Transform2D moleculeTransform)
@@ -18,19 +21,19 @@ namespace OpusSolver.Solver.LowCost.Input
             Transform.Rotation = transform.Rotation;
 
             MoleculeTransform = moleculeTransform;
-            new Reagent(this, moleculeTransform.Position, moleculeTransform.Rotation, molecule);
+            m_reagent = new Reagent(this, moleculeTransform.Position, moleculeTransform.Rotation, molecule);
         }
 
         public override void GrabMolecule()
         {
             Writer.NewFragment();
-            ArmController.MoveGrabberTo(InputTransform, this);
-            ArmController.GrabMolecule(CreateAtomCollection());
+            ArmController.SetMoleculeToGrab(new AtomCollection(Molecule, MoleculeTransform, this));
         }
 
-        private AtomCollection CreateAtomCollection()
+        public Atom GetAtomAtPosition(Vector2 localPos)
         {
-            return new AtomCollection(Molecule, MoleculeTransform, this);
+            var moleculePos = m_reagent.Transform.Inverse().Apply(localPos);
+            return m_reagent.Molecule.GetAtom(moleculePos);
         }
     }
 }
