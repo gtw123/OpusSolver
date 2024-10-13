@@ -61,7 +61,7 @@ namespace OpusSolver.Solver.LowCost
         /// <param name="grabberLocalTransform">The target position and rotation</param>
         /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
         /// <param name="armRotationOffset">Optional additional rotation to apply to the base of the arm</param>
-        public void MoveGrabberTo(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null, ArmMovementOptions options = null)
+        public bool MoveGrabberTo(Transform2D grabberLocalTransform, GameObject relativeToObj = null, HexRotation? armRotationOffset = null, ArmMovementOptions options = null, bool throwOnFailure = true)
         {
             var grabberWorldTransform = relativeToObj?.GetWorldTransform().Apply(grabberLocalTransform) ?? grabberLocalTransform;
 
@@ -73,8 +73,7 @@ namespace OpusSolver.Solver.LowCost
                     throw new SolverException("Cannot call MoveGrabberTo with more than one atom to grab. Use MoveMoleculeTo instead.");
                 }
 
-                MoveMoleculeTo(grabberWorldTransform, options: options);
-                return;
+                return MoveMoleculeTo(grabberWorldTransform, null, options: options, throwOnFailure);
             }
 
             var targetArmTransform = GrabberTransformToArmTransform(grabberWorldTransform);
@@ -83,8 +82,13 @@ namespace OpusSolver.Solver.LowCost
                 targetArmTransform.Rotation += armRotationOffset.Value;
             }
 
-            var instructions = m_armPathFinder.FindArmPath(m_armTransform, targetArmTransform, m_grabbedMolecule, options ?? new ArmMovementOptions());
-            m_writer.Write(m_mainArm, instructions);
+            var result = m_armPathFinder.FindArmPath(m_armTransform, targetArmTransform, m_grabbedMolecule, options ?? new ArmMovementOptions());
+            if (!result.Success)
+            {
+                return throwOnFailure ? throw new SolverException($"Cannot find path from {m_armTransform} to {targetArmTransform}.") : false;
+            }
+
+            m_writer.Write(m_mainArm, result.Instructions);
 
             if (m_grabbedMolecule != null)
             {
@@ -93,6 +97,8 @@ namespace OpusSolver.Solver.LowCost
             }
 
             m_armTransform = targetArmTransform;
+
+            return true;
         }
 
         /// <summary>
@@ -100,7 +106,7 @@ namespace OpusSolver.Solver.LowCost
         /// </summary>
         /// <param name="targetTarget">The target position and rotation of the molecule</param>
         /// <param name="relativeToObj">The object whose local coordinate system the transform is specified in (if null, world coordinates are assumed)</param>
-        public void MoveMoleculeTo(Transform2D targetTransform, GameObject relativeToObj = null, ArmMovementOptions options = null)
+        public bool MoveMoleculeTo(Transform2D targetTransform, GameObject relativeToObj = null, ArmMovementOptions options = null, bool throwOnFailure = true)
         {
             if (m_grabbedMolecule == null && m_moleculeToGrab == null)
             {
@@ -116,13 +122,24 @@ namespace OpusSolver.Solver.LowCost
                 m_gridState.UnregisterMolecule(moleculeToMove);
             }
 
-            var (instructions, finalArmTransform) = m_armPathFinder.FindMoleculePath(m_armTransform, targetTransform, moleculeToMove, alreadyGrabbed, options ?? new ArmMovementOptions());
-            m_writer.Write(m_mainArm, instructions);
+            var result = m_armPathFinder.FindMoleculePath(m_armTransform, targetTransform, moleculeToMove, alreadyGrabbed, options ?? new ArmMovementOptions());
+            if (!result.Success)
+            {
+                if (!alreadyGrabbed)
+                {
+                    m_gridState.RegisterMolecule(moleculeToMove);
+                }
+                return throwOnFailure ? throw new SolverException($"Cannot find path from {m_armTransform} to {targetTransform}.") : false;
+            }
+
+            m_writer.Write(m_mainArm, result.Instructions);
 
             m_grabbedMolecule = moleculeToMove;
             m_grabbedMolecule.WorldTransform = targetTransform;
-            m_armTransform = finalArmTransform;
+            m_armTransform = result.FinalArmTransform;
             m_moleculeToGrab = null;
+
+            return true;
         }
 
         public void GrabMolecule(AtomCollection molecule)

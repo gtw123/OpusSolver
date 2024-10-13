@@ -32,7 +32,9 @@ namespace OpusSolver.Solver.LowCost
             bool AllowGrabDrop
         );
 
-        public IEnumerable<Instruction> FindArmPath(Transform2D startTransform, Transform2D endTransform, AtomCollection moleculeToMove, ArmMovementOptions options)
+        public record class PathResult(bool Success, IEnumerable<Instruction> Instructions, Transform2D FinalArmTransform);
+
+        public PathResult FindArmPath(Transform2D startTransform, Transform2D endTransform, AtomCollection moleculeToMove, ArmMovementOptions options)
         {
             if (!m_trackCellsToIndexes.TryGetValue(startTransform.Position, out var startTrackIndex))
             {
@@ -65,14 +67,13 @@ namespace OpusSolver.Solver.LowCost
             var path = FindShortestPath(startState, moleculeToMove, searchParams, options);
             if (path == null)
             {
-                throw new SolverException($"Cannot find path from {startTransform} to {endTransform}.");
+                return new PathResult(Success: false, null, new());
             }
 
-            return GetInstructionsForPath(startState, path);
+            return new PathResult(Success: true, GetInstructionsForPath(startState, path), endTransform);
         }
 
-        public (IEnumerable<Instruction> instructions, Transform2D finalArmTransform)
-            FindMoleculePath(Transform2D startArmTransform, Transform2D endMoleculeTransform, AtomCollection moleculeToMove, bool isHoldingMolecule, ArmMovementOptions options)
+        public PathResult FindMoleculePath(Transform2D startArmTransform, Transform2D endMoleculeTransform, AtomCollection moleculeToMove, bool isHoldingMolecule, ArmMovementOptions options)
         {
             if (moleculeToMove == null)
             {
@@ -133,10 +134,10 @@ namespace OpusSolver.Solver.LowCost
             var path = FindShortestPath(startState, moleculeToMove, searchParams, options);
             if (path == null)
             {
-                throw new SolverException($"Cannot find path from {startArmTransform} to {endMoleculeTransform}.");
+                return new PathResult(Success: false, null, new());
             }
 
-            return (GetInstructionsForPath(startState, path), GetArmTransform(path.LastOrDefault() ?? startState));
+            return new PathResult(Success: true, GetInstructionsForPath(startState, path), GetArmTransform(path.LastOrDefault() ?? startState));
         }
 
         private Vector2 GetGrabberPosition(ArmState armState)
