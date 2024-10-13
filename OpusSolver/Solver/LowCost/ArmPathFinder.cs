@@ -167,7 +167,7 @@ namespace OpusSolver.Solver.LowCost
                 int newCost = costs[currentState] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    if (moleculeToMove == null || !neighbor.IsHoldingMolecule || IsMovementAllowed(currentState, neighbor, moleculeToMove, options))
+                    if (IsMovementAllowed(currentState, neighbor, moleculeToMove, options))
                     {
                         costs[neighbor] = newCost;
                         queue.Enqueue(neighbor, newCost + searchParams.CalculateHeuristic(neighbor));
@@ -299,6 +299,30 @@ namespace OpusSolver.Solver.LowCost
             {
                 // If the arm and atoms aren't moving, there's nothing to check. This includes the case where we're picking up
                 // or dropping atoms.
+                return true;
+            }
+
+            // Check if the arm base will collide with a static atom while moving along the track
+            var targetArmPos = m_trackCells[targetState.TrackIndex];
+            if (m_gridState.GetAtom(targetArmPos) != null)
+            {
+                return false;
+            }
+
+            if (moleculeToMove == null)
+            {
+                return true;
+            }
+
+            if (!targetState.IsHoldingMolecule)
+            {
+                // Check if the arm base with collide with an atom of the molecule while it's dropped
+                if (moleculeToMove.GetTransformedAtomPositions(targetState.MoleculeTransform).Any(p => p.position == targetArmPos))
+                {
+                    return false;
+                }
+
+                // There's nothing else to check if we're not currently holding the molecule
                 return true;
             }
 
