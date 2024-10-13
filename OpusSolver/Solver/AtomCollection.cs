@@ -81,8 +81,9 @@ namespace OpusSolver.Solver
             return GetTransformedAtomPositions(WorldTransform);
         }
 
-        public IEnumerable<(Atom atom, Vector2 position)> GetTransformedAtomPositions(Transform2D transform)
+        public IEnumerable<(Atom atom, Vector2 position)> GetTransformedAtomPositions(Transform2D transform, GameObject relativeToObj = null)
         {
+            transform = relativeToObj?.GetWorldTransform().Apply(transform) ?? transform;
             return Atoms.Select(a => (a, transform.Apply(a.Position)));
         }
 

@@ -149,35 +149,12 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             assembledMolecule.Atoms[0].Position = op.Atom.Position;
             yield return null;
 
-            bool isBondingUpsideDown = false;
+            var targetBondPosition = LowerBonderPosition;
 
             for (int opIndex = 1; opIndex < operations.Count; opIndex++)
             {
-                op = operations[opIndex];
-
-                if (isBondingUpsideDown)
-                {
-                    // Stash the new atom "behind" the previously dropped molecule
-                    var newAtom = ArmController.DropMoleculeAt(ArmController.GetRotatedGrabberTransform(LowerBonderPosition, HexRotation.R120), this);
-
-                    // Grab the previously dropped molecule and move it so that the previous atom is on the bonder and the molecule is
-                    // rotated 180 degrees from where it's meant to be.
-                    ArmController.SetMoleculeToGrab(assembledMolecule);
-                    var previousAtom = op.ParentAtom;
-                    var targetTransform = new Transform2D(LowerBonderPosition.Position - previousAtom.Position, HexRotation.R0);
-                    targetTransform = targetTransform.RotateAbout(LowerBonderPosition.Position, op.MoleculeRotation + HexRotation.R180);
-                    ArmController.DropMoleculeAt(targetTransform, this);
-
-                    // Grab the previously dropped new atom and bond it to the assembled molecule
-                    ArmController.SetMoleculeToGrab(newAtom);
-                    ArmController.MoveMoleculeTo(UpperBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
-                    ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
-                }
-                else 
-                {
-                    ArmController.MoveMoleculeTo(LowerBonderPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
-                    ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
-                }
+                ArmController.MoveMoleculeTo(targetBondPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
+                ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
 
                 if (opIndex == operations.Count - 1)
                 {
@@ -187,40 +164,36 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 }
 
                 var nextOp = operations[opIndex + 1];
-                if (nextOp.ParentAtom != op.Atom)
-                {
-                    var targetTransform = new Transform2D(UpperBonderPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
-                    targetTransform = targetTransform.RotateAbout(UpperBonderPosition.Position, nextOp.MoleculeRotation);
-                    ArmController.DropMoleculeAt(targetTransform, this);
-                }
-                else
-                {
-                    if (!isBondingUpsideDown)
-                    {
-                        var targetTransform = new Transform2D(UpperBonderPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
-                        targetTransform = targetTransform.RotateAbout(UpperBonderPosition.Position, op.MoleculeRotation);
-                        ArmController.MoveMoleculeTo(targetTransform, this);
-                    }
 
-                    var targetRotation = nextOp.MoleculeRotation;
-                    if (ArmController.TryPivotBy(targetRotation - assembledMolecule.WorldTransform.Rotation))
-                    {
-                        isBondingUpsideDown = false;
-                    }
-                    else
-                    {
-                        // Rotate/pivot the molecule so that we can move the next atom behind it
-                        var targetRotation2 = op.MoleculeRotation - HexRotation.R120;
-                        var requiredPivot = targetRotation2 - assembledMolecule.WorldTransform.Rotation;
-                        var targetTransform = assembledMolecule.WorldTransform.RotateAbout(ArmController.GetGrabberPosition(), requiredPivot);
-                        targetTransform = targetTransform.RotateAbout(ArmController.ArmTransform.Position, HexRotation.R120);
-                        ArmController.MoveMoleculeTo(targetTransform);
-                        isBondingUpsideDown = true;
-                    }
+                // Figure out where we need to position the molecule for the next bond
+                var targetTransform = new Transform2D(UpperBonderPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
+                targetTransform = targetTransform.RotateAbout(UpperBonderPosition.Position, nextOp.MoleculeRotation);
 
-                    ArmController.DropMolecule();
+                // Make sure the molecule won't overlap the track when it's positioned at the target transform. However,
+                // we will allow it to overlap the track cell that provides access to the upper bonder position as we don't
+                // need to access that right now.
+                bool moved = false;
+                var atomPositions = assembledMolecule.GetTransformedAtomPositions(targetTransform, this);
+                var upperTrackWorldPosition = ArmController.GrabberTransformToArmTransform(GetWorldTransform().Apply(UpperBonderPosition)).Position;
+                if (!atomPositions.Any(p => p.position != upperTrackWorldPosition && GridState.GetTrack(p.position) != null))
+                {
+                    if (ArmController.MoveMoleculeTo(targetTransform, this, throwOnFailure: false))
+                    {
+                        targetBondPosition = LowerBonderPosition;
+                        moved = true;
+                    }
                 }
 
+                if (!moved)
+                {
+                    // Position it so we can bond on the other side of the bonder instead
+                    targetTransform = new Transform2D(LowerBonderPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
+                    targetTransform = targetTransform.RotateAbout(LowerBonderPosition.Position, nextOp.MoleculeRotation + HexRotation.R180);
+                    ArmController.MoveMoleculeTo(targetTransform, this);
+                    targetBondPosition = UpperBonderPosition;
+                }
+
+                ArmController.DropMolecule();
                 yield return null;
             }
         }

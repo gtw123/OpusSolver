@@ -32,7 +32,7 @@ namespace OpusSolver.Solver.LowCost
             m_armTransform = arm.Transform;
         }
 
-        private Transform2D GrabberTransformToArmTransform(Transform2D grabberTransform)
+        public Transform2D GrabberTransformToArmTransform(Transform2D grabberTransform)
         {
             return grabberTransform.Apply(new Transform2D(new Vector2(-ArmLength, 0), HexRotation.R0));
         }

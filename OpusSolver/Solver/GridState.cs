@@ -86,6 +86,16 @@ namespace OpusSolver.Solver
             return m_glyphs.TryGetValue(position, out var glyph) ? glyph : null;
         }
 
+        public Reagent GetReagent(Vector2 position)
+        {
+            return m_reagents.TryGetValue(position, out var reagent) ? reagent : null;
+        }
+
+        public Track GetTrack(Vector2 position)
+        {
+            return m_tracks.TryGetValue(position, out var track) ? track : null;
+        }
+
         /// <summary>
         /// Checks whether the specified grid cell contains a game object such as a glyph, reagent or track.
         /// Ignores atoms.
