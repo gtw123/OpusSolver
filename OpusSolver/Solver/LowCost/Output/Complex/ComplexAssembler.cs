@@ -153,7 +153,46 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
             for (int opIndex = 1; opIndex < operations.Count; opIndex++)
             {
-                ArmController.MoveMoleculeTo(targetBondPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true });
+                // Try to move the new atom onto the bonder
+                if (!ArmController.MoveMoleculeTo(targetBondPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true }, throwOnFailure: false))
+                {
+                    var newAtom = ArmController.DropMolecule();
+
+                    var originalAssembledMoleculeTransform = assembledMolecule.WorldTransform;
+
+                    // Move the partially assembled molecule out of the way
+                    var moleculeTransform = GetWorldTransform().Inverse().Apply(originalAssembledMoleculeTransform);
+                    if (targetBondPosition == UpperBonderPosition)
+                    {
+                        // Move it to the upper bonder position if necessary
+                        moleculeTransform.Position += UpperBonderPosition.Position - LowerBonderPosition.Position;
+                    }
+
+                    // Rotate 120 degrees CCW
+                    moleculeTransform = moleculeTransform.RotateAbout(ArmController.GrabberTransformToArmTransform(UpperBonderPosition).Position, HexRotation.R120);
+                    
+                    // Pivot 60 degrees CCW
+                    moleculeTransform = moleculeTransform.RotateAbout(ArmController.GetRotatedGrabberTransform(UpperBonderPosition, HexRotation.R120).Position, HexRotation.R60);
+
+                    ArmController.SetMoleculeToGrab(assembledMolecule);
+                    ArmController.DropMoleculeAt(moleculeTransform, this);
+
+                    // Stash the new atom "behind" the partially assembled molecule
+                    ArmController.SetMoleculeToGrab(newAtom);
+                    ArmController.DropMoleculeAt(ArmController.GetRotatedGrabberTransform(LowerBonderPosition, HexRotation.R120), this);
+
+                    // Move the partially assembled molecule back onto the bonder
+                    ArmController.SetMoleculeToGrab(assembledMolecule);
+                    ArmController.DropMoleculeAt(originalAssembledMoleculeTransform);
+
+                    // Grab the stashed atom again
+                    ArmController.SetMoleculeToGrab(newAtom);
+                    if (!ArmController.MoveMoleculeTo(targetBondPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true }, throwOnFailure: false))
+                    {
+                        throw new SolverException($"Couldn't move atom to {targetBondPosition} even after repositioning the assembled molecule.");
+                    }
+                }
+
                 ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
 
                 if (opIndex == operations.Count - 1)

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Reflection;
 
 namespace OpusSolver.Solver.LowCost
 {
@@ -164,6 +165,13 @@ namespace OpusSolver.Solver.LowCost
 
         public AtomCollection DropMolecule(bool addToGrid = true)
         {
+            if (m_moleculeToGrab != null)
+            {
+                var result = m_moleculeToGrab;
+                m_moleculeToGrab = null;
+                return result;
+            }
+
             if (m_grabbedMolecule == null)
             {
                 throw new SolverException("Cannot drop a molecule when not holding one.");
