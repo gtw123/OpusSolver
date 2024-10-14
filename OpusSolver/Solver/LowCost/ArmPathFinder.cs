@@ -335,6 +335,11 @@ namespace OpusSolver.Solver.LowCost
                     return false;
                 }
 
+                if (m_gridState.GetStaticArm(pos) != null)
+                {
+                    return false;
+                }
+
                 if (!options.AllowCalcification && PeriodicTable.Cardinals.Contains(atom.Element) && m_gridState.GetGlyph(pos)?.Type == GlyphType.Calcification)
                 {
                     return false;

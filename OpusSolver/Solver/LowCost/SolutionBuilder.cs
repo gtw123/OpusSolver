@@ -152,20 +152,28 @@ namespace OpusSolver.Solver.LowCost
 
         private void RegisterObjectsOnGrid()
         {
-            foreach (var obj in GetAllObjects())
+            foreach (var glyph in GetAllObjects().OfType<Glyph>())
             {
-                switch (obj)
+                m_armArea.GridState.RegisterGlyph(glyph);
+            }
+
+            foreach (var reagent in GetAllObjects().OfType<Reagent>())
+            {
+                m_armArea.GridState.RegisterReagent(reagent);
+            }
+
+            var trackCells = new HashSet<Vector2>();
+            foreach (var track in GetAllObjects().OfType<Track>())
+            {
+                m_armArea.GridState.RegisterTrack(track);
+                trackCells.UnionWith(track.GetAllPathCells());
+            }
+
+            foreach (var arm in GetAllObjects().OfType<Arm>())
+            {
+                if (!trackCells.Contains(arm.GetWorldTransform().Position))
                 {
-                    case Glyph glyph:
-                        m_armArea.GridState.RegisterGlyph(glyph);
-                        break;
-                    case Reagent reagent:
-                        m_armArea.GridState.RegisterReagent(reagent);
-                        break;
-                    case Track track:
-                        m_armArea.GridState.RegisterTrack(track);
-                        break;
-                    // TODO: Register arms too
+                    m_armArea.GridState.RegisterStaticArm(arm);
                 }
             }
         }

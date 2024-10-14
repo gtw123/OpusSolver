@@ -9,6 +9,7 @@ namespace OpusSolver.Solver
         private Dictionary<Vector2, Glyph> m_glyphs = new();
         private Dictionary<Vector2, Reagent> m_reagents = new();
         private Dictionary<Vector2, Track> m_tracks = new();
+        private Dictionary<Vector2, Arm> m_staticArms = new();
 
         public void RegisterAtom(Vector2 position, Element? element, GameObject relativeToObj)
         {
@@ -62,6 +63,11 @@ namespace OpusSolver.Solver
             }
         }
 
+        public void RegisterStaticArm(Arm arm)
+        {
+            m_staticArms[arm.GetWorldTransform().Position] = arm;
+        }
+
         public Element? GetAtom(Vector2 position)
         {
             return m_atoms.TryGetValue(position, out var element) ? element : null;
@@ -96,12 +102,21 @@ namespace OpusSolver.Solver
             return m_tracks.TryGetValue(position, out var track) ? track : null;
         }
 
-        /// <summary>
+        public Arm GetStaticArm(Vector2 position)
+        {
+            return m_staticArms.TryGetValue(position, out var arm) ? arm : null;
+        }
+
+        public IEnumerable<Vector2> GetStaticArmPositions()
+        {
+            return m_staticArms.Keys;
+        }
+
         /// Checks whether the specified grid cell contains a game object such as a glyph, reagent or track.
         /// Ignores atoms.
         public bool CellContainsAnyObject(Vector2 position)
         {
-            return m_glyphs.ContainsKey(position) || m_reagents.ContainsKey(position) || m_tracks.ContainsKey(position);
+            return m_glyphs.ContainsKey(position) || m_reagents.ContainsKey(position) || m_tracks.ContainsKey(position) || m_staticArms.ContainsKey(position);
         }
     }
 }

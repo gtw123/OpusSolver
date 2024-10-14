@@ -139,6 +139,11 @@ namespace OpusSolver.Solver
                 return true;
             }
 
+            if (m_gridState.GetStaticArmPositions().Any(pos => WillAtomCollideWithObject(pos, ArmBaseRadius)))
+            {
+                return true;
+            }
+    
             return false;
         }
     }
