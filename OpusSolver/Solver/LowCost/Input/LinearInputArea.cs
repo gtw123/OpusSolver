@@ -53,7 +53,8 @@ namespace OpusSolver.Solver.LowCost.Input
             else
             {
                 ArmController.SetMoleculeToGrab(m_pendingAtoms);
-                targetPosition -= m_pendingAtoms.Atoms[0].Position;
+                var nextAtom = m_pendingAtoms.GetAtomAtWorldPosition(OuterUnbonderPosition.Position, this);
+                targetPosition -= nextAtom.Position;
             }
 
             ArmController.MoveMoleculeTo(new Transform2D(targetPosition, HexRotation.R0), this);
