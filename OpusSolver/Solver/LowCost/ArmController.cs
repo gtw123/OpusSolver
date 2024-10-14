@@ -86,7 +86,7 @@ namespace OpusSolver.Solver.LowCost
             var result = m_armPathFinder.FindArmPath(m_armTransform, targetArmTransform, m_grabbedMolecule, options ?? new ArmMovementOptions());
             if (!result.Success)
             {
-                return throwOnFailure ? throw new SolverException($"Cannot find path from {m_armTransform} to {targetArmTransform}.") : false;
+                return throwOnFailure ? throw new SolverException($"Cannot find path to move arm from {m_armTransform} to {targetArmTransform}.") : false;
             }
 
             m_writer.Write(m_mainArm, result.Instructions);
@@ -130,7 +130,7 @@ namespace OpusSolver.Solver.LowCost
                 {
                     m_gridState.RegisterMolecule(moleculeToMove);
                 }
-                return throwOnFailure ? throw new SolverException($"Cannot find path from {m_armTransform} to {targetTransform}.") : false;
+                return throwOnFailure ? throw new SolverException($"Cannot find path to move molecule from {moleculeToMove.WorldTransform} to {targetTransform}.") : false;
             }
 
             m_writer.Write(m_mainArm, result.Instructions);
