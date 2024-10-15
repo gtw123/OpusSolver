@@ -8,6 +8,11 @@
         public bool AllowCalcification;
 
         /// <summary>
+        /// Allow salt atoms to be moved over glyphs of duplication.
+        /// </summary>
+        public bool AllowDuplication;
+
+        /// <summary>
         /// Allow bonds to be created between atoms in the grabbed molecule and other atoms on the grid.
         /// </summary>
         public bool AllowExternalBonds;

@@ -340,42 +340,58 @@ namespace OpusSolver.Solver.LowCost
                     return false;
                 }
 
-                if (!options.AllowCalcification && PeriodicTable.Cardinals.Contains(atom.Element) && m_gridState.GetGlyph(pos)?.Type == GlyphType.Calcification)
-                {
-                    return false;
-                }
-
                 var glyph = m_gridState.GetGlyph(pos);
-                if (glyph != null && glyph.Type == GlyphType.Bonding)
+                if (glyph != null)
                 {
-                    // Check what's on top of the other cell of the bonder (if anything)
-                    var bonderCells = glyph.GetWorldCells();
-                    var otherPos = bonderCells[0] != pos ? bonderCells[0] : bonderCells[1];
-                    if (m_gridState.GetAtom(otherPos) != null)
+                    if (glyph.Type == GlyphType.Calcification && !options.AllowCalcification && PeriodicTable.Cardinals.Contains(atom.Element))
                     {
-                        // A static atom is on the other cell of the bonder
-                        if (!options.AllowExternalBonds)
+                        return false;
+                    }
+
+                    if (glyph.Type == GlyphType.Duplication && !options.AllowDuplication && atom.Element == Element.Salt)
+                    {
+                        var glyphCells = glyph.GetWorldCells();
+                        if (pos == glyphCells[1])
                         {
-                            return false;
+                            var otherAtom = m_gridState.GetAtom(glyphCells[0]);
+                            if (otherAtom != Element.Salt)
+                            {
+                                return false;
+                            }
                         }
                     }
-                    else
+
+                    if (glyph.Type == GlyphType.Bonding)
                     {
-                        var moleculeInverse = targetState.MoleculeTransform.Inverse();
-                        var otherAtomLocalPos = moleculeInverse.Apply(otherPos);
-                        var otherAtom = moleculeToMove.GetAtom(otherAtomLocalPos);
-                        if (otherAtom != null)
+                        // Check what's on top of the other cell of the bonder (if anything)
+                        var bonderCells = glyph.GetWorldCells();
+                        var otherPos = bonderCells[0] != pos ? bonderCells[0] : bonderCells[1];
+                        if (m_gridState.GetAtom(otherPos) != null)
                         {
-                            // Another atom within the molecule is on the other cell of the bonder.
-                            // Check if these atoms are *not* already bonded.
-                            var currentAtomLocalPos = moleculeInverse.Apply(pos);
-                            var bondDir = (otherAtomLocalPos - currentAtomLocalPos).ToRotation() ?? throw new InvalidOperationException($"Expected bonder cells {pos} and {otherPos} to be adjacent.");
-                            if (atom.Bonds[bondDir] == BondType.None)
+                            // A static atom is on the other cell of the bonder
+                            if (!options.AllowExternalBonds)
                             {
-                                // Disallow this bond unless the target molecule has it
-                                if (moleculeToMove.TargetMolecule == null || moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] == BondType.None)
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            var moleculeInverse = targetState.MoleculeTransform.Inverse();
+                            var otherAtomLocalPos = moleculeInverse.Apply(otherPos);
+                            var otherAtom = moleculeToMove.GetAtom(otherAtomLocalPos);
+                            if (otherAtom != null)
+                            {
+                                // Another atom within the molecule is on the other cell of the bonder.
+                                // Check if these atoms are *not* already bonded.
+                                var currentAtomLocalPos = moleculeInverse.Apply(pos);
+                                var bondDir = (otherAtomLocalPos - currentAtomLocalPos).ToRotation() ?? throw new InvalidOperationException($"Expected bonder cells {pos} and {otherPos} to be adjacent.");
+                                if (atom.Bonds[bondDir] == BondType.None)
                                 {
-                                    return false;
+                                    // Disallow this bond unless the target molecule has it
+                                    if (moleculeToMove.TargetMolecule == null || moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] == BondType.None)
+                                    {
+                                        return false;
+                                    }
                                 }
                             }
                         }

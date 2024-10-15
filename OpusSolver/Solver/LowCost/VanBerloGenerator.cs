@@ -25,17 +25,22 @@ namespace OpusSolver.Solver.LowCost
 
         public override void BeginSolution()
         {
-            foreach (var rot in HexRotation.All)
+            RegisterAtoms();
+        }
+
+        private void RegisterAtoms()
+        {
+            foreach (var (dir, element) in m_controller.GetCurrentElements())
             {
-                // Technically these aren't all salt elements, but that doesn't matter at the moment
-                GridState.RegisterAtom(m_wheelArm.Transform.Position + new Vector2(1, 0).RotateBy(rot), Element.Salt, this);
+                GridState.RegisterAtom(m_wheelArm.Transform.Position + new Vector2(1, 0).RotateBy(dir + HexRotation.R180), element, this);
             }
         }
 
         public override void Generate(Element element, int id)
         {
-            ArmController.MoveMoleculeTo(DuplicatorTransform, this);
+            ArmController.MoveMoleculeTo(DuplicatorTransform, this, options: new ArmMovementOptions { AllowDuplication = true });
             m_controller.RotateToElement(element);
+            RegisterAtoms();
             ArmController.GrabbedMolecule.GetAtomAtWorldPosition(DuplicatorTransform.Position, this).Element = element;
         }
 
@@ -44,6 +49,7 @@ namespace OpusSolver.Solver.LowCost
             if (element == Element.Salt)
             {
                 m_controller.RotateToElement(element);
+                RegisterAtoms();
             }
             else
             {
@@ -59,6 +65,7 @@ namespace OpusSolver.Solver.LowCost
             // adding an extra cycle per product.
             Writer.AdjustTime(-1);
             m_controller.Reset(asEarlyAsPossible: false);
+            RegisterAtoms();
         }
     }
 }

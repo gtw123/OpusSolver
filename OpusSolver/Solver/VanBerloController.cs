@@ -11,8 +11,16 @@ namespace OpusSolver.Solver
         private bool m_isFirstAtom = true;
         private HexRotation m_currentWheelRotation;
 
-        // Elements that can be produced by Van Berlo's wheel, in clockwise order
-        private static List<Element> sm_wheelElements = new List<Element> { Element.Salt, Element.Air, Element.Water, Element.Salt, Element.Earth, Element.Fire };
+        // Elements that can be produced by Van Berlo's wheel when it has the specified rotation.
+        public static HexRotationDictionary<Element> ProducedElements = new(new Dictionary<HexRotation, Element>
+        { 
+            { HexRotation.R0, Element.Salt },
+            { HexRotation.R60, Element.Air},
+            { HexRotation.R120, Element.Water },
+            { HexRotation.R180, Element.Salt },
+            { HexRotation.R240, Element.Earth },
+            { HexRotation.R300, Element.Fire }
+        });
 
         public VanBerloController(ProgramWriter writer, Arm wheelArm)
         {
@@ -22,7 +30,7 @@ namespace OpusSolver.Solver
 
         public void RotateToElement(Element element)
         {
-            var destRotation = new HexRotation(sm_wheelElements.FindIndex(e => e == element));
+            var destRotation = ProducedElements.First(p => p.Value == element).Key;
             if (m_isFirstAtom)
             {
                 // Set the initial rotation of the arm to the first element, to save a few instructions
@@ -45,6 +53,12 @@ namespace OpusSolver.Solver
             }
 
             m_currentWheelRotation = destRotation;
+        }
+
+        public HexRotationDictionary<Element> GetCurrentElements()
+        {
+            return new HexRotationDictionary<Element>(
+                HexRotation.All.ToDictionary(r => r, r => ProducedElements[m_currentWheelRotation - r]));
         }
 
         public void Reset(bool asEarlyAsPossible = true)
