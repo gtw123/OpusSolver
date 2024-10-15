@@ -362,16 +362,21 @@ namespace OpusSolver.Solver.LowCost
                     else
                     {
                         var moleculeInverse = targetState.MoleculeTransform.Inverse();
-                        var otherAtomPos = moleculeInverse.Apply(otherPos);
-                        var otherAtom = moleculeToMove.GetAtom(otherAtomPos);
+                        var otherAtomLocalPos = moleculeInverse.Apply(otherPos);
+                        var otherAtom = moleculeToMove.GetAtom(otherAtomLocalPos);
                         if (otherAtom != null)
                         {
                             // Another atom within the molecule is on the other cell of the bonder.
                             // Check if these atoms are *not* already bonded.
-                            var bondDir = (otherAtomPos - moleculeInverse.Apply(pos)).ToRotation() ?? throw new InvalidOperationException($"Expected bonder cells {pos} and {otherPos} to be adjacent.");
-                            if (atom.Bonds[bondDir] == BondType.None && !options.AllowInternalBonds)
+                            var currentAtomLocalPos = moleculeInverse.Apply(pos);
+                            var bondDir = (otherAtomLocalPos - currentAtomLocalPos).ToRotation() ?? throw new InvalidOperationException($"Expected bonder cells {pos} and {otherPos} to be adjacent.");
+                            if (atom.Bonds[bondDir] == BondType.None)
                             {
-                                return false;
+                                // Disallow this bond unless the target molecule has it
+                                if (moleculeToMove.TargetMolecule == null || moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] == BondType.None)
+                                {
+                                    return false;
+                                }
                             }
                         }
                     }

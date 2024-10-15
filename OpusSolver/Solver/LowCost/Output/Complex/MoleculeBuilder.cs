@@ -132,7 +132,8 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         private List<BondedAtom> DetermineAtomOrder()
         {
-            var firstAtom = Product.Atoms.Where(a => a.BondCount <= 1).MaxBy(a => a.Position.X);
+            // Start with the atom with the smallest bond, then use X position as an arbitrary tie-breaker
+            var firstAtom = Product.Atoms.GroupBy(a => a.BondCount).OrderBy(g => g.Key).First().MaxBy(a => a.Position.X);
             var seenAtoms = new HashSet<Atom> { firstAtom };
 
             var orderedAtoms = new List<BondedAtom>();

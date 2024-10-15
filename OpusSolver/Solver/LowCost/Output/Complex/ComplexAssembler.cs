@@ -147,6 +147,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             assembledMolecule.WorldTransform.Position = assembledMolecule.WorldTransform.Apply(assembledMolecule.Atoms[0].Position) - op.Atom.Position.RotateBy(op.MoleculeRotation);
             assembledMolecule.WorldTransform.Rotation = op.MoleculeRotation;
             assembledMolecule.Atoms[0].Position = op.Atom.Position;
+            assembledMolecule.TargetMolecule = builder.Product;
             yield return null;
 
             var targetBondPosition = LowerBonderPosition;
@@ -197,7 +198,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                 if (opIndex == operations.Count - 1)
                 {
-                    ArmController.DropMoleculeAt(m_outputs[builder.Product.ID].Transform, this, addToGrid: false);
+                    FinishAssembly(builder, assembledMolecule);
                     yield return null;
                     yield break;
                 }
@@ -237,47 +238,34 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             }
         }
 
-        public static bool IsProductCompatible(Molecule product)
+        private void FinishAssembly(MoleculeBuilder builder, AtomCollection assembledMolecule)
         {
-            //return product.Atoms.All(a => a.BondCount <= 2) && product.Atoms.Count(a => a.BondCount == 1) == 2 || product.Atoms.Count() == 1;
-            // For now, only allow molecules with no bond loops
-            return !DoesMoleculeHaveBondCycles(product);
-        }
-
-        private static bool DoesMoleculeHaveBondCycles(Molecule molecule)
-        {
-            var seenAtoms = new HashSet<Atom>();
-
-            bool CheckForCycle(Atom currentAtom, Atom parent)
+            // Add any missing internal bonds
+            foreach (var atom in assembledMolecule.Atoms)
             {
-                seenAtoms.Add(currentAtom);
-                foreach (var (_, bondedAtom) in molecule.GetAdjacentBondedAtoms(currentAtom.Position))
+                foreach (var bondDir in HexRotation.All)
                 {
-                    if (!seenAtoms.Contains(bondedAtom))
-                    {
-                        if (CheckForCycle(bondedAtom, currentAtom))
+                    var bondType = atom.Bonds[bondDir];
+                    if (bondType == BondType.None && assembledMolecule.TargetMolecule.GetAtom(atom.Position).Bonds[bondDir] != BondType.None)
+                    {                       
+                        var rot = -bondDir + BondingDirection;
+                        var targetTransform = new Transform2D(UpperBonderPosition.Position - atom.Position, HexRotation.R0);
+                        targetTransform = targetTransform.RotateAbout(UpperBonderPosition.Position, rot);
+                        if (!ArmController.MoveMoleculeTo(targetTransform, this, throwOnFailure: false))
                         {
-                            return true;
+                            targetTransform = new Transform2D(LowerBonderPosition.Position - atom.Position, HexRotation.R0);
+                            targetTransform = targetTransform.RotateAbout(LowerBonderPosition.Position, rot + HexRotation.R180);
+                            ArmController.MoveMoleculeTo(targetTransform, this);
                         }
-                    }
-                    else if (bondedAtom != parent)
-                    {
-                        return true;
-                    }
-                }
 
-                return false;
-            }
-
-            foreach (var atom in molecule.Atoms)
-            {
-                if (!seenAtoms.Contains(atom) && CheckForCycle(atom, null))
-                {
-                    return true;
+                        var otherAtom = assembledMolecule.GetAtom(atom.Position + new Vector2(1, 0).RotateBy(bondDir));
+                        assembledMolecule.AddBond(atom.Position, otherAtom.Position);
+                    }
                 }
             }
 
-            return false;
+            // Move the molecule to the output
+            ArmController.DropMoleculeAt(m_outputs[builder.Product.ID].Transform, this, addToGrid: false);
         }
 
         public static IEnumerable<MoleculeBuilder> CreateMoleculeBuilders(IEnumerable<Molecule> products)

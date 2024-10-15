@@ -11,6 +11,12 @@ namespace OpusSolver.Solver
         public IReadOnlyList<Atom> Atoms => m_atoms;
         public Transform2D WorldTransform;
 
+        /// <summary>
+        /// The molecule that these atoms are being assembled into (optional). Used to help determine
+        /// which bonds are allowed to be created between the atoms in this collection.
+        /// </summary>
+        public Molecule TargetMolecule { get; set; }
+
         public AtomCollection()
         {
             m_atoms = new();
