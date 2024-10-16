@@ -6,9 +6,9 @@ using static System.FormattableString;
 namespace OpusSolver.Solver.LowCost.Input
 {
     /// <summary>
-    /// A simple input area used when all reagents have a single atom.
+    /// A disassembler used when all reagents have a single atom.
     /// </summary>
-    public class SimpleInputArea : LowCostAtomGenerator
+    public class MonoatomicDisassembler : LowCostAtomGenerator
     {
         private readonly Dictionary<int, MoleculeInput> m_inputs = new();
 
@@ -20,17 +20,17 @@ namespace OpusSolver.Solver.LowCost.Input
         public override IEnumerable<Transform2D> RequiredAccessPoints =>
             m_inputAccessPointOrder.Select(o => m_inputs[o]).SelectMany(d => d.RequiredAccessPoints.Select(p => d.Transform.Apply(p)));
 
-        public SimpleInputArea(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
+        public MonoatomicDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
             : base(writer, armArea)
         {
             if (reagents.Any(r => r.Atoms.Count() > 1))
             {
-                throw new ArgumentException($"{nameof(SimpleInputArea)} can't handle reagents with multiple atoms.");
+                throw new ArgumentException($"{nameof(MonoatomicDisassembler)} can't handle reagents with multiple atoms.");
             }
 
             if (reagents.Count() > MaxReagents)
             {
-                throw new ArgumentException(Invariant($"{nameof(SimpleInputArea)} can't handle more than {MaxReagents} distinct reagents."));
+                throw new ArgumentException(Invariant($"{nameof(MonoatomicDisassembler)} can't handle more than {MaxReagents} distinct reagents."));
             }
 
             CreateInputs(reagents);

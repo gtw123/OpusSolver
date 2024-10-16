@@ -6,9 +6,9 @@ using static System.FormattableString;
 namespace OpusSolver.Solver.LowCost.Input
 {
     /// <summary>
-    /// An input area used when all reagents have at most two atoms.
+    /// A disassembler used when all reagents have at most two atoms.
     /// </summary>
-    public class DiatomicInputArea : LowCostAtomGenerator
+    public class DiatomicDisassembler : LowCostAtomGenerator
     {
         private record DisassemblerInfo(MoleculeInput Disassembler, int Index);
 
@@ -33,17 +33,17 @@ namespace OpusSolver.Solver.LowCost.Input
         private readonly List<Transform2D> m_accessPoints = new();
         public override IEnumerable<Transform2D> RequiredAccessPoints => m_accessPoints;
 
-        public DiatomicInputArea(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
+        public DiatomicDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
             : base(writer, armArea)
         {
             if (reagents.Any(r => r.Atoms.Count() > 2))
             {
-                throw new ArgumentException($"{nameof(DiatomicInputArea)} can't handle reagents with more than two atoms.");
+                throw new ArgumentException($"{nameof(DiatomicDisassembler)} can't handle reagents with more than two atoms.");
             }
 
             if (reagents.Count() > MaxReagents)
             {
-                throw new ArgumentException(Invariant($"{nameof(DiatomicInputArea)} can't handle more than {MaxReagents} distinct reagents."));
+                throw new ArgumentException(Invariant($"{nameof(DiatomicDisassembler)} can't handle more than {MaxReagents} distinct reagents."));
             }
 
             new Glyph(this, InnerUnbonderPosition.Position, HexRotation.R0, GlyphType.Unbonding);

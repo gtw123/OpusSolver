@@ -17,8 +17,7 @@ namespace OpusSolver.Solver.ElementGenerators
         public InputGenerator(CommandSequence commandSequence, SolutionPlan plan, ElementBuffer elementBuffer)
             : base(commandSequence, plan, elementBuffer)
         {
-            var requiredReagents = plan.Puzzle.Reagents.Where(r => Recipe.HasAvailableReactions(ReactionType.Reagent, id: r.ID));
-            m_inputs = requiredReagents.Select(reagent => new ElementInput(reagent, plan)).ToList();
+            m_inputs = Plan.RequiredReagents.Select(reagent => new ElementInput(reagent, plan)).ToList();
         }
 
         protected override bool CanGenerateElement(Element element) => true;

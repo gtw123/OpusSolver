@@ -5,6 +5,7 @@ namespace OpusSolver.Solver
     public class SolutionPlan(
         Puzzle puzzle,
         Recipe recipe,
+        IEnumerable<Molecule> requiredReagents,
         IReadOnlyDictionary<int, SolutionPlan.MoleculeElementInfo> reagentElementInfo,
         IReadOnlyDictionary<int, SolutionPlan.MoleculeElementInfo> productElementInfo,
         bool useSharedElementBuffer,
@@ -15,11 +16,13 @@ namespace OpusSolver.Solver
         public Puzzle Puzzle { get; private set; } = puzzle;
         public Recipe Recipe { get; private set; } = recipe;
 
-        private IReadOnlyDictionary<int, MoleculeElementInfo> m_reagentElementOrders = reagentElementInfo;
-        private IReadOnlyDictionary<int, MoleculeElementInfo> m_productElementOrders = productElementInfo;
+        public IEnumerable<Molecule> RequiredReagents { get; private set; } = requiredReagents;
 
-        public MoleculeElementInfo GetReagentElementInfo(Molecule reagent) => m_reagentElementOrders[reagent.ID];
-        public MoleculeElementInfo GetProductElementInfo(Molecule product) => m_productElementOrders[product.ID];
+        private IReadOnlyDictionary<int, MoleculeElementInfo> m_reagentElementInfo = reagentElementInfo;
+        private IReadOnlyDictionary<int, MoleculeElementInfo> m_productElementInfo = productElementInfo;
+
+        public MoleculeElementInfo GetReagentElementInfo(Molecule reagent) => m_reagentElementInfo[reagent.ID];
+        public MoleculeElementInfo GetProductElementInfo(Molecule product) => m_productElementInfo[product.ID];
 
         public bool UseSharedElementBuffer { get; private set; } = useSharedElementBuffer;
         public bool UsePendingElementsInOrder { get; private set; } = usePendingElementsInOrder;

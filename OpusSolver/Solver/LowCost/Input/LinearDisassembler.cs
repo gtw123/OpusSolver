@@ -6,9 +6,9 @@ using static System.FormattableString;
 namespace OpusSolver.Solver.LowCost.Input
 {
     /// <summary>
-    /// An input area used when all reagents have atoms in a straight line.
+    /// A disassembler used when all reagents have atoms in a straight line.
     /// </summary>
-    public class LinearInputArea : LowCostAtomGenerator
+    public class LinearDisassembler : LowCostAtomGenerator
     {
         private MoleculeInput m_input;
         private AtomCollection m_pendingAtoms;
@@ -21,17 +21,17 @@ namespace OpusSolver.Solver.LowCost.Input
 
         public override IEnumerable<Transform2D> RequiredAccessPoints => [ReagentPosition, InnerUnbonderPosition, OuterUnbonderPosition];
 
-        public LinearInputArea(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
+        public LinearDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
             : base(writer, armArea)
         {
             if (reagents.Any(r => r.Height > 1))
             {
-                throw new ArgumentException($"{nameof(LinearInputArea)} can't handle reagents with more than two atoms.");
+                throw new ArgumentException($"{nameof(LinearDisassembler)} can't handle reagents with more than two atoms.");
             }
 
             if (reagents.Count() > MaxReagents)
             {
-                throw new ArgumentException(Invariant($"{nameof(LinearInputArea)} can't handle more than {MaxReagents} distinct reagents."));
+                throw new ArgumentException(Invariant($"{nameof(LinearDisassembler)} can't handle more than {MaxReagents} distinct reagents."));
             }
 
             new Glyph(this, InnerUnbonderPosition.Position, HexRotation.R0, GlyphType.Unbonding);

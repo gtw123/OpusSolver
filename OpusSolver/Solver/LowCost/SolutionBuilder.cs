@@ -12,6 +12,7 @@ namespace OpusSolver.Solver.LowCost
         private readonly Recipe m_recipe;
         private readonly ProgramWriter m_writer;
 
+        private readonly List<Molecule> m_requiredReagents;
         private MoleculeDisassemblerFactory m_disassemblerFactory;
         private MoleculeAssemblerFactory m_assemblerFactory;
 
@@ -24,14 +25,16 @@ namespace OpusSolver.Solver.LowCost
             m_recipe = recipe;
             m_writer = writer;
 
-            m_disassemblerFactory = new MoleculeDisassemblerFactory(puzzle.Reagents);
+            m_requiredReagents = puzzle.Reagents.Where(r => recipe.HasAvailableReactions(ReactionType.Reagent, id: r.ID)).ToList();
+            m_disassemblerFactory = new MoleculeDisassemblerFactory(m_requiredReagents);
             m_assemblerFactory = new MoleculeAssemblerFactory(puzzle.Products);
         }
 
         public SolutionPlan CreatePlan()
         {
             return new SolutionPlan(m_puzzle, m_recipe,
-                m_puzzle.Reagents.ToDictionary(p => p.ID, p => m_disassemblerFactory.GetReagentElementInfo(p)),
+                m_requiredReagents,
+                m_requiredReagents.ToDictionary(p => p.ID, p => m_disassemblerFactory.GetReagentElementInfo(p)),
                 m_puzzle.Products.ToDictionary(p => p.ID, p => m_assemblerFactory.GetProductElementInfo(p)),
                 useSharedElementBuffer: true,
                 usePendingElementsInOrder: false);
@@ -92,36 +95,8 @@ namespace OpusSolver.Solver.LowCost
 
         private LowCostAtomGenerator CreateInputArea(ElementGenerators.InputGenerator generator)
         {
-            var reagents = generator.Inputs.Select(i => i.Molecule);
-            if (reagents.All(r => r.Atoms.Count() == 1))
-            {
-                if (reagents.Count() <= SimpleInputArea.MaxReagents)
-                {
-                    return new SimpleInputArea(m_writer, m_armArea, reagents);
-                }
-
-                throw new UnsupportedException($"LowCost solver can't currently handle more than {SimpleInputArea.MaxReagents} monoatomic reagents (requested {reagents.Count()}).");
-            }
-            else if (reagents.All(r => r.Atoms.Count() <= 2))
-            {
-                if (reagents.Count() <= DiatomicInputArea.MaxReagents)
-                {
-                    return new DiatomicInputArea(m_writer, m_armArea, reagents);
-                }
-
-                throw new UnsupportedException($"LowCost solver can't currently handle more than {DiatomicInputArea.MaxReagents} diatomic reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
-            }
-            else if (reagents.All(r => r.Height == 1))
-            {
-                if (reagents.Count() <= LinearInputArea.MaxReagents)
-                {
-                    return new LinearInputArea(m_writer, m_armArea, reagents);
-                }
-
-                throw new UnsupportedException($"LowCost solver can't currently handle more than {LinearInputArea.MaxReagents} linear reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
-            }
-
-            throw new UnsupportedException("LowCost solver can't currently handle non-linear reagents with more than two atoms.");
+            var usedReagents = generator.Inputs.Select(i => i.Molecule);
+            return m_disassemblerFactory.CreateDisassembler(m_writer, m_armArea, usedReagents);
         }
 
         private LowCostAtomGenerator CreateAtomBuffer(ElementGenerators.SingleStackElementBuffer.BufferInfo bufferInfo)

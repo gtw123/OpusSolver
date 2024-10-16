@@ -12,6 +12,7 @@ namespace OpusSolver.Solver.Standard
         private readonly Recipe m_recipe;
         private readonly ProgramWriter m_writer;
 
+        private readonly List<Molecule> m_requiredReagents;
         private MoleculeDisassemblerFactory m_disassemblerFactory;
         private MoleculeAssemblerFactory m_assemblerFactory;
 
@@ -23,6 +24,7 @@ namespace OpusSolver.Solver.Standard
             m_recipe = recipe;
             m_writer = writer;
 
+            m_requiredReagents = puzzle.Reagents.Where(r => recipe.HasAvailableReactions(ReactionType.Reagent, id: r.ID)).ToList();
             m_disassemblerFactory = new MoleculeDisassemblerFactory(puzzle.Reagents);
             m_assemblerFactory = new MoleculeAssemblerFactory(puzzle.Products);
         }
@@ -30,6 +32,7 @@ namespace OpusSolver.Solver.Standard
         public SolutionPlan CreatePlan()
         {
             return new SolutionPlan(m_puzzle, m_recipe,
+                m_requiredReagents,
                 m_puzzle.Reagents.ToDictionary(p => p.ID, p => m_disassemblerFactory.GetReagentElementInfo(p)),
                 m_puzzle.Products.ToDictionary(p => p.ID, p => m_assemblerFactory.GetProductElementInfo(p)),
                 useSharedElementBuffer: false,
