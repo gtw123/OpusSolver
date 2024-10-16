@@ -26,7 +26,7 @@ namespace OpusSolver.Solver.LowCost.Input
         {
             if (reagents.Any(r => r.Height > 1))
             {
-                throw new ArgumentException($"{nameof(LinearDisassembler)} can't handle reagents with more than two atoms.");
+                throw new ArgumentException($"{nameof(LinearDisassembler)} can't handle non-linear reagents.");
             }
 
             if (reagents.Count() > MaxReagents)
