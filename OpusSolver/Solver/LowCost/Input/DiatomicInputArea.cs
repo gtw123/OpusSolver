@@ -10,7 +10,7 @@ namespace OpusSolver.Solver.LowCost.Input
     /// </summary>
     public class DiatomicInputArea : LowCostAtomGenerator
     {
-        private record DisassemblerInfo(SimpleDisassembler Disassembler, int Index);
+        private record DisassemblerInfo(MoleculeInput Disassembler, int Index);
 
         private readonly Dictionary<int, DisassemblerInfo> m_disassemblers = new();
 
@@ -94,16 +94,8 @@ namespace OpusSolver.Solver.LowCost.Input
 
         private void AddDisassembler(Molecule reagent, Transform2D transform, HexRotation moleculeRotation, int index)
         {
-            var disassembler = new SimpleDisassembler(this, Writer, ArmArea, transform, reagent, new Transform2D(new(), moleculeRotation));
+            var disassembler = new MoleculeInput(this, Writer, ArmArea, transform, reagent, new Transform2D(new(), moleculeRotation));
             m_disassemblers[reagent.ID] = new DisassemblerInfo(disassembler, index);
-        }
-
-        public override void BeginSolution()
-        {
-            foreach (var disassembler in m_disassemblers.Values)
-            {
-                disassembler.Disassembler.BeginSolution();
-            }
         }
 
         public override void Generate(Element element, int id)

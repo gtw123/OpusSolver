@@ -10,7 +10,7 @@ namespace OpusSolver.Solver.LowCost.Input
     /// </summary>
     public class LinearInputArea : LowCostAtomGenerator
     {
-        private MoleculeDisassembler m_disassembler;
+        private MoleculeInput m_input;
         private AtomCollection m_pendingAtoms;
 
         public const int MaxReagents = 1;
@@ -35,12 +35,7 @@ namespace OpusSolver.Solver.LowCost.Input
             }
 
             new Glyph(this, InnerUnbonderPosition.Position, HexRotation.R0, GlyphType.Unbonding);
-            m_disassembler = new SimpleDisassembler(this, Writer, ArmArea, ReagentPosition, reagents.First(), new Transform2D());
-        }
-
-        public override void BeginSolution()
-        {
-            m_disassembler.BeginSolution();
+            m_input = new MoleculeInput(this, Writer, ArmArea, ReagentPosition, reagents.First(), new Transform2D());
         }
 
         public override void Generate(Element element, int id)
@@ -48,7 +43,7 @@ namespace OpusSolver.Solver.LowCost.Input
             var targetPosition = InnerUnbonderPosition.Position;
             if (m_pendingAtoms == null)
             {
-                m_disassembler.GrabMolecule();
+                m_input.GrabMolecule();
             }
             else
             {

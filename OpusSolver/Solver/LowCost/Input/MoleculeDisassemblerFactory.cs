@@ -7,16 +7,16 @@ namespace OpusSolver.Solver.LowCost.Input
     public class MoleculeDisassemblerFactory
     {
         private record class DisassemblerInfo(
-            Func<SolverComponent, ProgramWriter, Vector2, MoleculeDisassembler> CreateAssembler,
+            Func<SolverComponent, ProgramWriter, Vector2> CreateAssembler,
             SolutionPlan.MoleculeElementInfo ElementInfo);
 
         private Dictionary<int, DisassemblerInfo> m_disassemblerInfo;
 
-        public MoleculeDisassembler CreateDisassembler(Molecule molecule, SolverComponent parent, ProgramWriter writer, Vector2 position)
+        /*public MoleculeDisassembler CreateDisassembler(Molecule molecule, SolverComponent parent, ProgramWriter writer, Vector2 position)
         {
             return m_disassemblerInfo[molecule.ID].CreateAssembler(parent, writer, position);
         }
-
+        */
         public SolutionPlan.MoleculeElementInfo GetReagentElementInfo(Molecule molecule)
         {
             return m_disassemblerInfo[molecule.ID].ElementInfo;
@@ -44,7 +44,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 return new DisassemblerInfo(null, new SolutionPlan.MoleculeElementInfo(GetDefaultElementOrder(molecule)));
             }
 
-            throw new UnsupportedException($"LowCost solver can't currently handle non-linear reagents with more than 2 atoms (requested {molecule.Atoms.Count()}).");
+            throw new SolverException($"LowCost solver can't currently handle non-linear reagents with more than 2 atoms (requested {molecule.Atoms.Count()}).");
         }
     }
 }

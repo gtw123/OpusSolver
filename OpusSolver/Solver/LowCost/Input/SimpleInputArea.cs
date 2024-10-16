@@ -10,15 +10,15 @@ namespace OpusSolver.Solver.LowCost.Input
     /// </summary>
     public class SimpleInputArea : LowCostAtomGenerator
     {
-        private readonly Dictionary<int, MoleculeDisassembler> m_disassemblers = new();
+        private readonly Dictionary<int, MoleculeInput> m_inputs = new();
 
         public const int MaxReagents = 4;
 
         // We need to manually specify the order in which to add the access points because the logic in ArmArea
         // for building the track is currently a bit sensitive to the order of these.
-        private readonly List<int> m_disassemblerAccessPointOrder = new();
+        private readonly List<int> m_inputAccessPointOrder = new();
         public override IEnumerable<Transform2D> RequiredAccessPoints =>
-            m_disassemblerAccessPointOrder.Select(o => m_disassemblers[o]).SelectMany(d => d.RequiredAccessPoints.Select(p => d.Transform.Apply(p)));
+            m_inputAccessPointOrder.Select(o => m_inputs[o]).SelectMany(d => d.RequiredAccessPoints.Select(p => d.Transform.Apply(p)));
 
         public SimpleInputArea(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents)
             : base(writer, armArea)
@@ -33,15 +33,15 @@ namespace OpusSolver.Solver.LowCost.Input
                 throw new ArgumentException(Invariant($"{nameof(SimpleInputArea)} can't handle more than {MaxReagents} distinct reagents."));
             }
 
-            CreateDisassemblers(reagents);
+            CreateInputs(reagents);
         }
 
-        private void CreateDisassemblers(IEnumerable<Molecule> reagents)
+        private void CreateInputs(IEnumerable<Molecule> reagents)
         {
             var reagentsList = reagents.ToList();
             if (reagentsList.Count == 1)
             {
-                AddDisassembler(reagentsList[0], new Transform2D());
+                AddInput(reagentsList[0], new Transform2D());
                 return;
             }
 
@@ -50,55 +50,47 @@ namespace OpusSolver.Solver.LowCost.Input
             if (reagentsList.Count > 0)
             {
                 var transform = new Transform2D(pos + new Vector2(1, -1), HexRotation.R300);
-                AddDisassembler(reagentsList[0], transform);
+                AddInput(reagentsList[0], transform);
             }
 
             if (reagentsList.Count > 1)
             {
                 var transform = new Transform2D(pos, HexRotation.R300);
-                AddDisassembler(reagentsList[1], transform);
+                AddInput(reagentsList[1], transform);
             }
 
             if (reagentsList.Count > 2)
             {
                 var transform = new Transform2D(new Vector2(-1, 0), HexRotation.R0);
-                AddDisassembler(reagentsList[2], transform);
+                AddInput(reagentsList[2], transform);
             }
 
             if (reagentsList.Count > 3)
             {
                 var transform = new Transform2D(new Vector2(2, -1), HexRotation.R0);
-                AddDisassembler(reagentsList[3], transform, addAccessPointAtStart: true);
+                AddInput(reagentsList[3], transform, addAccessPointAtStart: true);
             }
         }
 
-        private void AddDisassembler(Molecule reagent, Transform2D transform, bool addAccessPointAtStart = false)
+        private void AddInput(Molecule reagent, Transform2D transform, bool addAccessPointAtStart = false)
         {
-            var disassembler = new SimpleDisassembler(this, Writer, ArmArea, transform, reagent, new Transform2D());
-            m_disassemblers[reagent.ID] = disassembler;
+            var input = new MoleculeInput(this, Writer, ArmArea, transform, reagent, new Transform2D());
+            m_inputs[reagent.ID] = input;
 
             if (addAccessPointAtStart)
             {
-                m_disassemblerAccessPointOrder.Insert(0, reagent.ID);
+                m_inputAccessPointOrder.Insert(0, reagent.ID);
             }
             else
             {
-                m_disassemblerAccessPointOrder.Add(reagent.ID);
-            }
-        }
-
-        public override void BeginSolution()
-        {
-            foreach (var disassembler in m_disassemblers.Values)
-            {
-                disassembler.BeginSolution();
+                m_inputAccessPointOrder.Add(reagent.ID);
             }
         }
 
         public override void Generate(Element element, int id)
         {
-            var disassembler = m_disassemblers[id];
-            disassembler.GrabMolecule();
+            var input = m_inputs[id];
+            input.GrabMolecule();
         }
     }
 }
