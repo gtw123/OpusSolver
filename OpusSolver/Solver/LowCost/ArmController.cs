@@ -230,7 +230,7 @@ namespace OpusSolver.Solver.LowCost
             m_grabbedMolecule = bondToAtoms;
         }
 
-        public AtomCollection RemoveAllExceptGrabbedAtom()
+        public AtomCollection UnbondGrabbedAtomFromOthers()
         {
             if (m_grabbedMolecule == null)
             {
@@ -240,11 +240,9 @@ namespace OpusSolver.Solver.LowCost
             var grabberPosition = GetGrabberPosition();
             var grabbedAtom = m_grabbedMolecule.GetAtomAtWorldPosition(grabberPosition);
 
-            m_grabbedMolecule.RemoveAtom(grabbedAtom);
             var droppedAtoms = m_grabbedMolecule;
+            m_grabbedMolecule = m_grabbedMolecule.RemoveAtom(grabbedAtom);
             m_gridState.RegisterMolecule(droppedAtoms);
-
-            m_grabbedMolecule = new AtomCollection(grabbedAtom.Element, new Transform2D(grabberPosition, HexRotation.R0));
 
             return droppedAtoms;
         }

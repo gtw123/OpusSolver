@@ -73,7 +73,7 @@ namespace OpusSolver.Solver.LowCost.Input
             molecule.TargetMolecule.RemoveBond(atomToUnbond.Position, atomToUnbondFrom.Position);
             ArmController.MoveMoleculeTo(new Transform2D(targetPosition, HexRotation.R0), this, options: new ArmMovementOptions { AllowUnbonding = true });
 
-            m_pendingAtoms = ArmController.RemoveAllExceptGrabbedAtom();
+            m_pendingAtoms = ArmController.UnbondGrabbedAtomFromOthers();
         }
     }
 }

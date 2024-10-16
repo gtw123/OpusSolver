@@ -166,7 +166,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 if (grabbedAtom.Element == element)
                 {
                     // Keep hold of the atom we've currently got
-                    var removedAtoms = ArmController.RemoveAllExceptGrabbedAtom();
+                    var removedAtoms = ArmController.UnbondGrabbedAtomFromOthers();
                     m_unbondedAtom.Atoms = new AtomCollection(removedAtoms.Atoms.Single().Element, otherAtomPosition, this);
                     GridState.RegisterMolecule(m_unbondedAtom.Atoms);
                 }

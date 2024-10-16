@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System;
 using System.Linq;
+using OpusSolver.Solver.LowCost.Input.Complex;
 
 namespace OpusSolver.Solver.LowCost.Input
 {
@@ -55,7 +56,14 @@ namespace OpusSolver.Solver.LowCost.Input
             }
             else
             {
-                throw new UnsupportedException($"LowCost solver can't currently handle non-linear reagents with more than 2 atoms (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
+                if (reagents.Count() > ComplexDisassembler.MaxReagents)
+                {
+                    throw new UnsupportedException($"LowCost solver can't currently handle more than {ComplexDisassembler.MaxReagents} complex reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
+                }
+
+                var dismantlers = ComplexDisassembler.CreateMoleculeDismantlers(reagents);
+                m_reagentElementInfo = reagents.ToDictionary(r => r.ID, r => new SolutionPlan.MoleculeElementInfo(dismantlers.Single(d => d.Molecule.ID == r.ID).GetElementOrder()));
+                m_createDisassembler = (writer, armArea, usedReagents) => new ComplexDisassembler(writer, armArea, dismantlers);
             }
         }
     }

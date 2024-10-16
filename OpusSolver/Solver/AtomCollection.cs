@@ -53,12 +53,26 @@ namespace OpusSolver.Solver
             m_atoms.Add(atom);
         }
 
-        public void RemoveAtom(Atom atom)
+        /// <summary>
+        /// Removes an atom (and its bonds) from the collection. Returns a new collection containing the removed atom.
+        /// </summary>
+        public AtomCollection RemoveAtom(Atom atom)
         {
             if (!m_atoms.Remove(atom))
             {
                 throw new ArgumentException("Cannot remove an atom that is not part of this AtomCollection.");
             }
+
+            foreach (var dir in HexRotation.All)
+            {
+                var otherAtom = GetAtom(atom.Position.OffsetInDirection(dir, 1));
+                if (otherAtom != null && atom.Bonds[dir] != BondType.None)
+                {
+                    otherAtom.Bonds[dir + HexRotation.R180] = BondType.None;
+                }
+            }
+
+            return new AtomCollection(atom.Element, new Transform2D(WorldTransform.Apply(atom.Position), HexRotation.R0));
         }
 
         public void AddBond(Vector2 atom1Pos, Vector2 atom2Pos)

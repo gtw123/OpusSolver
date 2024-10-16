@@ -1,46 +1,46 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace OpusSolver.Solver.LowCost.Output.Complex
+namespace OpusSolver.Solver.LowCost.Input.Complex
 {
-    public class MoleculeBuilder
+    public class MoleculeDismantler
     {
-        public Molecule Product { get; private set; }
+        public Molecule Molecule { get; private set; }
 
         public class Operation
         {
             /// <summary>
-            /// The atom to bond to the rest of the molecule.
+            /// The atom to unbond from the rest of the molecule.
             /// </summary>
             public Atom Atom { get; init; }
 
             /// <summary>
-            /// The existing atom to bond this atom to, or null if it's the first atom to be assembled.
+            /// The atom to unbond this atom from, or null if it's the first atom to be unbonded.
             /// </summary>
             public Atom ParentAtom { get; init; }
 
             /// <summary>
-            /// The required rotation of the molecule when bonding this atom to its parent, using the same coordinate
-            /// system as ComplexAssembler.
+            /// The required rotation of the molecule when unbonding this atom from its parent, using the same coordinate
+            /// system as ComplexDisassembler.
             /// </summary>
             public HexRotation MoleculeRotation { get; set; }
 
             /// <summary>
-            /// The delta rotation required to bond the next atom after this one.
+            /// The delta rotation required to unbond the next atom after this one.
             /// </summary>
             public HexRotation RotationToNext { get; set; }
         }
 
-        private record class BondedAtom(Atom Atom, Atom Parent);
+        private record class UnbondedAtom(Atom Atom, Atom Parent);
 
         private List<Operation> m_operations;
         public IReadOnlyList<Operation> Operations => m_operations;
 
-        public IEnumerable<Element> GetElementsInBuildOrder() => m_operations.Select(op => op.Atom.Element);
+        public IEnumerable<Element> GetElementOrder() => m_operations.Select(op => op.Atom.Element);
 
-        public MoleculeBuilder(Molecule product)
+        public MoleculeDismantler(Molecule molecule)
         {
-            Product = product;
+            Molecule = molecule;
 
             GenerateOperations();
         }
@@ -51,13 +51,13 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             var ops1 = BuildOperations(orderedAtoms);
 
             // If it's a single-chain molecule, try reversing the order
-            if (Product.Atoms.All(a => a.BondCount <= 2) && Product.Atoms.Count(a => a.BondCount == 1) == 2)
+            if (Molecule.Atoms.All(a => a.BondCount <= 2) && Molecule.Atoms.Count(a => a.BondCount == 1) == 2)
             {
-                var reverseOrderedAtoms = new List<BondedAtom>();
+                var reverseOrderedAtoms = new List<UnbondedAtom>();
                 for (int i = orderedAtoms.Count - 1; i >= 0; i--)
                 {
                     var parent = (i < orderedAtoms.Count - 1) ? orderedAtoms[i + 1].Atom : null;
-                    reverseOrderedAtoms.Add(new BondedAtom(orderedAtoms[i].Atom, parent));
+                    reverseOrderedAtoms.Add(new UnbondedAtom(orderedAtoms[i].Atom, parent));
                 }
 
                 var ops2 = BuildOperations(reverseOrderedAtoms);
@@ -95,7 +95,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             }
         }
 
-        private List<Operation> BuildOperations(List<BondedAtom> orderedAtoms)
+        private List<Operation> BuildOperations(List<UnbondedAtom> orderedAtoms)
         {
             var ops = orderedAtoms.Select(a => new Operation { Atom = a.Atom, ParentAtom = a.Parent }).ToList();
 
@@ -108,13 +108,13 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             var currentRotation = HexRotation.R0;
             for (int i = 1; i < orderedAtoms.Count; i++)
             {
-                var bondedAtom = orderedAtoms[i];
-                var atom = bondedAtom.Atom;
-                var parentAtom = bondedAtom.Parent;
+                var unbondedAtom = orderedAtoms[i];
+                var atom = unbondedAtom.Atom;
+                var parentAtom = unbondedAtom.Parent;
 
                 var bondDir = (atom.Position - parentAtom.Position).ToRotation().Value;
 
-                ops[i].MoleculeRotation = -bondDir + ComplexAssembler.BondingDirection;
+                ops[i].MoleculeRotation = -bondDir + ComplexDisassembler.UnbondingDirection;
             }
 
             // The rotation for the first operation is arbitrary since there'll be only one atom at that stage.
@@ -130,15 +130,21 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             return ops;
         }
 
-        private List<BondedAtom> DetermineAtomOrder()
+        private List<UnbondedAtom> DetermineAtomOrder()
         {
-            // Start with the atom with the fewest bonds, then use X position as an arbitrary tie-breaker
-            var firstAtom = Product.Atoms.GroupBy(a => a.BondCount).OrderBy(g => g.Key).First().MaxBy(a => a.Position.X);
+            // For now, only allow molecules with no branches or loops
+            if (!(Molecule.Atoms.All(a => a.BondCount <= 2) && Molecule.Atoms.Count(a => a.BondCount == 1) == 2))
+            {
+                throw new UnsupportedException("MoleculeDismantler currently only supports molecules with a single atom chain.");
+            }
+
+            // Start with the atoms with the fewest bonds, then use X position as an arbitrary tie-breaker
+            var firstAtom = Molecule.Atoms.GroupBy(a => a.BondCount).OrderBy(g => g.Key).First().MaxBy(a => a.Position.X);
             var seenAtoms = new HashSet<Atom> { firstAtom };
 
-            var orderedAtoms = new List<BondedAtom>();
-            var atomsToProcess = new Stack<BondedAtom>();
-            atomsToProcess.Push(new BondedAtom(firstAtom, null));
+            var orderedAtoms = new List<UnbondedAtom>();
+            var atomsToProcess = new Stack<UnbondedAtom>();
+            atomsToProcess.Push(new UnbondedAtom(firstAtom, null));
 
             // Do a depth-first search so that we build entire molecule chains one at a time
             while (atomsToProcess.Count > 0)
@@ -146,12 +152,12 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 var currentAtom = atomsToProcess.Pop();
                 orderedAtoms.Add(currentAtom);
 
-                foreach (var (_, bondedAtom) in Product.GetAdjacentBondedAtoms(currentAtom.Atom.Position))
+                foreach (var (_, bondedAtom) in Molecule.GetAdjacentBondedAtoms(currentAtom.Atom.Position))
                 {
                     if (!seenAtoms.Contains(bondedAtom))
                     {
                         seenAtoms.Add(bondedAtom);
-                        atomsToProcess.Push(new BondedAtom(bondedAtom, currentAtom.Atom));
+                        atomsToProcess.Push(new UnbondedAtom(bondedAtom, currentAtom.Atom));
                     }
                 }
             }
