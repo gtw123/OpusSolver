@@ -167,7 +167,7 @@ namespace OpusSolver.Solver.LowCost
                 int newCost = costs[currentState] + 1;
                 if (!costs.TryGetValue(neighbor, out int existingCost) || newCost < existingCost)
                 {
-                    if (IsMovementAllowed(currentState, neighbor, moleculeToMove, options))
+                    if (IsMovementAllowed(currentState, neighbor, moleculeToMove, searchParams.IsAtTarget(neighbor), options))
                     {
                         costs[neighbor] = newCost;
                         queue.Enqueue(neighbor, newCost + searchParams.CalculateHeuristic(neighbor));
@@ -293,7 +293,7 @@ namespace OpusSolver.Solver.LowCost
             return Enumerable.Reverse(path);
         }
 
-        private bool IsMovementAllowed(ArmState currentState, ArmState targetState, AtomCollection moleculeToMove, ArmMovementOptions options)
+        private bool IsMovementAllowed(ArmState currentState, ArmState targetState, AtomCollection moleculeToMove, bool isAtTargetState, ArmMovementOptions options)
         {
             if (currentState.TrackIndex == targetState.TrackIndex && currentState.MoleculeTransform == targetState.MoleculeTransform)
             {
@@ -348,7 +348,7 @@ namespace OpusSolver.Solver.LowCost
                         GlyphType.Calcification => IsMovementAllowedOverCalcification(atom, pos, glyph, options),
                         GlyphType.Duplication => IsMovementAllowedOverDuplication(atom, pos, glyph, options),
                         GlyphType.Bonding => IsMovementAllowedOverBonder(targetState, moleculeToMove, atom, pos, glyph, options),
-                        GlyphType.Unbonding => IsMovementAllowedOverUnbonder(targetState, moleculeToMove, atom, pos, glyph, options),
+                        GlyphType.Unbonding => IsMovementAllowedOverUnbonder(targetState, moleculeToMove, atom, pos, glyph, isAtTargetState, options),
                         _ => true
                     };
                     if (!isMovementAllowed)
@@ -447,7 +447,7 @@ namespace OpusSolver.Solver.LowCost
             return true;
         }
 
-        private bool IsMovementAllowedOverUnbonder(ArmState targetState, AtomCollection moleculeToMove, Atom atom, Vector2 atomWorldPos, Glyph glyph, ArmMovementOptions options)
+        private bool IsMovementAllowedOverUnbonder(ArmState targetState, AtomCollection moleculeToMove, Atom atom, Vector2 atomWorldPos, Glyph glyph, bool isAtTargetState, ArmMovementOptions options)
         {
             // Check what's on top of the other cell of the unbonder (if anything)
             var unbonderCells = glyph.GetWorldCells();
@@ -469,8 +469,10 @@ namespace OpusSolver.Solver.LowCost
                         return false;
                     }
 
-                    // Disallow removing this bond unless the target molecule doesn't have it
-                    if (moleculeToMove.TargetMolecule == null || moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] != BondType.None)
+                    // Disallow removing this bond unless the target molecule doesn't have it, in which case we can remove it too.
+                    // But also disallow removing the bond if the molecule isn't yet the target state - otherwise we'll need to track
+                    // both the removed atoms and the remaining atoms separately, and this class isn't sophisticated enough to do that yet.
+                    if (moleculeToMove.TargetMolecule == null || moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] != BondType.None || !isAtTargetState)
                     {
                         return false;
                     }
