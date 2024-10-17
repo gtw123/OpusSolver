@@ -193,9 +193,9 @@ namespace OpusSolver.Solver.LowCost
         /// <summary>
         /// Moves the grabbed molecule to the specified transform and then drops it.
         /// </summary>
-        public AtomCollection DropMoleculeAt(Transform2D targetTransform, GameObject relativeToObj = null, bool addToGrid = true)
+        public AtomCollection DropMoleculeAt(Transform2D targetTransform, GameObject relativeToObj = null, bool addToGrid = true, ArmMovementOptions options = null)
         {
-            MoveMoleculeTo(targetTransform, relativeToObj);
+            MoveMoleculeTo(targetTransform, relativeToObj, options);
             return DropMolecule(addToGrid);
         }
 

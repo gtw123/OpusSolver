@@ -52,11 +52,12 @@ namespace OpusSolver.Solver.LowCost
 
         public override void Consume(Element element, int id)
         {
-            ArmController.DropMoleculeAt(GrabPosition, this, addToGrid: false);
+            var elementToStore = m_bufferInfo.Elements[id];
+            var options = new ArmMovementOptions { AllowCalcification = elementToStore.IsWaste, AllowDuplication = elementToStore.IsWaste };
+            ArmController.DropMoleculeAt(GrabPosition, this, addToGrid: false, options: options);
 
             // If necessary, move the atom further down the atom chain so that all the atoms that need to be restored
             // before it come after it.
-            var elementToStore = m_bufferInfo.Elements[id];
             var elementsToReorder = m_storedElements.Where(s => s.RestoreOrder.HasValue && (!elementToStore.RestoreOrder.HasValue || elementToStore.RestoreOrder > s.RestoreOrder)).ToList();
             if (elementsToReorder.Any())
             {
