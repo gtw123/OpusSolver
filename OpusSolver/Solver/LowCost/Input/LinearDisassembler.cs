@@ -41,24 +41,39 @@ namespace OpusSolver.Solver.LowCost.Input
         public override void Generate(Element element, int id)
         {
             var targetPosition = InnerUnbonderPosition.Position;
+            AtomCollection molecule;
+            Atom atomToUnbond;
+            Atom atomToUnbondFrom;
+
             if (m_pendingAtoms == null)
             {
-                m_input.GrabMolecule();
+                molecule = m_input.GrabMolecule();
+                atomToUnbond = molecule.GetAtom(new Vector2(0, 0));
+                atomToUnbondFrom = molecule.GetAtom(new Vector2(1, 0));
+            }
+            else if (m_pendingAtoms.Atoms.Count == 1)
+            {
+                // Recreate the atom collection so we can be sure it's at (0, 0) and with no bonds
+                var lastAtom = new AtomCollection(m_pendingAtoms.Atoms[0].Element, GetWorldTransform().Apply(OuterUnbonderPosition));
+                ArmController.SetMoleculeToGrab(lastAtom);
+                m_pendingAtoms = null;
+                return;
             }
             else
             {
+                molecule = m_pendingAtoms;
                 ArmController.SetMoleculeToGrab(m_pendingAtoms);
-                var nextAtom = m_pendingAtoms.GetAtomAtWorldPosition(OuterUnbonderPosition.Position, this);
-                targetPosition -= nextAtom.Position;
+                atomToUnbond = m_pendingAtoms.GetAtomAtWorldPosition(OuterUnbonderPosition.Position, this);
+                targetPosition -= atomToUnbond.Position;
+
+                atomToUnbondFrom = m_pendingAtoms.GetAtomAtWorldPosition(OuterUnbonderPosition.Position + new Vector2(1, 0), this);
             }
 
-            ArmController.MoveMoleculeTo(new Transform2D(targetPosition, HexRotation.R0), this);
+            molecule.TargetMolecule = molecule.Copy();
+            molecule.TargetMolecule.RemoveBond(atomToUnbond.Position, atomToUnbondFrom.Position);
+            ArmController.MoveMoleculeTo(new Transform2D(targetPosition, HexRotation.R0), this, options: new ArmMovementOptions { AllowUnbonding = true });
 
             m_pendingAtoms = ArmController.RemoveAllExceptGrabbedAtom();
-            if (m_pendingAtoms.Atoms.Count == 0)
-            {
-                m_pendingAtoms = null;
-            }
         }
     }
 }

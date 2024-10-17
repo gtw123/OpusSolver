@@ -21,5 +21,10 @@
         /// Allow bonds to be created between atoms within the grabbed molecule.
         /// </summary>
         public bool AllowInternalBonds;
+
+        /// <summary>
+        /// Allow bonds within the molecule to be removed.
+        /// </summary>
+        public bool AllowUnbonding;
     }
 }

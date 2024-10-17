@@ -348,6 +348,7 @@ namespace OpusSolver.Solver.LowCost
                         GlyphType.Calcification => IsMovementAllowedOverCalcification(atom, pos, glyph, options),
                         GlyphType.Duplication => IsMovementAllowedOverDuplication(atom, pos, glyph, options),
                         GlyphType.Bonding => IsMovementAllowedOverBonder(targetState, moleculeToMove, atom, pos, glyph, options),
+                        GlyphType.Unbonding => IsMovementAllowedOverUnbonder(targetState, moleculeToMove, atom, pos, glyph, options),
                         _ => true
                     };
                     if (!isMovementAllowed)
@@ -439,6 +440,39 @@ namespace OpusSolver.Solver.LowCost
                         {
                             return false;
                         }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private bool IsMovementAllowedOverUnbonder(ArmState targetState, AtomCollection moleculeToMove, Atom atom, Vector2 atomWorldPos, Glyph glyph, ArmMovementOptions options)
+        {
+            // Check what's on top of the other cell of the unbonder (if anything)
+            var unbonderCells = glyph.GetWorldCells();
+            var otherPos = unbonderCells[0] != atomWorldPos ? unbonderCells[0] : unbonderCells[1];
+
+            var moleculeInverse = targetState.MoleculeTransform.Inverse();
+            var otherAtomLocalPos = moleculeInverse.Apply(otherPos);
+            var otherAtom = moleculeToMove.GetAtom(otherAtomLocalPos);
+            if (otherAtom != null)
+            {
+                // Another atom within the molecule is on the other cell of the bonder.
+                // Check if these atoms are already bonded.
+                var currentAtomLocalPos = moleculeInverse.Apply(atomWorldPos);
+                var bondDir = (otherAtomLocalPos - currentAtomLocalPos).ToRotation() ?? throw new InvalidOperationException($"Expected unbonder cells {atomWorldPos} and {otherPos} to be adjacent.");
+                if (atom.Bonds[bondDir] != BondType.None)
+                {
+                    if (!options.AllowUnbonding)
+                    {
+                        return false;
+                    }
+
+                    // Disallow removing this bond unless the target molecule doesn't have it
+                    if (moleculeToMove.TargetMolecule == null || moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] != BondType.None)
+                    {
+                        return false;
                     }
                 }
             }

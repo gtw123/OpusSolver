@@ -28,10 +28,13 @@ namespace OpusSolver.Solver.LowCost.Input
             m_reagent = new Reagent(this, moleculeTransform.Position, moleculeTransform.Rotation, molecule);
         }
 
-        public void GrabMolecule()
+        public AtomCollection GrabMolecule()
         {
             Writer.NewFragment();
-            ArmController.SetMoleculeToGrab(new AtomCollection(Molecule, MoleculeTransform, this));
+            var molecule = new AtomCollection(Molecule, MoleculeTransform, this);
+            ArmController.SetMoleculeToGrab(molecule);
+
+            return molecule;
         }
 
         public Atom GetAtomAtPosition(Vector2 localPos)
