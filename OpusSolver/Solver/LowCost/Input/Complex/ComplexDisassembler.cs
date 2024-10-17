@@ -39,12 +39,31 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             }
 
             var dismantler = m_dismantlers.First();
+            var molecule = dismantler.Molecule;
+            var atomToGrab = FindAtomToGrab(molecule);
 
-            var moleculeTransform = new Transform2D(LowerUnbonderPosition.Position, HexRotation.R0);
+            var moleculeTransform = new Transform2D(LowerUnbonderPosition.Position - atomToGrab.Position, HexRotation.R0);
             var armPos = LowerUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
             var inputTransform = moleculeTransform.RotateAbout(armPos, -HexRotation.R60);
 
-            m_input = new MoleculeInput(this, Writer, ArmArea, inputTransform, dismantler.Molecule, new Transform2D());
+            m_input = new MoleculeInput(this, Writer, ArmArea, inputTransform, molecule, new Transform2D());
+        }
+
+        private Atom FindAtomToGrab(Molecule molecule)
+        {
+            for (int x = 0; x < molecule.Width; x++)
+            {
+                for (int y = 0; y <= x; y++)
+                {
+                    var atomToGrab = molecule.GetAtom(new(x - y, y));
+                    if (atomToGrab != null)
+                    {
+                        return atomToGrab;
+                    }
+                }
+            }
+
+            throw new SolverException("Couldn't find an atom on the molecule to grab.");
         }
 
         public override void Generate(Element element, int id)
