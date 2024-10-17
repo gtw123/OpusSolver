@@ -38,32 +38,45 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                 throw new UnsupportedException($"{nameof(ComplexDisassembler)} currently only supports {MaxReagents} reagents (requested {m_dismantlers.Count()}).");
             }
 
-            var dismantler = m_dismantlers.First();
-            var molecule = dismantler.Molecule;
-            var atomToGrab = FindAtomToGrab(molecule);
-
-            var moleculeTransform = new Transform2D(LowerUnbonderPosition.Position - atomToGrab.Position, HexRotation.R0);
-            var armPos = LowerUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
-            var inputTransform = moleculeTransform.RotateAbout(armPos, -HexRotation.R60);
-
-            m_input = new MoleculeInput(this, Writer, ArmArea, inputTransform, molecule, new Transform2D());
+            AddInput(m_dismantlers.First().Molecule);
         }
 
-        private Atom FindAtomToGrab(Molecule molecule)
+        private void AddInput(Molecule molecule)
         {
-            for (int x = 0; x < molecule.Width; x++)
+            IEnumerable<Atom> FindAtomsToGrab()
             {
-                for (int y = 0; y <= x; y++)
+                for (int x = 0; x < molecule.Width; x++)
                 {
-                    var atomToGrab = molecule.GetAtom(new(x - y, y));
-                    if (atomToGrab != null)
+                    for (int y = 0; y <= x; y++)
                     {
-                        return atomToGrab;
+                        var atomToGrab = molecule.GetAtom(new(x - y, y));
+                        if (atomToGrab != null)
+                        {
+                            yield return atomToGrab;
+                        }
                     }
                 }
             }
 
-            throw new SolverException("Couldn't find an atom on the molecule to grab.");
+            var unbonderCells = m_unbonder.GetCells();
+            foreach (var atom in FindAtomsToGrab())
+            {
+                var moleculeTransform = new Transform2D(LowerUnbonderPosition.Position - atom.Position, HexRotation.R0);
+                var armPos = LowerUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0);
+                var inputTransform = moleculeTransform.RotateAbout(armPos, -HexRotation.R60);
+
+                // Make sure the molecule won't overlap the unbonder
+                var atomPositions = molecule.GetTransformedAtomPositions(GetWorldTransform().Apply(inputTransform));
+                if (atomPositions.Intersect(unbonderCells).Any())
+                {
+                    continue;
+                }
+
+                m_input = new MoleculeInput(this, Writer, ArmArea, inputTransform, molecule, new Transform2D());
+                return;
+            }
+
+            throw new SolverException("Couldn't find a valid input location for the reagent.");
         }
 
         public override void Generate(Element element, int id)
@@ -94,7 +107,22 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                 var targetUnbondPosition = UpperUnbonderPosition.Position;
                 var targetTransform = new Transform2D(targetUnbondPosition - op.Atom.Position, HexRotation.R0);
                 targetTransform = targetTransform.RotateAbout(targetUnbondPosition, op.MoleculeRotation);
-                if (!ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true }, throwOnFailure: false))
+
+                // Make sure the molecule won't overlap the track when it's positioned at the target transform. However,
+                // we will allow it to overlap the track cell that provides access to the lower unbonder position as we don't
+                // need to access that right now.
+                bool moved = false;
+                var atomPositions = remainingAtoms.GetTransformedAtomPositions(targetTransform, this);
+                var lowerTrackWorldPosition = ArmController.GrabberTransformToArmTransform(GetWorldTransform().Apply(LowerUnbonderPosition)).Position;
+                if (!atomPositions.Any(p => p.position != lowerTrackWorldPosition && GridState.GetTrack(p.position) != null))
+                {
+                    if (ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true }, throwOnFailure: false))
+                    {
+                        moved = true;
+                    }
+                }
+
+                if (!moved)
                 {
                     targetUnbondPosition = LowerUnbonderPosition.Position;
                     targetTransform = new Transform2D(targetUnbondPosition - op.Atom.Position, HexRotation.R0);
