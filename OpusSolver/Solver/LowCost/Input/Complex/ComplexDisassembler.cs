@@ -75,10 +75,9 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
         {
             AtomCollection remainingAtoms = null;
 
-            // We skip the first operation because that atom has no parent
-            for (int opIndex = 1; opIndex < dismantler.Operations.Count; opIndex++)
+            for (int opIndex = 0; opIndex < dismantler.Operations.Count - 1; opIndex++)
             {
-                if (opIndex == 1)
+                if (opIndex == 0)
                 {
                     remainingAtoms = m_input.GrabMolecule();
                 }
@@ -90,15 +89,15 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                 var op = dismantler.Operations[opIndex];
 
                 remainingAtoms.TargetMolecule = remainingAtoms.Copy();
-                remainingAtoms.TargetMolecule.RemoveBond(op.Atom.Position, op.ParentAtom.Position);
+                remainingAtoms.TargetMolecule.RemoveBond(op.Atom.Position, op.NextAtom.Position);
 
                 var targetUnbondPosition = UpperUnbonderPosition.Position;
-                var targetTransform = new Transform2D(targetUnbondPosition - op.ParentAtom.Position, HexRotation.R0);
+                var targetTransform = new Transform2D(targetUnbondPosition - op.Atom.Position, HexRotation.R0);
                 targetTransform = targetTransform.RotateAbout(targetUnbondPosition, op.MoleculeRotation);
                 if (!ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true }, throwOnFailure: false))
                 {
                     targetUnbondPosition = LowerUnbonderPosition.Position;
-                    targetTransform = new Transform2D(targetUnbondPosition - op.ParentAtom.Position, HexRotation.R0);
+                    targetTransform = new Transform2D(targetUnbondPosition - op.Atom.Position, HexRotation.R0);
                     targetTransform = targetTransform.RotateAbout(targetUnbondPosition, op.MoleculeRotation + HexRotation.R180);
                     ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true });
                 }

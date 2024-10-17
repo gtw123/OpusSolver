@@ -15,12 +15,12 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             public Atom Atom { get; init; }
 
             /// <summary>
-            /// The atom to unbond this atom from, or null if it's the first atom to be unbonded.
+            /// The atom to unbond this atom from, or null if it's the last atom in a bond chain.
             /// </summary>
-            public Atom ParentAtom { get; init; }
+            public Atom NextAtom { get; init; }
 
             /// <summary>
-            /// The required rotation of the molecule when unbonding this atom from its parent, using the same coordinate
+            /// The required rotation of the molecule when unbonding this atom from the next one, using the same coordinate
             /// system as ComplexDisassembler.
             /// </summary>
             public HexRotation MoleculeRotation { get; set; }
@@ -31,7 +31,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             public HexRotation RotationToNext { get; set; }
         }
 
-        private record class UnbondedAtom(Atom Atom, Atom Parent);
+        private record class UnbondedAtom(Atom Atom, Atom Next);
 
         private List<Operation> m_operations;
         public IReadOnlyList<Operation> Operations => m_operations;
@@ -56,8 +56,8 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                 var reverseOrderedAtoms = new List<UnbondedAtom>();
                 for (int i = orderedAtoms.Count - 1; i >= 0; i--)
                 {
-                    var parent = (i < orderedAtoms.Count - 1) ? orderedAtoms[i + 1].Atom : null;
-                    reverseOrderedAtoms.Add(new UnbondedAtom(orderedAtoms[i].Atom, parent));
+                    var next = (i > 0) ? orderedAtoms[i - 1].Atom : null;
+                    reverseOrderedAtoms.Add(new UnbondedAtom(orderedAtoms[i].Atom, next));
                 }
 
                 var ops2 = BuildOperations(reverseOrderedAtoms);
@@ -97,7 +97,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
         private List<Operation> BuildOperations(List<UnbondedAtom> orderedAtoms)
         {
-            var ops = orderedAtoms.Select(a => new Operation { Atom = a.Atom, ParentAtom = a.Parent }).ToList();
+            var ops = orderedAtoms.Select(a => new Operation { Atom = a.Atom, NextAtom = a.Next }).ToList();
 
             if (orderedAtoms.Count == 1)
             {
@@ -106,21 +106,21 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             }
 
             var currentRotation = HexRotation.R0;
-            for (int i = 1; i < orderedAtoms.Count; i++)
+            for (int i = 0; i < orderedAtoms.Count - 1; i++)
             {
                 var unbondedAtom = orderedAtoms[i];
                 var atom = unbondedAtom.Atom;
-                var parentAtom = unbondedAtom.Parent;
+                var nextAtom = unbondedAtom.Next;
 
-                var bondDir = (atom.Position - parentAtom.Position).ToRotation().Value;
+                var bondDir = (nextAtom.Position - atom.Position).ToRotation().Value;
 
                 ops[i].MoleculeRotation = -bondDir + ComplexDisassembler.UnbondingDirection;
             }
 
-            // The rotation for the first operation is arbitrary since there'll be only one atom at that stage.
-            // But we make it the same as the rotation for the second operation so that no rotation will be
+            // The rotation for the last operation is arbitrary since there'll be only one atom at that stage.
+            // But we make it the same as the rotation for the second last operation so that no rotation will be
             // required between them.
-            ops[0].MoleculeRotation = ops[1].MoleculeRotation;
+            ops[orderedAtoms.Count - 1].MoleculeRotation = ops[orderedAtoms.Count - 2].MoleculeRotation;
 
             for (int i = 0; i < orderedAtoms.Count - 1; i++)
             {
@@ -133,36 +133,74 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
         private List<UnbondedAtom> DetermineAtomOrder()
         {
             // For now, only allow molecules with no branches or loops
-            if (!(Molecule.Atoms.All(a => a.BondCount <= 2) && Molecule.Atoms.Count(a => a.BondCount == 1) == 2))
+            if (DoesMoleculeHaveBondCycles(Molecule))
             {
-                throw new UnsupportedException("MoleculeDismantler currently only supports molecules with a single atom chain.");
+                throw new UnsupportedException("MoleculeDismantler currently only supports molecules with no bond cycles.");
             }
 
-            // Start with the atoms with the fewest bonds, then use X position as an arbitrary tie-breaker
-            var firstAtom = Molecule.Atoms.GroupBy(a => a.BondCount).OrderBy(g => g.Key).First().MaxBy(a => a.Position.X);
-            var seenAtoms = new HashSet<Atom> { firstAtom };
-
+            var molecule = new AtomCollection(Molecule, new());
             var orderedAtoms = new List<UnbondedAtom>();
-            var atomsToProcess = new Stack<UnbondedAtom>();
-            atomsToProcess.Push(new UnbondedAtom(firstAtom, null));
 
-            // Do a depth-first search so that we build entire molecule chains one at a time
-            while (atomsToProcess.Count > 0)
+            while (molecule.Atoms.Count > 0)
             {
-                var currentAtom = atomsToProcess.Pop();
-                orderedAtoms.Add(currentAtom);
+                // Get the next leaf atom
+                var currentAtom = molecule.Atoms.Where(a => a.BondCount == 1).MaxBy(a => a.Position.X);
 
-                foreach (var (_, bondedAtom) in Molecule.GetAdjacentBondedAtoms(currentAtom.Atom.Position))
+                // Process the whole atom chain
+                while (currentAtom != null)
                 {
-                    if (!seenAtoms.Contains(bondedAtom))
+                    var bondedAtoms = molecule.GetAdjacentBondedAtoms(currentAtom);
+                    if (bondedAtoms.Count > 1)
                     {
-                        seenAtoms.Add(bondedAtom);
-                        atomsToProcess.Push(new UnbondedAtom(bondedAtom, currentAtom.Atom));
+                        // This atom is bonded to 2 or more atoms, so it's part of a new chain
+                        break;
                     }
+
+                    var nextAtom = molecule.GetAdjacentBondedAtoms(currentAtom).SingleOrDefault().Value;
+                    molecule.RemoveAtom(currentAtom);
+
+                    orderedAtoms.Add(new UnbondedAtom(currentAtom, nextAtom));
+                    currentAtom = nextAtom;
                 }
             }
 
             return orderedAtoms;
+        }
+
+        private static bool DoesMoleculeHaveBondCycles(Molecule molecule)
+        {
+            var seenAtoms = new HashSet<Atom>();
+
+            bool CheckForCycle(Atom currentAtom, Atom parent)
+            {
+                seenAtoms.Add(currentAtom);
+                foreach (var (_, bondedAtom) in molecule.GetAdjacentBondedAtoms(currentAtom.Position))
+                {
+                    if (!seenAtoms.Contains(bondedAtom))
+                    {
+                        if (CheckForCycle(bondedAtom, currentAtom))
+                        {
+                            return true;
+                        }
+                    }
+                    else if (bondedAtom != parent)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            foreach (var atom in molecule.Atoms)
+            {
+                if (!seenAtoms.Contains(atom) && CheckForCycle(atom, null))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
