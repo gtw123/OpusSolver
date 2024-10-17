@@ -75,40 +75,31 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
         {
             AtomCollection remainingAtoms = null;
 
-            for (int opIndex = 0; opIndex < dismantler.Operations.Count; opIndex++)
+            // We skip the first operation because that atom has no parent
+            for (int opIndex = 1; opIndex < dismantler.Operations.Count; opIndex++)
             {
-                if (opIndex == 0)
+                if (opIndex == 1)
                 {
                     remainingAtoms = m_input.GrabMolecule();
-                }
-                else if (opIndex == dismantler.Operations.Count - 1)
-                {
-                    // Recreate the atom collection so we can be sure it's at (0, 0) and with no bonds
-                    remainingAtoms = new AtomCollection(remainingAtoms.Atoms[0].Element, GetWorldTransform().Apply(LowerUnbonderPosition));
-                    ArmController.SetMoleculeToGrab(remainingAtoms);
-                    yield return null;
-                    yield break;
                 }
                 else
                 {
                     ArmController.SetMoleculeToGrab(remainingAtoms);
                 }
 
-                // TODO: Should we start at index 1 instead of 0?
-
-                var nextOp = dismantler.Operations[opIndex + 1];
+                var op = dismantler.Operations[opIndex];
 
                 remainingAtoms.TargetMolecule = remainingAtoms.Copy();
-                remainingAtoms.TargetMolecule.RemoveBond(nextOp.Atom.Position, nextOp.ParentAtom.Position);
+                remainingAtoms.TargetMolecule.RemoveBond(op.Atom.Position, op.ParentAtom.Position);
 
                 var targetUnbondPosition = UpperUnbonderPosition.Position;
-                var targetTransform = new Transform2D(targetUnbondPosition - nextOp.ParentAtom.Position, HexRotation.R0);
-                targetTransform = targetTransform.RotateAbout(targetUnbondPosition, nextOp.MoleculeRotation);
+                var targetTransform = new Transform2D(targetUnbondPosition - op.ParentAtom.Position, HexRotation.R0);
+                targetTransform = targetTransform.RotateAbout(targetUnbondPosition, op.MoleculeRotation);
                 if (!ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true }, throwOnFailure: false))
                 {
                     targetUnbondPosition = LowerUnbonderPosition.Position;
-                    targetTransform = new Transform2D(targetUnbondPosition - nextOp.ParentAtom.Position, HexRotation.R0);
-                    targetTransform = targetTransform.RotateAbout(targetUnbondPosition, nextOp.MoleculeRotation + HexRotation.R180);
+                    targetTransform = new Transform2D(targetUnbondPosition - op.ParentAtom.Position, HexRotation.R0);
+                    targetTransform = targetTransform.RotateAbout(targetUnbondPosition, op.MoleculeRotation + HexRotation.R180);
                     ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true });
                 }
 
@@ -128,6 +119,11 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
                 yield return null;
             }
+
+            // Recreate the atom collection so we can be sure it's at (0, 0) and with no bonds
+            remainingAtoms = new AtomCollection(remainingAtoms.Atoms[0].Element, GetWorldTransform().Apply(LowerUnbonderPosition));
+            ArmController.SetMoleculeToGrab(remainingAtoms);
+            yield return null;
         }
 
         public static IEnumerable<MoleculeDismantler> CreateMoleculeDismantlers(IEnumerable<Molecule> reagents)
