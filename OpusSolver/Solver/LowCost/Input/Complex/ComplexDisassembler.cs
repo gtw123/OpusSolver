@@ -101,15 +101,22 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                 remainingAtoms.TargetMolecule = remainingAtoms.Copy();
                 remainingAtoms.TargetMolecule.RemoveBond(nextOp.Atom.Position, nextOp.ParentAtom.Position);
 
-                var targetTransform = new Transform2D(UpperUnbonderPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
-                targetTransform = targetTransform.RotateAbout(UpperUnbonderPosition.Position, nextOp.MoleculeRotation);
-                ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true });
+                var targetUnbondPosition = UpperUnbonderPosition.Position;
+                var targetTransform = new Transform2D(targetUnbondPosition - nextOp.ParentAtom.Position, HexRotation.R0);
+                targetTransform = targetTransform.RotateAbout(targetUnbondPosition, nextOp.MoleculeRotation);
+                if (!ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true }, throwOnFailure: false))
+                {
+                    targetUnbondPosition = LowerUnbonderPosition.Position;
+                    targetTransform = new Transform2D(targetUnbondPosition - nextOp.ParentAtom.Position, HexRotation.R0);
+                    targetTransform = targetTransform.RotateAbout(targetUnbondPosition, nextOp.MoleculeRotation + HexRotation.R180);
+                    ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true });
+                }
 
                 // Make sure we're grabbing the atom we want to move
-                if (ArmController.GetGrabberPosition() != GetWorldTransform().Apply(UpperUnbonderPosition).Position)
+                if (ArmController.GetGrabberPosition() != GetWorldTransform().Apply(targetUnbondPosition))
                 {
                     var molecule = ArmController.DropMolecule();
-                    var removedAtom = molecule.RemoveAtom(molecule.GetAtomAtWorldPosition(UpperUnbonderPosition.Position, this));
+                    var removedAtom = molecule.RemoveAtom(molecule.GetAtomAtWorldPosition(targetUnbondPosition, this));
                     ArmController.SetMoleculeToGrab(removedAtom);
 
                     remainingAtoms = molecule;
