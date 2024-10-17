@@ -15,7 +15,7 @@ namespace OpusSolver.Solver
         /// The molecule that these atoms are being assembled into (optional). Used to help determine
         /// which bonds are allowed to be created between the atoms in this collection.
         /// </summary>
-        public Molecule TargetMolecule { get; set; }
+        public AtomCollection TargetMolecule { get; set; }
 
         public AtomCollection()
         {

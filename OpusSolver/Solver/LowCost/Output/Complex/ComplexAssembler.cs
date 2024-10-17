@@ -147,7 +147,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             assembledMolecule.WorldTransform.Position = assembledMolecule.WorldTransform.Apply(assembledMolecule.Atoms[0].Position) - op.Atom.Position.RotateBy(op.MoleculeRotation);
             assembledMolecule.WorldTransform.Rotation = op.MoleculeRotation;
             assembledMolecule.Atoms[0].Position = op.Atom.Position;
-            assembledMolecule.TargetMolecule = builder.Product;
+            assembledMolecule.TargetMolecule = new AtomCollection(builder.Product, new Transform2D());
             yield return null;
 
             var targetBondPosition = LowerBonderPosition;
