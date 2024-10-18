@@ -72,6 +72,12 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                     continue;
                 }
 
+                // Make sure there's a gap between the molecule and the unbonder, otherwise it may be too difficult to unbond atoms
+                if (atomPositions.Any(p => p.Y >= LowerUnbonderPosition.Position.Y - 1))
+                {
+                    continue;
+                }
+
                 m_input = new MoleculeInput(this, Writer, ArmArea, inputTransform, molecule, new Transform2D());
                 return;
             }
@@ -93,6 +99,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                 if (opIndex == 0)
                 {
                     remainingAtoms = m_input.GrabMolecule();
+                    remainingAtoms.TargetMolecule = dismantler.BondReducedMolecule.Copy();
                 }
                 else
                 {
@@ -101,33 +108,57 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
                 var op = dismantler.Operations[opIndex];
 
-                remainingAtoms.TargetMolecule = remainingAtoms.Copy();
-                remainingAtoms.TargetMolecule.RemoveBond(op.Atom.Position, op.NextAtom.Position);
-
-                var targetUnbondPosition = UpperUnbonderPosition.Position;
-                var targetTransform = new Transform2D(targetUnbondPosition - op.Atom.Position, HexRotation.R0);
-                targetTransform = targetTransform.RotateAbout(targetUnbondPosition, op.MoleculeRotation);
-
-                // Make sure the molecule won't overlap the track when it's positioned at the target transform. However,
-                // we will allow it to overlap the track cell that provides access to the lower unbonder position as we don't
-                // need to access that right now.
-                bool moved = false;
-                var atomPositions = remainingAtoms.GetTransformedAtomPositions(targetTransform, this);
-                var lowerTrackWorldPosition = ArmController.GrabberTransformToArmTransform(GetWorldTransform().Apply(LowerUnbonderPosition)).Position;
-                if (!atomPositions.Any(p => p.position != lowerTrackWorldPosition && GridState.GetTrack(p.position) != null))
+                Vector2 targetUnbondPosition = new();
+                var bondedAtoms = remainingAtoms.GetAdjacentBondedAtoms(remainingAtoms.GetAtom(op.Atom.Position)).ToList();
+                if (bondedAtoms.Count > 1)
                 {
-                    if (ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true }, throwOnFailure: false))
-                    {
-                        moved = true;
-                    }
+                    // Make sure the bond referenced by the operation comes last in the list
+                    bondedAtoms = bondedAtoms.Where(b => b.Value.Position != op.NextAtom.Position).Append(bondedAtoms.Single(b => b.Value.Position == op.NextAtom.Position)).ToList();
                 }
 
-                if (!moved)
+                var options = new ArmMovementOptions
                 {
-                    targetUnbondPosition = LowerUnbonderPosition.Position;
-                    targetTransform = new Transform2D(targetUnbondPosition - op.Atom.Position, HexRotation.R0);
-                    targetTransform = targetTransform.RotateAbout(targetUnbondPosition, op.MoleculeRotation + HexRotation.R180);
-                    ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true });
+                    AllowUnbonding = true,
+                    FinalBondToRemove = (op.Atom.Position, op.NextAtom.Position)
+                };
+
+                foreach (var (bondDir, otherAtom) in bondedAtoms)
+                {
+                    // Skip if the bond has already been removed as a side-effect of removing the other bonds
+                    if (remainingAtoms.GetAtom(op.Atom.Position).Bonds[bondDir] == BondType.None)
+                    {
+                        continue;
+                    }
+
+                    var requiredRotation = -bondDir + UnbondingDirection;
+
+                    targetUnbondPosition = UpperUnbonderPosition.Position;
+                    var targetTransform = new Transform2D(targetUnbondPosition - op.Atom.Position, HexRotation.R0);
+                    targetTransform = targetTransform.RotateAbout(targetUnbondPosition, requiredRotation);
+
+                    // Make sure the molecule won't overlap the track when it's positioned at the target transform. However,
+                    // we will allow it to overlap the track cell that provides access to the lower unbonder position as we don't
+                    // need to access that right now.
+                    bool moved = false;
+                    var atomPositions = remainingAtoms.GetTransformedAtomPositions(targetTransform, this);
+                    var lowerTrackWorldPosition = ArmController.GrabberTransformToArmTransform(GetWorldTransform().Apply(LowerUnbonderPosition)).Position;
+                    if (!atomPositions.Any(p => p.position != lowerTrackWorldPosition && GridState.GetTrack(p.position) != null))
+                    {
+                        if (ArmController.MoveMoleculeTo(targetTransform, this, options: options, throwOnFailure: false))
+                        {
+                            moved = true;
+                        }
+                    }
+
+                    if (!moved)
+                    {
+                        targetUnbondPosition = LowerUnbonderPosition.Position;
+                        targetTransform = new Transform2D(targetUnbondPosition - op.Atom.Position, HexRotation.R0);
+                        targetTransform = targetTransform.RotateAbout(targetUnbondPosition, requiredRotation + HexRotation.R180);
+                        ArmController.MoveMoleculeTo(targetTransform, this, options: options);
+                    }
+
+                    remainingAtoms.RemoveBond(op.Atom.Position, otherAtom.Position);
                 }
 
                 // Make sure we're grabbing the atom we want to move
@@ -143,6 +174,8 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                 {
                     remainingAtoms = ArmController.UnbondGrabbedAtomFromOthers();
                 }
+
+                remainingAtoms.TargetMolecule.RemoveAtom(remainingAtoms.TargetMolecule.GetAtom(op.Atom.Position));
 
                 yield return null;
             }

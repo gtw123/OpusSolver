@@ -1,4 +1,6 @@
-﻿namespace OpusSolver.Solver.LowCost
+﻿using System.Collections.Generic;
+
+namespace OpusSolver.Solver.LowCost
 {
     public class ArmMovementOptions
     {
@@ -26,5 +28,10 @@
         /// Allow bonds within the molecule to be removed.
         /// </summary>
         public bool AllowUnbonding;
+
+        /// <summary>
+        /// A bond which is only allowed to be removed once the molecule has reached its target position.
+        /// </summary>
+        public (Vector2 Atom1, Vector2 Atom2)? FinalBondToRemove;
     }
 }

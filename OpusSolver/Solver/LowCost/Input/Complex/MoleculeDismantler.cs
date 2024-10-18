@@ -36,6 +36,12 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
         private List<Operation> m_operations;
         public IReadOnlyList<Operation> Operations => m_operations;
 
+        /// <summary>
+        /// The molecule with all non-essential bonds removed, so that the atoms are still all connected
+        /// but there are no bond cycles.
+        /// </summary>
+        public AtomCollection BondReducedMolecule { get; private set; }
+
         public IEnumerable<Element> GetElementOrder() => m_operations.Select(op => op.Atom.Element);
 
         public MoleculeDismantler(Molecule molecule)
@@ -132,32 +138,46 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
         private List<UnbondedAtom> DetermineAtomOrder()
         {
-            // For now, only allow molecules with no branches or loops
-            if (DoesMoleculeHaveBondCycles(Molecule))
-            {
-                throw new UnsupportedException("MoleculeDismantler currently only supports molecules with no bond cycles.");
-            }
-
-            var molecule = new AtomCollection(Molecule, new());
+            var remainingAtoms = new AtomCollection(Molecule, new());
+            BondReducedMolecule = new AtomCollection(Molecule, new());
             var orderedAtoms = new List<UnbondedAtom>();
 
-            while (molecule.Atoms.Count > 0)
+            while (remainingAtoms.Atoms.Count > 0)
             {
                 // Get the next leaf atom
-                var currentAtom = molecule.Atoms.Where(a => a.BondCount == 1).MaxBy(a => a.Position.X);
+                var currentAtom = remainingAtoms.Atoms.Where(a => a.BondCount == 1).OrderByDescending(a => a.Position.X).ThenByDescending(a => a.Position.Y).FirstOrDefault();
+                while (currentAtom == null)
+                {
+                    // There are no leaf atoms, so try an atom with the fewest numbers of bonds (>= 2)
+                    var nextAtoms = remainingAtoms.Atoms.OrderBy(a => a.BondCount).ThenBy(a => a.Position.X).ThenBy(a => a.Position.Y);
+
+                    // Find the first atom which has an adjacent atom that is part of a cycle
+                    var atomsInCycle = nextAtoms.Select(a => new { Atom = a, Adjacent = FindAdjacentAtomOnCycle(remainingAtoms, a) }).FirstOrDefault(a => a.Adjacent != null);
+                    if (atomsInCycle == null)
+                    {
+                        // This should never happen...
+                        throw new SolverException("Molecule contains no leaf nodes but also no cycles.");
+                    }
+
+                    // Remove the bond to break the cycle
+                    remainingAtoms.RemoveBond(atomsInCycle.Atom.Position, atomsInCycle.Adjacent.Position);
+                    BondReducedMolecule.RemoveBond(atomsInCycle.Atom.Position, atomsInCycle.Adjacent.Position);                   
+
+                    currentAtom = remainingAtoms.Atoms.Where(a => a.BondCount == 1).MaxBy(a => a.Position.X);
+                }
 
                 // Process the whole atom chain
                 while (currentAtom != null)
                 {
-                    var bondedAtoms = molecule.GetAdjacentBondedAtoms(currentAtom);
+                    var bondedAtoms = remainingAtoms.GetAdjacentBondedAtoms(currentAtom);
                     if (bondedAtoms.Count > 1)
                     {
                         // This atom is bonded to 2 or more atoms, so it's part of a new chain
                         break;
                     }
 
-                    var nextAtom = molecule.GetAdjacentBondedAtoms(currentAtom).SingleOrDefault().Value;
-                    molecule.RemoveAtom(currentAtom);
+                    var nextAtom = remainingAtoms.GetAdjacentBondedAtoms(currentAtom).SingleOrDefault().Value;
+                    remainingAtoms.RemoveAtom(currentAtom);
 
                     orderedAtoms.Add(new UnbondedAtom(currentAtom, nextAtom));
                     currentAtom = nextAtom;
@@ -167,40 +187,33 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             return orderedAtoms;
         }
 
-        private static bool DoesMoleculeHaveBondCycles(Molecule molecule)
+        private static Atom FindAdjacentAtomOnCycle(AtomCollection molecule, Atom startAtom)
         {
             var seenAtoms = new HashSet<Atom>();
 
-            bool CheckForCycle(Atom currentAtom, Atom parent)
+            Atom FindAtomInCycle(Atom currentAtom, Atom parent)
             {
                 seenAtoms.Add(currentAtom);
-                foreach (var (_, bondedAtom) in molecule.GetAdjacentBondedAtoms(currentAtom.Position))
+                foreach (var (_, bondedAtom) in molecule.GetAdjacentBondedAtoms(currentAtom))
                 {
                     if (!seenAtoms.Contains(bondedAtom))
                     {
-                        if (CheckForCycle(bondedAtom, currentAtom))
+                        var cycleAtom = FindAtomInCycle(bondedAtom, currentAtom);
+                        if (cycleAtom != null)
                         {
-                            return true;
+                            return cycleAtom;
                         }
                     }
-                    else if (bondedAtom != parent)
+                    else if (bondedAtom != parent && bondedAtom == startAtom)
                     {
-                        return true;
+                        return currentAtom;
                     }
                 }
 
-                return false;
+                return null;
             }
 
-            foreach (var atom in molecule.Atoms)
-            {
-                if (!seenAtoms.Contains(atom) && CheckForCycle(atom, null))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return FindAtomInCycle(startAtom, null);
         }
     }
 }

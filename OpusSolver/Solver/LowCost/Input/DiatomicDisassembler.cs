@@ -152,9 +152,12 @@ namespace OpusSolver.Solver.LowCost.Input
                 }
 
                 var molecule = disassembler.GrabMolecule();
-                molecule.TargetMolecule = molecule.Copy();
-                molecule.TargetMolecule.RemoveBond(molecule.Atoms[0].Position, molecule.Atoms[1].Position);
-                ArmController.MoveMoleculeTo(targetTransform, this, options: new ArmMovementOptions { AllowUnbonding = true });
+                var options = new ArmMovementOptions
+                {
+                    AllowUnbonding = true,
+                    FinalBondToRemove = (molecule.Atoms[0].Position, molecule.Atoms[1].Position)
+                };
+                ArmController.MoveMoleculeTo(targetTransform, this, options: options);
 
                 var targetGrabberPosition = GetWorldTransform().Inverse().Apply(ArmController.GetGrabberPosition());
                 var otherAtomPosition = targetGrabberPosition == OuterUnbonderPosition.Position ? InnerUnbonderPosition : OuterUnbonderPosition;

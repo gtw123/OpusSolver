@@ -469,10 +469,18 @@ namespace OpusSolver.Solver.LowCost
                         return false;
                     }
 
-                    // Disallow removing this bond unless the target molecule doesn't have it, in which case we can remove it too.
-                    // But also disallow removing the bond if the molecule isn't yet the target state - otherwise we'll need to track
-                    // both the removed atoms and the remaining atoms separately, and this class isn't sophisticated enough to do that yet.
-                    if (moleculeToMove.TargetMolecule == null || moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] != BondType.None || !isAtTargetState)
+                    bool canRemoveBond = false;
+                    if (options.FinalBondToRemove.HasValue && (options.FinalBondToRemove.Value.Atom1 == atom.Position && options.FinalBondToRemove.Value.Atom2 == otherAtom.Position
+                        || options.FinalBondToRemove.Value.Atom2 == atom.Position && options.FinalBondToRemove.Value.Atom1 == otherAtom.Position))
+                    {
+                        canRemoveBond = isAtTargetState;
+                    }
+                    else if (moleculeToMove.TargetMolecule != null && moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] == BondType.None)
+                    {
+                        canRemoveBond = true;
+                    }
+
+                    if (!canRemoveBond)
                     {
                         return false;
                     }
