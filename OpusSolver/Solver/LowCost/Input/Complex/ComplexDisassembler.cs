@@ -177,6 +177,20 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
                 remainingAtoms.TargetMolecule.RemoveAtom(remainingAtoms.TargetMolecule.GetAtom(op.Atom.Position));
 
+                var newAtomPositions = remainingAtoms.GetTransformedAtomPositions(GetWorldTransform().Inverse().Apply(remainingAtoms.WorldTransform));
+                if (newAtomPositions.Any(p => p.position == UpperUnbonderPosition.Position + new Vector2(-1, 1)))
+                {
+                    if (targetUnbondPosition == UpperUnbonderPosition.Position)
+                    {
+                        // Move the molecule out the way of the unbonded atom
+                        var targetTransform = remainingAtoms.WorldTransform.RotateAbout(GetWorldTransform().Apply(LowerUnbonderPosition).Position, -HexRotation.R60);
+                        var droppedMolecule = ArmController.DropMolecule();
+                        ArmController.SetMoleculeToGrab(remainingAtoms);
+                        ArmController.DropMoleculeAt(targetTransform);
+                        ArmController.SetMoleculeToGrab(droppedMolecule);
+                    }
+                }
+
                 yield return null;
             }
 
