@@ -33,6 +33,8 @@ namespace OpusSolver.Solver
 
         public Solution Generate()
         {
+            Arm.ResetArmIDs();
+
             m_solutionBuilder = CreateSolutionBuilder();
 
             var plan = m_solutionBuilder.CreatePlan();
@@ -49,11 +51,11 @@ namespace OpusSolver.Solver
             }
             catch (Exception e)
             {
-                LogUtils.LogSolverException(m_puzzle.Name, m_puzzle.FilePath, e);
+                LogUtils.LogSolverException(m_puzzle.Name, m_puzzle.FilePath, e, logToConsole: false);
 
                 // Try to generate a solution anyway so that it can be saved to disk and the user can debug it
                 var solution2 = CreateSolution();
-                solution2.HasErrors = true;
+                solution2.Exception = e;
                 return solution2;
             }
 

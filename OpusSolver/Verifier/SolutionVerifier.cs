@@ -15,6 +15,13 @@ namespace OpusSolver.Verifier
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(SolutionVerifier));
         private static readonly Regex sm_solutionNameRegex = new Regex(@"^SOLUTION: (.*)", RegexOptions.Compiled);
 
+        private bool m_logErrorsToConsole;
+
+        public SolutionVerifier(bool logErrorsToConsole)
+        {
+            m_logErrorsToConsole = logErrorsToConsole;
+        }
+
         public void Verify(List<GeneratedSolution> generatedSolutions)
         {
             var runners = new List<VerifierRunner>();
@@ -180,7 +187,16 @@ namespace OpusSolver.Verifier
                 else if ((match = Regex.Match(line, @"ERROR: (.*)")).Success)
                 {
                     sm_log.Debug($"Solution \"{generatedSolution.SolutionFile}\" failed verification.");
-                    sm_log.Error($"Error verifying solution for puzzle {generatedSolution.Solution.Puzzle.Name} from \"{generatedSolution.PuzzleFile}\": {match.Groups[1].Value}");
+                    string errorMessage = $"Error verifying solution for puzzle {generatedSolution.Solution.Puzzle.Name} from \"{generatedSolution.PuzzleFile}\": {match.Groups[1].Value}";
+                    if (m_logErrorsToConsole)
+                    {
+                        sm_log.Error(errorMessage);
+                    }
+                    else
+                    {
+                        sm_log.Debug(errorMessage);
+                    }
+
                     generatedSolution.PassedVerification = false;
                 }
                 else

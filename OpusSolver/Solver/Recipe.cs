@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace OpusSolver.Solver
 {
-    public class Recipe
+    public class Recipe : IEquatable<Recipe>
     {
-        public class ReactionUsage(Reaction reaction, int maxUsages)
+        public class ReactionUsage(Reaction reaction, int maxUsages) : IEquatable<ReactionUsage>
         {
             public Reaction Reaction { get; private set; } = reaction;
             public int MaxUsages { get; private set; } = maxUsages;
@@ -25,14 +26,57 @@ namespace OpusSolver.Solver
             public bool IsAvailable => CurrentUsages < MaxUsages;
 
             public override string ToString() => $"{MaxUsages}x {Reaction}";
+
+            public bool Equals(ReactionUsage other)
+            {
+                return Reaction.Equals(other.Reaction) && MaxUsages == other.MaxUsages && CurrentUsages == other.CurrentUsages;
+            }
+
+            public override bool Equals(object obj) => Equals(obj as ReactionUsage);
+
+            // TODO: Implement this properly
+            public override int GetHashCode() => 0;
         }
 
         private readonly Dictionary<ReactionType, List<ReactionUsage>> m_reactions = new();
 
         public bool HasWaste { get; set; }
 
+
+
+        public bool Equals(Recipe other)
+        {
+            if (m_reactions.Count != other.m_reactions.Count)
+            {
+                return false;
+            }
+
+            foreach (var (p1, p2) in m_reactions.OrderBy(p => p.Key).Zip(other.m_reactions.OrderBy(p => p.Key)))
+            {
+                if (p1.Key != p2.Key || !p1.Value.SequenceEqual(p2.Value))
+                {
+                    return false;
+                }
+            }
+            
+            return HasWaste == other.HasWaste;
+        }
+
+        public override bool Equals(object obj) => Equals(obj as Recipe);
+
+        // TODO: Implement this properly. For now it doesn't matter as we don't expecting to be comparing many recipes
+        // for a single puzzle.
+        public override int GetHashCode() => 0;
+       
+
         public void AddReaction(Reaction reaction, int usageCount)
         {
+            if (usageCount == 0)
+            {
+                // Don't add unused reactions because that makes it more difficult to compare two recipes for equality
+                return;
+            }
+
             if (!m_reactions.TryGetValue(reaction.Type, out var reactionList))
             {
                 reactionList = new();

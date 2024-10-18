@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpusSolver
@@ -15,7 +16,7 @@ namespace OpusSolver
 
         public Metrics Metrics { get; set; }
 
-        public bool HasErrors { get; set; }
+        public Exception Exception { get; set; }
 
         public Solution(Puzzle puzzle, string name, IEnumerable<GameObject> objects, Program program)
         {

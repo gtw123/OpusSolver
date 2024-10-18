@@ -1,3 +1,7 @@
+param (
+   [string]$puzzleName = "",
+   [switch]$optimize = $False
+)
 $puzzleDirs = (
     "test\puzzles"
 )
@@ -34,15 +38,27 @@ if (Test-Path -LiteralPath $solutionDir)
 
 $args = ("--output", $solutionDir, "--report", "$PSScriptRoot\report.csv")
 
-foreach ($exclude in $excludes)
+if ($optimize)
 {
-    $args += "--exclude"
-    $args += $exclude
+	$args += "--optimize"
 }
 
-foreach ($dir in $puzzleDirs)
+if ($puzzleName -ne "")
 {
-    $args += "$PSScriptRoot\$dir"
+	$args += "$PSScriptRoot\test\puzzles\24hour-1-test\GEN$puzzleName.puzzle"
+}
+else
+{
+	foreach ($exclude in $excludes)
+	{
+		$args += "--exclude"
+		$args += $exclude
+	}
+
+	foreach ($dir in $puzzleDirs)
+	{
+		$args += "$PSScriptRoot\$dir"
+	}
 }
 
 & "$PSScriptRoot\bin\Release\OpusSolver.exe" $args

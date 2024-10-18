@@ -35,7 +35,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
             if (m_dismantlers.Count() > MaxReagents)
             {
-                throw new UnsupportedException($"{nameof(ComplexDisassembler)} currently only supports {MaxReagents} reagents (requested {m_dismantlers.Count()}).");
+                throw new SolverException($"{nameof(ComplexDisassembler)} currently only supports {MaxReagents} reagents (requested {m_dismantlers.Count()}).");
             }
 
             AddInput(m_dismantlers.First().Molecule);

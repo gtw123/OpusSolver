@@ -47,7 +47,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         {
             if (m_builders.Count > MaxProducts)
             {
-                throw new UnsupportedException($"ComplexAssembler currently only supports {MaxProducts} products (requested {m_builders.Count}).");
+                throw new SolverException($"ComplexAssembler currently only supports {MaxProducts} products (requested {m_builders.Count}).");
             }
 
             var possibleRotations = HexRotation.All;

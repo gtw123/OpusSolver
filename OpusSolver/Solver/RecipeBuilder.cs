@@ -124,12 +124,12 @@ namespace OpusSolver.Solver
             return new Reaction(type, id, inputs.ToDictionary(p => p.Item1, p => p.Item2), outputs.ToDictionary(p => p.Item1, p => p.Item2));
         }
 
-        public Recipe GenerateRecipe()
+        public IEnumerable<Recipe> GenerateRecipes()
         {
             m_usedElements = m_reactions.SelectMany(r => r.Inputs.Keys).Concat(m_reactions.SelectMany(r => r.Outputs.Keys))
                 .Concat(m_productReactions.SelectMany(r => r.Reaction.Inputs.Keys)).Distinct().OrderBy(e => e).ToList();
             using var lp = CreateLinearProgram();
-            return FindFeasibleRecipe(lp);
+            return [FindFeasibleRecipe(lp)];
         }
 
         private LinearProgram CreateLinearProgram()

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -17,7 +18,7 @@ namespace OpusSolver.Solver
         Dispersion,
     }
 
-    public class Reaction(ReactionType type, int id, IReadOnlyDictionary<Element, int> inputs, IReadOnlyDictionary<Element, int> outputs)
+    public class Reaction(ReactionType type, int id, IReadOnlyDictionary<Element, int> inputs, IReadOnlyDictionary<Element, int> outputs) : IEquatable<Reaction>
     {
         public ReactionType Type { get; private set; } = type;
         public int ID { get; private set; } = id;
@@ -53,5 +54,17 @@ namespace OpusSolver.Solver
 
             return str.ToString();
         }
+
+        public bool Equals(Reaction other)
+        {
+            return Type == other.Type && ID == other.ID
+                && Inputs.OrderBy(p => p.Key).SequenceEqual(other.Inputs.OrderBy(p => p.Key))
+                && Outputs.OrderBy(p => p.Key).SequenceEqual(other.Outputs.OrderBy(p => p.Key));
+        }
+
+        public override bool Equals(object obj) => Equals(obj as Reaction);
+
+        // TODO: Implement this properly
+        public override int GetHashCode() => 0;
     }
 }

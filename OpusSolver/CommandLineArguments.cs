@@ -9,6 +9,7 @@ namespace OpusSolver
         public string OutputDir;
         public SolutionType SolutionType = SolutionType.Standard;
         public string ReportFile;
+        public bool GenerateMultipleSolutions = false;
         public bool AnalyzeOnly = false;
     }
 }

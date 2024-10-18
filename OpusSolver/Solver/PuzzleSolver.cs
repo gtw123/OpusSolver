@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using OpusSolver.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace OpusSolver.Solver
 {
@@ -19,19 +22,62 @@ namespace OpusSolver.Solver
             m_solutionType = solutionType;
         }
 
-        public Solution Solve()
+        public IEnumerable<Solution> Solve(bool generateMultipleSolutions)
         {
             sm_log.Debug("Solving puzzle");
-
-            Arm.ResetArmIDs();
 
             CheckPreconditions();
             FixRepeatingMolecules();
 
-            var generator = new RecipeGenerator(Puzzle);
-            var solution = new SolutionGenerator(Puzzle, m_solutionType, generator.GenerateRecipe()).Generate();
-            CheckAllowedGlyphs(solution);
+            var recipes = new RecipeGenerator(Puzzle, new RecipeOptions()).GenerateRecipes();
 
+            if (!generateMultipleSolutions)
+            {
+                return [GenerateSolution(recipes.First())];
+            }
+
+            recipes = recipes.Concat(new RecipeGenerator(Puzzle, new RecipeOptions { IncludeUneededReactions = true }).GenerateRecipes());
+            recipes = recipes.Distinct().ToList();
+
+            var solutions = new List<Solution>();
+            var exceptions = new List<Exception>();
+            foreach (var recipe in recipes)
+            {
+                try
+                {
+                    solutions.Add(GenerateSolution(recipe));
+                }
+                catch (Exception e)
+                {
+                    // Since we're generating multiple solutions, just log the error and continue on with the next
+                    LogUtils.LogSolverException(Puzzle.Name, Puzzle.FilePath, e, logToConsole: false);
+                    exceptions.Add(e);
+                }
+            }
+
+            if (!solutions.Any(s => s.Exception == null))
+            {
+                // Unsupported messages are usually unique, but include them all if there are multiple.
+                // Note that an unsupported message may be generated for one solution and not another.
+                // e.g. An alternate recipe may use fewer reagents.
+                var unsupportedExceptions = exceptions.OfType<UnsupportedException>().Select(e => e.Message).Distinct();
+                if (unsupportedExceptions.Any())
+                {
+                    throw new UnsupportedException(string.Join(Environment.NewLine, unsupportedExceptions));
+                }
+
+                throw new SolverException("Could not generate any solutions. See log file for detail.");
+            }
+
+            return solutions;
+        }
+
+        private Solution GenerateSolution(Recipe recipe)
+        {
+            sm_log.Debug("Recipe:" + Environment.NewLine + recipe.ToString());
+
+            var solution = new SolutionGenerator(Puzzle, m_solutionType, recipe).Generate();
+            CheckAllowedGlyphs(solution);
             return solution;
         }
 

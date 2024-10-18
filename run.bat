@@ -1,1 +1,1 @@
-@powershell -executionpolicy bypass -f run.ps1
+@powershell -executionpolicy bypass -f run.ps1 %*

@@ -105,6 +105,9 @@ namespace OpusSolver
                         commandArgs.ReportFile = args[++i];
                         break;
                     }
+                    case "--optimize":
+                        commandArgs.GenerateMultipleSolutions = true;
+                        break;
                     case "--analyze":
                         commandArgs.AnalyzeOnly = true;
                         break;
@@ -160,6 +163,8 @@ namespace OpusSolver
             sm_log.Error("    --exclude <file name> Name of a puzzle file to skip");
             string solutionTypes = string.Join(", ", Enum.GetNames(typeof(Solver.SolutionType)));
             sm_log.Error($"    --type <type>         Generates solutions of this type. Valid types: {solutionTypes}");
+            sm_log.Error("    --optimize            Generate multiple solutions for each puzzle and keep those with the best metrics.");
+            sm_log.Error("                          Note: Using this option will greatly increase run time.");
             sm_log.Error("    --analyze             Analyze puzzles instead of solving them. Output will be written to the report file");
             sm_log.Error("    --report <file>       Generate a report file summarizing the solutions and their metrics");
         }

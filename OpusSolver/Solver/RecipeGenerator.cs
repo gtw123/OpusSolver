@@ -4,25 +4,36 @@ using System.Linq;
 
 namespace OpusSolver.Solver
 {
+    public class RecipeOptions
+    {
+        /// <summary>
+        /// If true, include some reactions that aren't actually strictly necessary to generate the products.
+        /// This can lead to better solutions in some cases.
+        /// </summary>
+        public bool IncludeUneededReactions = false;
+    }
+
     public class RecipeGenerator
     {
         private static readonly log4net.ILog sm_log = log4net.LogManager.GetLogger(typeof(RecipeGenerator));
 
-        private Puzzle m_puzzle;
+        private readonly Puzzle m_puzzle;
+        private readonly RecipeOptions m_options;
 
-        private HashSet<Element> m_generatedElements = new HashSet<Element>();
-        private HashSet<Element> m_neededElements = new HashSet<Element>();
-        private HashSet<Element> m_reagentElements = new HashSet<Element>();
+        private readonly HashSet<Element> m_generatedElements = new HashSet<Element>();
+        private readonly HashSet<Element> m_neededElements = new HashSet<Element>();
+        private readonly HashSet<Element> m_reagentElements = new HashSet<Element>();
         private bool m_needAnyCardinal = false;
 
         private RecipeBuilder m_recipeBuilder = new RecipeBuilder();
 
-        public RecipeGenerator(Puzzle puzzle)
+        public RecipeGenerator(Puzzle puzzle, RecipeOptions options)
         {
             m_puzzle = puzzle;
+            m_options = options;
         }
 
-        public Recipe GenerateRecipe()
+        public IEnumerable<Recipe> GenerateRecipes()
         {
             AnalyzeProductsAndReagents();
             AnalyzeQuintessence();
@@ -32,10 +43,7 @@ namespace OpusSolver.Solver
             AnalyzeCardinalsAgain();
             AnalyzeMetals();
 
-            var recipe = m_recipeBuilder.GenerateRecipe();
-            sm_log.Debug("Recipe:" + Environment.NewLine + recipe.ToString());
-
-            return recipe;
+            return m_recipeBuilder.GenerateRecipes();
         }
 
         private void AnalyzeProductsAndReagents()
@@ -93,11 +101,17 @@ namespace OpusSolver.Solver
                         AddGeneratedElements(PeriodicTable.Cardinals);
                         AddNeededElement(Element.Salt);
                         m_recipeBuilder.AddReaction(ReactionType.VanBerlo);
+                        return;
                     }
                 }
 
                 // Don't generate an error if we can't use Van Berlo's wheel as we may still be able to use the glyph
                 // of dispersion, but we need to check that after analyzing salt.
+            }
+
+            if (m_options.IncludeUneededReactions && m_puzzle.AllowedArmTypes.Contains(ArmType.VanBerlo) && m_puzzle.AllowedGlyphs.Contains(GlyphType.Duplication))
+            {
+                m_recipeBuilder.AddReaction(ReactionType.VanBerlo);
             }
         }
 
@@ -111,11 +125,17 @@ namespace OpusSolver.Solver
                     AddGeneratedElement(Element.Salt);
                     m_needAnyCardinal = true;   // Special case - we need at least one cardinal but don't care which one it is
                     m_recipeBuilder.AddReaction(ReactionType.Calcification);
+                    return;
                 }
                 else
                 {
                     throw new SolverException("This puzzle requires salt to be created but doesn't allow the glyph of calcification.");
                 }
+            }
+
+            if (m_options.IncludeUneededReactions && m_puzzle.AllowedGlyphs.Contains(GlyphType.Calcification))
+            {
+                m_recipeBuilder.AddReaction(ReactionType.Calcification);
             }
         }
 

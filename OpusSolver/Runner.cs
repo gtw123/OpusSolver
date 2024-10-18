@@ -16,9 +16,12 @@ namespace OpusSolver
         private CommandLineArguments m_args;
         private StreamWriter m_reportWriter;
 
-        private List<GeneratedSolution> m_generatedSolutions = new();
-        private int m_totalErrors = 0;
-        private int m_totalUnsupported = 0;
+        private record class PuzzleSolutions(string Name, string PuzzleFile, List<GeneratedSolution> AllSolutions)
+        {
+            public GeneratedSolution BestCost, BestCycles, BestArea;
+            public IEnumerable<GeneratedSolution> ValidSolutions => AllSolutions.Where(s => s.PassedVerification);
+            public bool IsSolved => ValidSolutions.Any();
+        }
 
         public Runner(CommandLineArguments args)
         {
@@ -38,56 +41,57 @@ namespace OpusSolver
 
         public void Run()
         {
-            GenerateSolutions();
+            var puzzleSolutions = GenerateSolutions();
+            VerifySolutions(puzzleSolutions);
+            FindBestSolutions(puzzleSolutions);
+            GenerateReport(puzzleSolutions);
 
-            VerifySolutions(m_generatedSolutions);
-            int totalSuccessfulSolutions = m_generatedSolutions.Count(s => s.PassedVerification);
-            int totalFailedVerification = m_generatedSolutions.Count - totalSuccessfulSolutions;
-
-            sm_log.Info($"Successfully generated and verified solutions for {totalSuccessfulSolutions}/{m_args.PuzzleFiles.Count} puzzles.");
-
-            if (totalFailedVerification > 0)
+            if (m_args.GenerateMultipleSolutions)
             {
-                sm_log.Error($"{totalFailedVerification} solutions failed verification.");
+                // Explicitly log errors for puzzles that had no valid solutions since we suppress verification errors
+                // when generating multiple solutions. Note that if we couldn't generate any solutions at all, we already
+                // log an error for that elsewhere.
+                var failedPuzzles = puzzleSolutions.Where(s => s.AllSolutions.Any() && !s.IsSolved);
+                foreach (var puzzle in failedPuzzles)
+                {
+                    var error = new SolverException($"Could not generate any valid solutions. See log file for details.");
+                    LogUtils.LogSolverException(puzzle.Name, puzzle.PuzzleFile, error, logToConsole: true);
+                }
             }
 
-            if (m_totalErrors > 0)
-            {
-                sm_log.Error($"{m_totalErrors} puzzles had unexpected errors.");
-            }
+            int totalSolvedPuzzles = puzzleSolutions.Where(p => p.IsSolved).Count();
+            sm_log.Info($"Successfully generated solutions for {totalSolvedPuzzles}/{m_args.PuzzleFiles.Count} puzzles.");
 
-            if (m_totalUnsupported > 0)
+            int totalUnsolved = m_args.PuzzleFiles.Count - totalSolvedPuzzles;
+            if (totalUnsolved > 0)
             {
-                sm_log.Warn($"{m_totalUnsupported} puzzles could not be solved due to solver limitations.");
+                sm_log.Error($"Could not generate valid solutions for {totalUnsolved} puzzles.");
             }
 
             if (m_reportWriter != null)
             {
                 sm_log.Info($"Report saved to \"{m_args.ReportFile}\"");
-                m_reportWriter.WriteLine($"Successful solutions: {totalSuccessfulSolutions}/{m_args.PuzzleFiles.Count}");
+                m_reportWriter.WriteLine($"Solved puzzles: {totalSolvedPuzzles}/{m_args.PuzzleFiles.Count}");
             }
         }
 
-        private void GenerateSolutions()
+        private List<PuzzleSolutions> GenerateSolutions()
         {
             sm_log.Info($"Generating solutions to \"{m_args.OutputDir}\"");
 
+            var puzzleSolutions = new List<PuzzleSolutions>();
             foreach (var puzzleFile in m_args.PuzzleFiles)
             {
-                string solutionFile = Path.Combine(m_args.OutputDir, Path.GetFileNameWithoutExtension(puzzleFile) + $"_{m_args.SolutionType}.solution");
-                var generatedSolution = GenerateSolution(puzzleFile, solutionFile);
-                if (generatedSolution != null)
-                {
-                    m_generatedSolutions.Add(generatedSolution);
-                }
-
+                puzzleSolutions.Add(GenerateSolutionsForPuzzle(puzzleFile));
                 Console.Write(".");
             }
 
             Console.WriteLine();
+
+            return puzzleSolutions;
         }
 
-        private GeneratedSolution GenerateSolution(string puzzleFile, string solutionFile)
+        private PuzzleSolutions GenerateSolutionsForPuzzle(string puzzleFile)
         {
             string puzzleName = null;
 
@@ -100,57 +104,84 @@ namespace OpusSolver
                 sm_log.Debug($"Puzzle: " + Environment.NewLine + puzzle.ToString());
 
                 var solver = new PuzzleSolver(puzzle, m_args.SolutionType);
-                var solution = solver.Solve();
+                var solutions = solver.Solve(generateMultipleSolutions: m_args.GenerateMultipleSolutions);
 
-                sm_log.Debug($"Writing solution to \"{solutionFile}\"");
-                SolutionWriter.WriteSolution(solution, solutionFile);
-
-                if (solution.HasErrors)
+                int solutionIndex = 0;
+                var generatedSolutions = new List<GeneratedSolution>();
+                foreach (var solution in solutions)
                 {
-                    // In this case an error message will have already been logged, so we don't need to do that again.
-                    // But return null so that we don't try to verify the solution and generate another error.
-                    m_totalErrors++;
-                    return null;
+                    string suffix = m_args.GenerateMultipleSolutions ? $"_{m_args.SolutionType}_{solutionIndex}.solution" : $"_{m_args.SolutionType}.solution";
+                    string outputDir = m_args.GenerateMultipleSolutions ? Path.Combine(m_args.OutputDir, "Working") : m_args.OutputDir;
+                    string solutionFile = Path.Combine(outputDir, Path.GetFileNameWithoutExtension(puzzleFile) + suffix);
+                    sm_log.Debug($"Writing solution to \"{solutionFile}\"");
+                    SolutionWriter.WriteSolution(solution, solutionFile);
+
+                    if (solution.Exception != null)
+                    {
+                        // Don't add the solution to the list as we don't want to try to verify the solution and generate
+                        // another error.
+                        if (!m_args.GenerateMultipleSolutions)
+                        {
+                            LogUtils.LogSolverException(puzzleName, puzzleFile, solution.Exception, logToConsole: true);
+                        }
+                    }
+                    else
+                    {
+                        generatedSolutions.Add(new GeneratedSolution { PuzzleFile = puzzleFile, SolutionFile = solutionFile, Solution = solution });
+                    }
+
+                    solutionIndex++;
                 }
 
-                return new GeneratedSolution { PuzzleFile = puzzleFile, SolutionFile = solutionFile, Solution = solution };
-            }
-            catch (UnsupportedException e)
-            {
-                sm_log.Debug(e.Message);
-                m_totalUnsupported++;
-                return null;
+                return new PuzzleSolutions(puzzleName, puzzleFile, generatedSolutions);
             }
             catch (Exception e)
             {
-                LogUtils.LogSolverException(puzzleName, puzzleFile, e);
-                m_totalErrors++;
-                return null;
+                LogUtils.LogSolverException(puzzleName, puzzleFile, e, logToConsole: true);
+                return new PuzzleSolutions(puzzleName, puzzleFile, []);
             }
         }
 
-        private void VerifySolutions(List<GeneratedSolution> generatedSolutions)
+        private void VerifySolutions(List<PuzzleSolutions> puzzleSolutions)
         {
             sm_log.Info("Verifying solutions...");
 
-            var verifier = new SolutionVerifier();
-            verifier.Verify(generatedSolutions);
+            var verifier = new SolutionVerifier(logErrorsToConsole: !m_args.GenerateMultipleSolutions);
+            verifier.Verify(puzzleSolutions.SelectMany(p => p.AllSolutions).ToList());
+        }
 
-            var metricSums = new Metrics();
-            var verifiedSolutions = generatedSolutions.Where(s => s.PassedVerification);
-
-            foreach (var generatedSolution in verifiedSolutions)
+        private void FindBestSolutions(IEnumerable<PuzzleSolutions> puzzleSolutions)
+        {
+            foreach (var puzzle in puzzleSolutions.Where(p => p.IsSolved))
             {
-                var solution = generatedSolution.Solution;
-                var metrics = solution.Metrics;
-                m_reportWriter?.WriteLine($"{solution.Puzzle.Name},\"{generatedSolution.PuzzleFile}\",{metrics.Cost},{metrics.Cycles},{metrics.Area},{metrics.Instructions}");
+                puzzle.BestCost = puzzle.ValidSolutions.MinBy(s => s.Solution.Metrics.Cost);
+                puzzle.BestCycles = puzzle.ValidSolutions.MinBy(s => s.Solution.Metrics.Cycles);
+                puzzle.BestArea = puzzle.ValidSolutions.MinBy(s => s.Solution.Metrics.Area);
+            }
+        }
+
+        private void GenerateReport(IEnumerable<PuzzleSolutions> puzzleSolutions)
+        {
+            var metricSums = new Metrics();
+            int totalPuzzles = 0;
+
+            foreach (var puzzle in puzzleSolutions.Where(p => p.IsSolved))
+            {
+                var metrics = new Metrics
+                {
+                    Cost = puzzle.BestCost.Solution.Metrics.Cost,
+                    Cycles = puzzle.BestCycles.Solution.Metrics.Cycles,
+                    Area = puzzle.BestArea.Solution.Metrics.Area,
+                };
+
+                m_reportWriter?.WriteLine($"{puzzle.Name},\"{puzzle.PuzzleFile}\",{metrics.Cost},{metrics.Cycles},{metrics.Area}");
 
                 metricSums.Add(metrics);
+                totalPuzzles++;
             }
 
-            double total = verifiedSolutions.Count();
-            m_reportWriter?.WriteLine($"Average,,{metricSums.Cost / total:.00},{metricSums.Cycles / total:.00},{metricSums.Area / total:.00},{metricSums.Instructions / total:.00}");
-
+            double total = totalPuzzles;
+            m_reportWriter?.WriteLine($"Average,,{metricSums.Cost / total:.00},{metricSums.Cycles / total:.00},{metricSums.Area / total:.00}");
         }
     }
 }

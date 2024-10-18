@@ -290,7 +290,7 @@ namespace OpusSolver
         private PuzzleInfo LoadPuzzle(string puzzleFile)
         {
             var puzzle = PuzzleReader.ReadPuzzle(puzzleFile);
-            var generator = new RecipeGenerator(puzzle);
+            var generator = new RecipeGenerator(puzzle, new RecipeOptions());
 
             return new PuzzleInfo
             {
@@ -298,7 +298,7 @@ namespace OpusSolver
                 File = puzzleFile,
                 Reagents = new MoleculeListInfo(puzzle.Reagents),
                 Products = new MoleculeListInfo(puzzle.Products),
-                Recipe = generator.GenerateRecipe()
+                Recipe = generator.GenerateRecipes().First()
             };
         }
     }
