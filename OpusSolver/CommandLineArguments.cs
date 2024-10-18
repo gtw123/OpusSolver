@@ -8,7 +8,6 @@ namespace OpusSolver
         public List<string> PuzzleFiles = new();
         public string OutputDir;
         public SolutionType SolutionType = SolutionType.Standard;
-        public bool SkipVerification = false;
         public string ReportFile;
         public bool AnalyzeOnly = false;
     }

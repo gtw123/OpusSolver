@@ -40,21 +40,11 @@ namespace OpusSolver
         {
             GenerateSolutions();
 
-            int totalSuccessfulSolutions;
-            int totalFailedVerification = 0;
-            if (!m_args.SkipVerification)
-            {
-                VerifySolutions(m_generatedSolutions);
-                totalSuccessfulSolutions = m_generatedSolutions.Count(s => s.PassedVerification);
-                totalFailedVerification = m_generatedSolutions.Count - totalSuccessfulSolutions;
-            }
-            else
-            {
-                totalSuccessfulSolutions = m_generatedSolutions.Count();
-            }
+            VerifySolutions(m_generatedSolutions);
+            int totalSuccessfulSolutions = m_generatedSolutions.Count(s => s.PassedVerification);
+            int totalFailedVerification = m_generatedSolutions.Count - totalSuccessfulSolutions;
 
-            string verifyMessage = m_args.SkipVerification ? "" : "and verified ";
-            sm_log.Info($"Successfully generated {verifyMessage}solutions for {totalSuccessfulSolutions}/{m_args.PuzzleFiles.Count} puzzles.");
+            sm_log.Info($"Successfully generated and verified solutions for {totalSuccessfulSolutions}/{m_args.PuzzleFiles.Count} puzzles.");
 
             if (totalFailedVerification > 0)
             {

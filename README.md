@@ -29,7 +29,7 @@ These steps have currently been tested on Windows only.
 * Build!
 
 ### Building libverify
-To automatically verify solutions, libverify from omsim is also required.
+Libverify from omsim is required in order to verify solutions.
 
 To build libverify on Windows:
 * Clone the omsim repo from https://github.com/ianh/omsim
@@ -48,7 +48,6 @@ To build libverify on other platforms, follow the steps in the README in the oms
 * To generate a solution for a puzzle, simply run `OpusSolver.exe <path to the .puzzle file>`. This will create a corresponding `.solution` file in the current directory.
 * You can also give it multiple files or directories to run on.
 * For other options, run `OpusSolver.exe` with no arguments.
-* If you're unable to build libverify, you can still run OpenSolver without automatic verification by using `OpusSolver.exe --noverify`
 
 ## FAQ
 
