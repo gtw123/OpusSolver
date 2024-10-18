@@ -142,10 +142,12 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             BondReducedMolecule = new AtomCollection(Molecule, new());
             var orderedAtoms = new List<UnbondedAtom>();
 
+            Atom GetNextLeafAtom() => remainingAtoms.Atoms.Where(a => a.BondCount == 1).OrderByDescending(a => a.Position.X).ThenByDescending(a => a.Position.Y).FirstOrDefault();
+
             while (remainingAtoms.Atoms.Count > 0)
             {
                 // Get the next leaf atom
-                var currentAtom = remainingAtoms.Atoms.Where(a => a.BondCount == 1).OrderByDescending(a => a.Position.X).ThenByDescending(a => a.Position.Y).FirstOrDefault();
+                var currentAtom = GetNextLeafAtom();
                 while (currentAtom == null)
                 {
                     // There are no leaf atoms, so try an atom with the fewest numbers of bonds (>= 2)
@@ -161,9 +163,9 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
                     // Remove the bond to break the cycle
                     remainingAtoms.RemoveBond(atomsInCycle.Atom.Position, atomsInCycle.Adjacent.Position);
-                    BondReducedMolecule.RemoveBond(atomsInCycle.Atom.Position, atomsInCycle.Adjacent.Position);                   
+                    BondReducedMolecule.RemoveBond(atomsInCycle.Atom.Position, atomsInCycle.Adjacent.Position);
 
-                    currentAtom = remainingAtoms.Atoms.Where(a => a.BondCount == 1).MaxBy(a => a.Position.X);
+                    currentAtom = GetNextLeafAtom();
                 }
 
                 // Process the whole atom chain
