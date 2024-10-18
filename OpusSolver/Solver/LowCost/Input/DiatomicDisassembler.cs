@@ -23,12 +23,11 @@ namespace OpusSolver.Solver.LowCost.Input
         private StoredAtom m_unbondedAtom;
         private StoredAtom m_stashedAtom;
 
-        public const int MaxReagents = 2;
+        public const int MaxReagents = 3;
 
         private static readonly Transform2D InnerUnbonderPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D OuterUnbonderPosition = new Transform2D(new Vector2(1, 0), HexRotation.R0);
         private readonly Transform2D m_stashPosition;
-        private Transform2D m_input2GrabPosition;
 
         private readonly List<Transform2D> m_accessPoints = new();
         public override IEnumerable<Transform2D> RequiredAccessPoints => m_accessPoints;
@@ -69,13 +68,10 @@ namespace OpusSolver.Solver.LowCost.Input
                 AddDisassembler(reagentsList[0], transform, HexRotation.R180, 0);
                 return;
             }
-            else if (reagentsList.Count == 2)
+            else if (reagentsList.Count >= 2)
             {
-                // If there's a single-atom reagent, add that last
-                if (reagentsList[0].Atoms.Count() == 1)
-                {
-                    reagentsList.Reverse();
-                }
+                // Sort the reagents so we add single-atom reagents last
+                reagentsList = reagents.OrderByDescending(r => r.Atoms.Count()).ToList();
 
                 var transform = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R0).RotateAbout(OuterUnbonderPosition.Position - new Vector2(ArmArea.ArmLength, 0), -HexRotation.R60);
                 AddDisassembler(reagentsList[0], transform, HexRotation.R0, 0);
@@ -85,9 +81,26 @@ namespace OpusSolver.Solver.LowCost.Input
 
                 if (reagentsList[1].Atoms.Count() > 1)
                 {
-                    m_input2GrabPosition = transform;
-                    m_input2GrabPosition.Position.X -= 1;
-                    m_accessPoints.Add(m_input2GrabPosition);
+                    var grabPosition = transform;
+                    grabPosition.Position.X -= 1;
+                    m_accessPoints.Add(grabPosition);
+                }
+
+                if (reagentsList.Count >= 3)
+                {
+                    if (reagentsList[2].Atoms.Count() == 1)
+                    {
+                        var reagentTransform = new Transform2D(transform.Position += new Vector2(1, -1), transform.Rotation);
+                        AddDisassembler(reagentsList[2], reagentTransform, HexRotation.R0, 2);
+                        m_accessPoints.Add(reagentTransform);
+                    }
+                    else
+                    {
+                        // TODO: Find a better location for this molecule
+                        var reagentTransform = new Transform2D(transform.Position += new Vector2(-1, 1), HexRotation.R0);
+                        AddDisassembler(reagentsList[2], reagentTransform, HexRotation.R0, 2);
+                        m_accessPoints.Add(reagentTransform);
+                    }
                 }
             }
         }
