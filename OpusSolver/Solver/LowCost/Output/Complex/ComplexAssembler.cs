@@ -6,7 +6,9 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 {
     public class ComplexAssembler : MoleculeAssembler
     {
-        private IEnumerable<MoleculeBuilder> m_builders;
+        public const int MaxProducts = 4;
+
+        private readonly IReadOnlyList<MoleculeBuilder> m_builders;
         private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines;
         private readonly Glyph m_bonder;
 
@@ -27,7 +29,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         public ComplexAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeBuilder> builders)
             : base(parent, writer, armArea)
         {
-            m_builders = builders;
+            m_builders = builders.ToList();
             m_assembleCoroutines = builders.ToDictionary(b => b.Product.ID, b => new LoopingCoroutine<object>(() => Assemble(b)));
             m_bonder = new Glyph(this, LowerBonderPosition.Position, BondingDirection - HexRotation.R180, GlyphType.Bonding);
         }
@@ -39,14 +41,16 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             AddOutputs();
         }
 
+        private record class OutputLocation(Transform2D Transform, List<Vector2> AtomPositions);
+
         private void AddOutputs()
         {
-            if (m_builders.Count() > 2)
+            if (m_builders.Count > MaxProducts)
             {
-                throw new UnsupportedException($"ComplexAssembler currently only supports 2 products (requested {m_builders.Count()}).");
+                throw new UnsupportedException($"ComplexAssembler currently only supports {MaxProducts} products (requested {m_builders.Count}).");
             }
 
-            var possibleRotations = new[] { HexRotation.R60, HexRotation.R120 };
+            var possibleRotations = HexRotation.All;
             var possiblePivots = HexRotation.All;
             var possiblePositions = new[] { UpperBonderPosition.Position, LowerBonderPosition.Position };
             var rotationCases = (
@@ -55,59 +59,59 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 from position in possiblePositions
                 select (rotation, pivot, position)).ToList();
 
-            var outputTransforms = new Dictionary<int, Transform2D>();
+            var outputLocations = new Dictionary<int, OutputLocation>();
 
-            var builder1 = m_builders.First();
-            foreach (var (rot1, pivot1, pos1) in rotationCases)
+            // Recursively finds an output location for the specified builder and all subsequent builders.
+            bool FindOutputLocations(int builderIndex)
             {
-                var output1Transform = CalculateOutputTransform(builder1, rot1, pivot1, pos1);
-
-                // Check that none of the output atoms overlap any other atoms
-                var atomPositions = builder1.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output1Transform));
-                if (atomPositions.Any(p => GridState.CellContainsAnyObject(p)))
+                var builder = m_builders[builderIndex];
+                foreach (var (rot, pivot, pos) in rotationCases)
                 {
-                    continue;
-                }
-
-                if (m_builders.Count() == 1)
-                {
-                    outputTransforms[builder1.Product.ID] = output1Transform;
-                    break;
-                }
-
-                var builder2 = m_builders.Skip(1).Single();
-                foreach (var (rot2, pivot2, pos2) in rotationCases)
-                {
-                    var output2Transform = CalculateOutputTransform(builder2, rot2, pivot2, pos2);
+                    var outputTransform = CalculateOutputTransform(builder, rot, pivot, pos);
 
                     // Check that none of the output atoms overlap any other atoms
-                    var atomPositions2 = builder2.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(output2Transform));
-                    if (atomPositions2.Any(p => GridState.CellContainsAnyObject(p)))
+                    var atomPositions = builder.Product.GetTransformedAtomPositions(GetWorldTransform().Apply(outputTransform)).ToList();
+                    if (atomPositions.Any(p => GridState.CellContainsAnyObject(p)))
                     {
                         continue;
                     }
 
-                    // Check that the outputs don't overlap with each other
-                    if (atomPositions.Intersect(atomPositions2).Any())
+                    // Check that this output doesn't overlap another one
+                    if (outputLocations.Values.Any(pos => atomPositions.Intersect(pos.AtomPositions).Any()))
                     {
                         continue;
                     }
 
-                    outputTransforms[builder1.Product.ID] = output1Transform;
-                    outputTransforms[builder2.Product.ID] = output2Transform;
-                    break;
+                    outputLocations[builder.Product.ID] = new OutputLocation(outputTransform, atomPositions);
+
+                    if (builderIndex == m_builders.Count - 1)
+                    {
+                        // This was the last output and we found the output location successfully
+                        return true;
+                    }
+                    else if (FindOutputLocations(builderIndex + 1))
+                    {
+                        // All remaining output locations were found successfully
+                        return true;
+                    }
+                    else
+                    {
+                        // One of the other outputs locations was found, so reset and try the another location for the current one
+                        outputLocations.Remove(builder.Product.ID);
+                    }
                 }
+
+                return false;
             }
 
-            var missingOutputs = m_builders.Select(b => b.Product.ID).Except(outputTransforms.Keys);
-            if (missingOutputs.Any())
+            if (!FindOutputLocations(0))
             {
-                throw new SolverException($"Could not find valid output positions for products.");
+                throw new SolverException($"Could not find valid output locations for all products.");
             }
 
             foreach (var builder in m_builders)
             {
-                var outputTransform = outputTransforms[builder.Product.ID];
+                var outputTransform = outputLocations[builder.Product.ID].Transform;
                 m_outputs[builder.Product.ID] = new Product(this, outputTransform.Position, outputTransform.Rotation, builder.Product);
             }
         }
