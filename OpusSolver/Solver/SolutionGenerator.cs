@@ -13,21 +13,23 @@ namespace OpusSolver.Solver
         private Puzzle m_puzzle;
         private SolutionType m_solutionType;      
         private Recipe m_recipe;
+        private SolutionParameterSet m_paramSet;
 
         private ISolutionBuilder m_solutionBuilder;
         private ProgramWriter m_writer = new ProgramWriter();
 
-        public SolutionGenerator(Puzzle puzzle, SolutionType solutionType, Recipe recipe)
+        public SolutionGenerator(Puzzle puzzle, SolutionType solutionType, Recipe recipe, SolutionParameterSet paramSet)
         {
             m_puzzle = puzzle;
             m_solutionType = solutionType;
             m_recipe = recipe;
+            m_paramSet = paramSet;
         }
 
         private ISolutionBuilder CreateSolutionBuilder() => m_solutionType switch
         {
-            SolutionType.Standard => new Standard.SolutionBuilder(m_puzzle, m_recipe, m_writer),
-            SolutionType.LowCost => new LowCost.SolutionBuilder(m_puzzle, m_recipe, m_writer),
+            SolutionType.Standard => new Standard.SolutionBuilder(m_puzzle, m_recipe, m_paramSet, m_writer),
+            SolutionType.LowCost => new LowCost.SolutionBuilder(m_puzzle, m_recipe, m_paramSet, m_writer),
             _ => throw new ArgumentException($"Invalid solution type {m_solutionType}.")
         };
 

@@ -21,7 +21,7 @@ namespace OpusSolver.Solver.ElementGenerators
 
         public void GenerateCommandSequence()
         {
-            foreach (var product in m_products)
+            foreach (var product in m_products.ConditionalReverse(Plan.SolutionParameters.GetParameterValue(SolutionParameterRegistry.Common.ReverseProductBuildOrder)))
             {
                 var elementOrder = Plan.GetProductElementInfo(product).ElementOrder;
                 int numCopies = Recipe.GetAvailableReactions(ReactionType.Product, id: product.ID).Single().MaxUsages;

@@ -36,13 +36,26 @@ namespace OpusSolver.Solver
 
             // TODO: Implement this properly
             public override int GetHashCode() => 0;
+
+            public ReactionUsage Copy() => new ReactionUsage(Reaction, MaxUsages);
         }
 
         private readonly Dictionary<ReactionType, List<ReactionUsage>> m_reactions = new();
 
         public bool HasWaste { get; set; }
 
+        public Recipe Copy()
+        {
+            var recipe = new Recipe();
+            foreach (var (type, usages) in m_reactions)
+            {
+                recipe.m_reactions[type] = usages.Select(u => u.Copy()).ToList();
+            }
 
+            recipe.HasWaste = HasWaste;
+
+            return recipe;
+        }
 
         public bool Equals(Recipe other)
         {

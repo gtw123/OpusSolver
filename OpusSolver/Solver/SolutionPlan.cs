@@ -5,6 +5,7 @@ namespace OpusSolver.Solver
     public class SolutionPlan(
         Puzzle puzzle,
         Recipe recipe,
+        SolutionParameterSet paramSet,
         IEnumerable<Molecule> requiredReagents,
         IReadOnlyDictionary<int, SolutionPlan.MoleculeElementInfo> reagentElementInfo,
         IReadOnlyDictionary<int, SolutionPlan.MoleculeElementInfo> productElementInfo,
@@ -15,6 +16,7 @@ namespace OpusSolver.Solver
 
         public Puzzle Puzzle { get; private set; } = puzzle;
         public Recipe Recipe { get; private set; } = recipe;
+        public SolutionParameterSet SolutionParameters { get; private set; } = paramSet;
 
         public IEnumerable<Molecule> RequiredReagents { get; private set; } = requiredReagents;
 

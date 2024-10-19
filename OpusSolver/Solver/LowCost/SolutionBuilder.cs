@@ -10,6 +10,7 @@ namespace OpusSolver.Solver.LowCost
     {
         private readonly Puzzle m_puzzle;
         private readonly Recipe m_recipe;
+        private SolutionParameterSet m_paramSet;
         private readonly ProgramWriter m_writer;
 
         private readonly List<Molecule> m_requiredReagents;
@@ -19,10 +20,11 @@ namespace OpusSolver.Solver.LowCost
         private ArmArea m_armArea;
         private List<LowCostAtomGenerator> m_atomGenerators = [];
 
-        public SolutionBuilder(Puzzle puzzle, Recipe recipe, ProgramWriter writer)
+        public SolutionBuilder(Puzzle puzzle, Recipe recipe, SolutionParameterSet paramSet, ProgramWriter writer)
         {
             m_puzzle = puzzle;
             m_recipe = recipe;
+            m_paramSet = paramSet;
             m_writer = writer;
 
             m_requiredReagents = puzzle.Reagents.Where(r => recipe.HasAvailableReactions(ReactionType.Reagent, id: r.ID)).ToList();
@@ -32,7 +34,7 @@ namespace OpusSolver.Solver.LowCost
 
         public SolutionPlan CreatePlan()
         {
-            return new SolutionPlan(m_puzzle, m_recipe,
+            return new SolutionPlan(m_puzzle, m_recipe, m_paramSet,
                 m_requiredReagents,
                 m_requiredReagents.ToDictionary(p => p.ID, p => m_disassemblerFactory.GetReagentElementInfo(p)),
                 m_puzzle.Products.ToDictionary(p => p.ID, p => m_assemblerFactory.GetProductElementInfo(p)),

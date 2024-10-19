@@ -33,7 +33,7 @@ namespace OpusSolver.Solver
 
             if (!generateMultipleSolutions)
             {
-                return [GenerateSolution(recipes.First())];
+                return [GenerateSolution(recipes.First(), new SolutionParameterSet([]))];
             }
 
             recipes = recipes.Concat(new RecipeGenerator(Puzzle, new RecipeOptions { IncludeUneededReactions = true }).GenerateRecipes(generateMultipleSolutions));
@@ -43,15 +43,19 @@ namespace OpusSolver.Solver
             var exceptions = new List<Exception>();
             foreach (var recipe in recipes)
             {
-                try
+                var registry = CreateParameterRegistry(recipe);
+                foreach (var paramSet in registry.CreateParameterSets())
                 {
-                    solutions.Add(GenerateSolution(recipe));
-                }
-                catch (Exception e)
-                {
-                    // Since we're generating multiple solutions, just log the error and continue on with the next
-                    LogUtils.LogSolverException(Puzzle.Name, Puzzle.FilePath, e, logToConsole: false);
-                    exceptions.Add(e);
+                    try
+                    {
+                        solutions.Add(GenerateSolution(recipe.Copy(), paramSet));
+                    }
+                    catch (Exception e)
+                    {
+                        // Since we're generating multiple solutions, just log the error and continue on with the next
+                        LogUtils.LogSolverException(Puzzle.Name, Puzzle.FilePath, e, logToConsole: false);
+                        exceptions.Add(e);
+                    }
                 }
             }
 
@@ -72,11 +76,22 @@ namespace OpusSolver.Solver
             return solutions;
         }
 
-        private Solution GenerateSolution(Recipe recipe)
+        private SolutionParameterRegistry CreateParameterRegistry(Recipe recipe)
+        {
+            return m_solutionType switch
+            {
+                SolutionType.Standard => Standard.SolutionParameterFactory.CreateParameterRegistry(Puzzle, recipe),
+                SolutionType.LowCost => LowCost.SolutionParameterFactory.CreateParameterRegistry(Puzzle, recipe),
+                _ => throw new ArgumentException($"Unknown solution type {m_solutionType}.")
+            };
+        }
+
+        private Solution GenerateSolution(Recipe recipe, SolutionParameterSet paramSet)
         {
             sm_log.Debug("Recipe:" + Environment.NewLine + recipe.ToString());
+            sm_log.Debug("Solution Parameters:" + Environment.NewLine + paramSet.ToString());
 
-            var solution = new SolutionGenerator(Puzzle, m_solutionType, recipe).Generate();
+            var solution = new SolutionGenerator(Puzzle, m_solutionType, recipe, paramSet).Generate();
             CheckAllowedGlyphs(solution);
             return solution;
         }
