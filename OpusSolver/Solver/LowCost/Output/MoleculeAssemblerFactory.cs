@@ -13,8 +13,10 @@ namespace OpusSolver.Solver.LowCost.Output
         public MoleculeAssembler CreateAssembler(SolverComponent parent, ProgramWriter writer, ArmArea armArea) => m_createAssembler(parent, writer, armArea);
         public SolutionPlan.MoleculeElementInfo GetProductElementInfo(Molecule molecule) => new SolutionPlan.MoleculeElementInfo(m_productElementOrders[molecule.ID]);
 
-        public MoleculeAssemblerFactory(IEnumerable<Molecule> products)
+        public MoleculeAssemblerFactory(IEnumerable<Molecule> products, SolutionParameterSet paramSet)
         {
+            var reverseElementOrder = paramSet.GetParameterValue(SolutionParameterRegistry.Common.ReverseProductElementOrder);
+
             if (products.Any(p => p.HasTriplex))
             {
                 throw new UnsupportedException("LowCost solver can't currently handle products with triplex bonds.");
@@ -36,7 +38,7 @@ namespace OpusSolver.Solver.LowCost.Output
             }
             else
             {
-                var builders = ComplexAssembler.CreateMoleculeBuilders(products);
+                var builders = ComplexAssembler.CreateMoleculeBuilders(products, reverseElementOrder);
                 m_productElementOrders = products.ToDictionary(p => p.ID, p => builders.Single(b => b.Product.ID == p.ID).GetElementsInBuildOrder());
                 m_createAssembler = (parent, writer, armArea) => new ComplexAssembler(parent, writer, armArea, builders);
             }

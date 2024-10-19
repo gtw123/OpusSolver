@@ -272,9 +272,9 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             ArmController.DropMoleculeAt(m_outputs[builder.Product.ID].Transform, this, addToGrid: false);
         }
 
-        public static IEnumerable<MoleculeBuilder> CreateMoleculeBuilders(IEnumerable<Molecule> products)
+        public static IEnumerable<MoleculeBuilder> CreateMoleculeBuilders(IEnumerable<Molecule> products, bool reverseElementOrder)
         {
-            return products.Select(p => new MoleculeBuilder(p)).ToList();
+            return products.Select(p => new MoleculeBuilder(p, reverseElementOrder)).ToList();
         }
     }
 }

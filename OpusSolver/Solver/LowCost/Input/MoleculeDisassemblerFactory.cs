@@ -20,7 +20,7 @@ namespace OpusSolver.Solver.LowCost.Input
             return m_reagentElementInfo[molecule.ID];
         }
 
-        public MoleculeDisassemblerFactory(IEnumerable<Molecule> reagents)
+        public MoleculeDisassemblerFactory(IEnumerable<Molecule> reagents, SolutionParameterSet paramSet)
         {
             IEnumerable<Element> GetDefaultElementOrder(Molecule molecule) => molecule.GetAtomsInInputOrder().Reverse().Select(a => a.Element);
 

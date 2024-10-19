@@ -6,6 +6,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
     public class MoleculeBuilder
     {
         public Molecule Product { get; private set; }
+        private bool m_reverseElementOrder;
 
         public class Operation
         {
@@ -38,9 +39,10 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         public IEnumerable<Element> GetElementsInBuildOrder() => m_operations.Select(op => op.Atom.Element);
 
-        public MoleculeBuilder(Molecule product)
+        public MoleculeBuilder(Molecule product, bool reverseElementOrder)
         {
             Product = product;
+            m_reverseElementOrder = reverseElementOrder;
 
             GenerateOperations();
         }
@@ -133,7 +135,17 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         private List<BondedAtom> DetermineAtomOrder()
         {
             // Start with the atom with the fewest bonds, then use X and Y positions as arbitrary tie-breakers
-            var firstAtom = Product.Atoms.OrderBy(a => a.BondCount).ThenByDescending(a => a.Position.X).ThenByDescending(a => a.Position.Y).First();
+            var atoms = Product.Atoms.OrderBy(a => a.BondCount);
+            if (m_reverseElementOrder)
+            {
+                atoms = atoms.ThenBy(a => a.Position.X).ThenBy(a => a.Position.Y);
+            }
+            else
+            {
+                atoms = atoms.ThenByDescending(a => a.Position.X).ThenByDescending(a => a.Position.Y);
+            }
+
+            var firstAtom = atoms.First();
             var seenAtoms = new HashSet<Atom> { firstAtom };
 
             var orderedAtoms = new List<BondedAtom>();

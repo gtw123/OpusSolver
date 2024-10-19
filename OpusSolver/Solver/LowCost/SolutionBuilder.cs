@@ -28,8 +28,8 @@ namespace OpusSolver.Solver.LowCost
             m_writer = writer;
 
             m_requiredReagents = puzzle.Reagents.Where(r => recipe.HasAvailableReactions(ReactionType.Reagent, id: r.ID)).ToList();
-            m_disassemblerFactory = new MoleculeDisassemblerFactory(m_requiredReagents);
-            m_assemblerFactory = new MoleculeAssemblerFactory(puzzle.Products);
+            m_disassemblerFactory = new MoleculeDisassemblerFactory(m_requiredReagents, m_paramSet);
+            m_assemblerFactory = new MoleculeAssemblerFactory(puzzle.Products, m_paramSet);
         }
 
         public SolutionPlan CreatePlan()

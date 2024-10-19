@@ -1,4 +1,6 @@
-﻿namespace OpusSolver.Solver.LowCost
+﻿using System.Linq;
+
+namespace OpusSolver.Solver.LowCost
 {
     public static class SolutionParameterFactory
     {
@@ -10,11 +12,11 @@
             {
                 registry.AddParameter(SolutionParameterRegistry.Common.ReverseProductBuildOrder);
             }
-            /*
-            if (puzzle.Products.Any(p => p.Atoms.Count() > 0))
+            
+            if (puzzle.Products.Any(p => p.Atoms.Count() > 1))
             {
                 registry.AddParameter(SolutionParameterRegistry.Common.ReverseProductElementOrder);
-            }*/
+            }
 
             return registry;
         }
