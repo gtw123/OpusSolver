@@ -31,12 +31,13 @@ $excludes = (
 )
 
 $solutionDir = "$PSScriptRoot\test\solutions"
-if (Test-Path -LiteralPath $solutionDir)
+$outputDir = Join-Path $solutionDir "output"
+if (Test-Path -LiteralPath $outputDir)
 {
-    Remove-Item -LiteralPath $solutionDir -Force -Recurse | Out-Null
+    Remove-Item -LiteralPath $outputDir -Force -Recurse | Out-Null
 }
 
-$args = ("--output", $solutionDir, "--report", "$PSScriptRoot\report.csv")
+$args = ("--output", $outputDir, "--report", "$PSScriptRoot\report.csv")
 
 if ($optimize)
 {
@@ -63,3 +64,9 @@ else
 
 & "$PSScriptRoot\bin\Release\OpusSolver.exe" $args
 
+# Save a copy of the solutions so that we can scan them for best solutions later on
+if ($optimize)
+{
+	$date = Get-Date -format "yyyyMMdd-HHmmss"
+	Copy-Item "$outputDir\*" (Join-Path $solutionDir "$date")
+}
