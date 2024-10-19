@@ -48,6 +48,8 @@ namespace OpusSolver
 
             if (m_args.GenerateMultipleSolutions)
             {
+                CopyBestSolutions(puzzleSolutions);
+
                 // Explicitly log errors for puzzles that had no valid solutions since we suppress verification errors
                 // when generating multiple solutions. Note that if we couldn't generate any solutions at all, we already
                 // log an error for that elsewhere.
@@ -157,6 +159,22 @@ namespace OpusSolver
                 puzzle.BestCost = puzzle.ValidSolutions.MinBy(s => s.Solution.Metrics.Cost);
                 puzzle.BestCycles = puzzle.ValidSolutions.MinBy(s => s.Solution.Metrics.Cycles);
                 puzzle.BestArea = puzzle.ValidSolutions.MinBy(s => s.Solution.Metrics.Area);
+            }
+        }
+
+        private void CopyBestSolutions(IEnumerable<PuzzleSolutions> puzzleSolutions)
+        {
+            void CopySolutionToOutputDir(GeneratedSolution solution, string suffix)
+            {
+                string solutionFile = Path.Combine(m_args.OutputDir, Path.GetFileNameWithoutExtension(solution.PuzzleFile) + $"_{suffix}.solution");
+                File.Copy(solution.SolutionFile, solutionFile, overwrite: true);
+            }
+
+            foreach (var puzzle in puzzleSolutions.Where(p => p.IsSolved))
+            {
+                CopySolutionToOutputDir(puzzle.BestCost, "Cost");
+                CopySolutionToOutputDir(puzzle.BestCycles, "Cycles");
+                CopySolutionToOutputDir(puzzle.BestArea, "Area");
             }
         }
 
