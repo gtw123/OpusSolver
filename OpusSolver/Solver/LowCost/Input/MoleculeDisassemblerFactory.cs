@@ -22,6 +22,8 @@ namespace OpusSolver.Solver.LowCost.Input
 
         public MoleculeDisassemblerFactory(IEnumerable<Molecule> reagents, SolutionParameterSet paramSet)
         {
+            var reverseElementOrder = paramSet.GetParameterValue(SolutionParameterRegistry.Common.ReverseReagentElementOrder);
+
             IEnumerable<Element> GetDefaultElementOrder(Molecule molecule) => molecule.GetAtomsInInputOrder().Reverse().Select(a => a.Element);
 
             if (reagents.All(r => r.Atoms.Count() == 1))
@@ -61,7 +63,7 @@ namespace OpusSolver.Solver.LowCost.Input
                     throw new UnsupportedException($"LowCost solver can't currently handle more than {ComplexDisassembler.MaxReagents} complex reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
                 }
 
-                var dismantlers = ComplexDisassembler.CreateMoleculeDismantlers(reagents);
+                var dismantlers = ComplexDisassembler.CreateMoleculeDismantlers(reagents, reverseElementOrder);
                 m_reagentElementInfo = reagents.ToDictionary(r => r.ID, r => new SolutionPlan.MoleculeElementInfo(dismantlers.Single(d => d.Molecule.ID == r.ID).GetElementOrder()));
                 m_createDisassembler = (writer, armArea, usedReagents) => new ComplexDisassembler(writer, armArea, dismantlers);
             }

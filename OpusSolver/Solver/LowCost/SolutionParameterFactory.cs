@@ -18,6 +18,11 @@ namespace OpusSolver.Solver.LowCost
                 registry.AddParameter(SolutionParameterRegistry.Common.ReverseProductElementOrder);
             }
 
+            if (puzzle.Reagents.Any(p => p.Atoms.Count() > 1))
+            {
+                registry.AddParameter(SolutionParameterRegistry.Common.ReverseReagentElementOrder);
+            }
+
             return registry;
         }
     }

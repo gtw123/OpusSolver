@@ -6,6 +6,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
     public class MoleculeDismantler
     {
         public Molecule Molecule { get; private set; }
+        private bool m_reverseElementOrder;
 
         public class Operation
         {
@@ -44,9 +45,10 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
         public IEnumerable<Element> GetElementOrder() => m_operations.Select(op => op.Atom.Element);
 
-        public MoleculeDismantler(Molecule molecule)
+        public MoleculeDismantler(Molecule molecule, bool reverseElementOrder)
         {
             Molecule = molecule;
+            m_reverseElementOrder = reverseElementOrder;
 
             GenerateOperations();
         }
@@ -142,7 +144,20 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             BondReducedMolecule = new AtomCollection(Molecule, new());
             var orderedAtoms = new List<UnbondedAtom>();
 
-            Atom GetNextLeafAtom() => remainingAtoms.Atoms.Where(a => a.BondCount == 1).OrderByDescending(a => a.Position.X).ThenByDescending(a => a.Position.Y).FirstOrDefault();
+            Atom GetNextLeafAtom()
+            {
+                var atoms = remainingAtoms.Atoms.Where(a => a.BondCount == 1);
+                if (m_reverseElementOrder)
+                {
+                    atoms = atoms.OrderBy(a => a.Position.X).ThenBy(a => a.Position.Y);
+                }
+                else
+                {
+                    atoms = atoms.OrderByDescending(a => a.Position.X).ThenByDescending(a => a.Position.Y);
+                }
+
+                return atoms.FirstOrDefault();
+            }
 
             while (remainingAtoms.Atoms.Count > 0)
             {
