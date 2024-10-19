@@ -51,6 +51,11 @@ namespace OpusSolver.Solver
                 return false;
             }
 
+            if (m_reactions.Count != other.m_reactions.Count)
+            {
+                return false;
+            }
+
             foreach (var (p1, p2) in m_reactions.OrderBy(p => p.Key).Zip(other.m_reactions.OrderBy(p => p.Key)))
             {
                 if (p1.Key != p2.Key || !p1.Value.SequenceEqual(p2.Value))
@@ -58,8 +63,8 @@ namespace OpusSolver.Solver
                     return false;
                 }
             }
-            
-            return HasWaste == other.HasWaste;
+
+            return true;
         }
 
         public override bool Equals(object obj) => Equals(obj as Recipe);

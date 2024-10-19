@@ -33,7 +33,7 @@ namespace OpusSolver.Solver
             m_options = options;
         }
 
-        public IEnumerable<Recipe> GenerateRecipes()
+        public IEnumerable<Recipe> GenerateRecipes(bool generateMultiple)
         {
             AnalyzeProductsAndReagents();
             AnalyzeQuintessence();
@@ -43,7 +43,7 @@ namespace OpusSolver.Solver
             AnalyzeCardinalsAgain();
             AnalyzeMetals();
 
-            return m_recipeBuilder.GenerateRecipes();
+            return m_recipeBuilder.GenerateRecipes(generateMultiple);
         }
 
         private void AnalyzeProductsAndReagents()

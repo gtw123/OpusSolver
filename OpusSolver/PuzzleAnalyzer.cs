@@ -298,7 +298,7 @@ namespace OpusSolver
                 File = puzzleFile,
                 Reagents = new MoleculeListInfo(puzzle.Reagents),
                 Products = new MoleculeListInfo(puzzle.Products),
-                Recipe = generator.GenerateRecipes().First()
+                Recipe = generator.GenerateRecipes(generateMultiple: false).First()
             };
         }
     }

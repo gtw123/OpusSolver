@@ -29,14 +29,14 @@ namespace OpusSolver.Solver
             CheckPreconditions();
             FixRepeatingMolecules();
 
-            var recipes = new RecipeGenerator(Puzzle, new RecipeOptions()).GenerateRecipes();
+            var recipes = new RecipeGenerator(Puzzle, new RecipeOptions()).GenerateRecipes(generateMultipleSolutions);
 
             if (!generateMultipleSolutions)
             {
                 return [GenerateSolution(recipes.First())];
             }
 
-            recipes = recipes.Concat(new RecipeGenerator(Puzzle, new RecipeOptions { IncludeUneededReactions = true }).GenerateRecipes());
+            recipes = recipes.Concat(new RecipeGenerator(Puzzle, new RecipeOptions { IncludeUneededReactions = true }).GenerateRecipes(generateMultipleSolutions));
             recipes = recipes.Distinct().ToList();
 
             var solutions = new List<Solution>();

@@ -124,12 +124,16 @@ namespace OpusSolver.Solver
             return new Reaction(type, id, inputs.ToDictionary(p => p.Item1, p => p.Item2), outputs.ToDictionary(p => p.Item1, p => p.Item2));
         }
 
-        public IEnumerable<Recipe> GenerateRecipes()
+        public IEnumerable<Recipe> GenerateRecipes(bool generateMultiple)
         {
             m_usedElements = m_reactions.SelectMany(r => r.Inputs.Keys).Concat(m_reactions.SelectMany(r => r.Outputs.Keys))
                 .Concat(m_productReactions.SelectMany(r => r.Reaction.Inputs.Keys)).Distinct().OrderBy(e => e).ToList();
             using var lp = CreateLinearProgram();
-            return [FindFeasibleRecipe(lp)];
+            var recipes = FindFeasibleRecipes(lp);
+
+            // We can't simply return recipes from here without expanding the list because the lp will be destroyed on return
+            // and we'll get a crash if we try to access it afterwards.
+            return generateMultiple ? recipes.ToList() : [recipes.First()];
         }
 
         private LinearProgram CreateLinearProgram()
@@ -204,7 +208,7 @@ namespace OpusSolver.Solver
             return result;
         }
 
-        private Recipe FindFeasibleRecipe(LinearProgram lp)
+        private IEnumerable<Recipe> FindFeasibleRecipes(LinearProgram lp)
         {
             // First try to solve the LP exactly. We try different numbers of product counts because sometimes
             // building multiple copies of a product lets us use a whole number of reagents which usually leads
@@ -213,7 +217,7 @@ namespace OpusSolver.Solver
             {
                 if (SolveLinearProgram(lp, scale, hasWaste: false, out var recipe) == SolveResult.OPTIMAL)
                 {
-                    return recipe;
+                    yield return recipe;
                 }
             }
 
@@ -229,7 +233,7 @@ namespace OpusSolver.Solver
 
                 if (SolveLinearProgram(lp, 1, hasWaste: true, out var recipe) == SolveResult.OPTIMAL)
                 {
-                    return recipe;
+                    yield return recipe;
                 }
             }
 
@@ -240,12 +244,12 @@ namespace OpusSolver.Solver
             }
 
             var result = SolveLinearProgram(lp, 1, hasWaste: true, out var recipe2);
-            if (result == SolveResult.OPTIMAL)
+            if (result != SolveResult.OPTIMAL)
             {
-                return recipe2;
+                throw new SolverException($"Could not solve linear program even after relaxing all constraints: solver returned {result}.");
             }
 
-            throw new SolverException($"Could not solve linear program even after relaxing all constraints: solver returned {result}.");
+            yield return recipe2;
         }
 
         private Recipe CreateRecipe(LinearProgram lp, int productScale)
