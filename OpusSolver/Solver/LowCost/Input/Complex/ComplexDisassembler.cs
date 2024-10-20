@@ -18,15 +18,17 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
         private static readonly Transform2D LowerUnbonderPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D UpperUnbonderPosition = new Transform2D(new Vector2(-1, 1), HexRotation.R0);
+        private static readonly Transform2D ExtraAccessPoint = new Transform2D(new Vector2(-1, 0), HexRotation.R0);
 
-        public override IEnumerable<Transform2D> RequiredAccessPoints => [LowerUnbonderPosition, UpperUnbonderPosition];
+        private List<Transform2D> m_accessPoints = [];
+        public override IEnumerable<Transform2D> RequiredAccessPoints => m_accessPoints;
 
         /// <summary>
         /// The direction in which this disassembler's unbonder removes bonds, from the previous atom to the new atom.
         /// </summary>
         public static HexRotation UnbondingDirection = HexRotation.R300;
 
-        public ComplexDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeDismantler> dismantlers)
+        public ComplexDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeDismantler> dismantlers, bool addExtraAcessPoint)
             : base(writer, armArea)
         {
             m_dismantlers = dismantlers;
@@ -36,6 +38,13 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             if (m_dismantlers.Count() > MaxReagents)
             {
                 throw new SolverException($"{nameof(ComplexDisassembler)} currently only supports {MaxReagents} reagents (requested {m_dismantlers.Count()}).");
+            }
+
+            m_accessPoints.Add(LowerUnbonderPosition);
+            m_accessPoints.Add(UpperUnbonderPosition);
+            if (addExtraAcessPoint)
+            {
+                m_accessPoints.Add(ExtraAccessPoint);
             }
 
             AddInput(m_dismantlers.First().Molecule);

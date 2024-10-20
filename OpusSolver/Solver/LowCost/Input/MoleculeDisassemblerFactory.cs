@@ -66,7 +66,9 @@ namespace OpusSolver.Solver.LowCost.Input
                 bool reverseBondTraversalDirection = paramSet.GetParameterValue(SolutionParameters.ReverseReagentBondTraversalDirection);
                 var dismantlers = ComplexDisassembler.CreateMoleculeDismantlers(reagents, reverseElementOrder, reverseBondTraversalDirection);
                 m_reagentElementInfo = reagents.ToDictionary(r => r.ID, r => new SolutionPlan.MoleculeElementInfo(dismantlers.Single(d => d.Molecule.ID == r.ID).GetElementOrder()));
-                m_createDisassembler = (writer, armArea, usedReagents) => new ComplexDisassembler(writer, armArea, dismantlers);
+
+                bool addExtraAcessPoint = paramSet.GetParameterValue(SolutionParameters.AddExtraDisassemblerAccessPoint);
+                m_createDisassembler = (writer, armArea, usedReagents) => new ComplexDisassembler(writer, armArea, dismantlers, addExtraAcessPoint);
             }
         }
     }

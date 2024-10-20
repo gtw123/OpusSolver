@@ -183,6 +183,7 @@ namespace OpusSolver.Solver.LowCost
             if (m_puzzle.Reagents.Any(p => p.Atoms.Count() > 1))
             {
                 registry.AddParameter(SolutionParameterRegistry.Common.ReverseReagentElementOrder);
+                registry.AddParameter(SolutionParameters.AddExtraDisassemblerAccessPoint);
             }
 
             bool IsSingleChain(Molecule molecule) => molecule.Atoms.All(a => a.BondCount <= 2) && molecule.Atoms.Count(a => a.BondCount == 1) == 2;
