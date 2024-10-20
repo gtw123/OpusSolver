@@ -13,11 +13,12 @@ namespace OpusSolver.Solver.LowCost
 
         public GridState GridState { get; private set; } = new GridState();
 
-        public int ArmLength => 2;
+        public int ArmLength { get; private init; }
 
-        public ArmArea(SolverComponent parent, ProgramWriter writer)
+        public ArmArea(SolverComponent parent, ProgramWriter writer, int armLength)
             : base(parent, writer, new Vector2())
         {
+            ArmLength = armLength;
         }
 
         public void CreateComponents(IEnumerable<Transform2D> requiredAccessPoints)

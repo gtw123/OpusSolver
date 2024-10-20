@@ -44,7 +44,8 @@ namespace OpusSolver.Solver.LowCost
 
         public void CreateAtomGenerators(ElementPipeline pipeline)
         {
-            m_armArea = new ArmArea(null, m_writer);
+            int armLength = m_paramSet.GetParameterValue(SolutionParameterFactory.UseLength3Arm) ? 3 : 2;
+            m_armArea = new ArmArea(null, m_writer, armLength);
 
             var baseTransform = new Transform2D();
             var offsetTransform = new Transform2D(new Vector2(m_armArea.ArmLength, 0), HexRotation.R0);

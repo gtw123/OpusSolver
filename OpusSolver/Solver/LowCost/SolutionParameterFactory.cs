@@ -4,11 +4,14 @@ namespace OpusSolver.Solver.LowCost
 {
     public static class SolutionParameterFactory
     {
+        public const string UseLength3Arm = nameof(UseLength3Arm);
         public const string UseBreadthFirstOrderForComplexProducts = nameof(UseBreadthFirstOrderForComplexProducts);
 
         public static SolutionParameterRegistry CreateParameterRegistry(Puzzle puzzle, Recipe recipe)
         {
             var registry = new SolutionParameterRegistry();
+
+            registry.AddParameter(UseLength3Arm);
 
             if (puzzle.Products.Count > 1)
             {
