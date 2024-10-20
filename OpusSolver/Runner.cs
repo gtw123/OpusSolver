@@ -156,9 +156,9 @@ namespace OpusSolver
         {
             foreach (var puzzle in puzzleSolutions.Where(p => p.IsSolved))
             {
-                puzzle.BestCost = puzzle.ValidSolutions.MinBy(s => s.Solution.Metrics.Cost);
-                puzzle.BestCycles = puzzle.ValidSolutions.MinBy(s => s.Solution.Metrics.Cycles);
-                puzzle.BestArea = puzzle.ValidSolutions.MinBy(s => s.Solution.Metrics.Area);
+                puzzle.BestCost = puzzle.ValidSolutions.OrderBy(s => s.Solution.Metrics.Cost).ThenBy(s => s.Solution.Metrics.Cycles).ThenBy(s => s.Solution.Metrics.Area).First();
+                puzzle.BestCycles = puzzle.ValidSolutions.OrderBy(s => s.Solution.Metrics.Cycles).ThenBy(s => s.Solution.Metrics.Area).ThenBy(s => s.Solution.Metrics.Cost).First();
+                puzzle.BestArea = puzzle.ValidSolutions.OrderBy(s => s.Solution.Metrics.Area).ThenBy(s => s.Solution.Metrics.Cost).ThenBy(s => s.Solution.Metrics.Cycles).First();
             }
         }
 

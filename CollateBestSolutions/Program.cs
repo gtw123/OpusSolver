@@ -129,13 +129,13 @@ namespace CollateBestSolutions
 
             foreach (var puzzleSolutions in solutions.GroupBy(s => s.PuzzleFileName).OrderBy(g => g.Key))
             {
-                var bestCost = puzzleSolutions.MinBy(s => s.Metrics.Cost);
+                var bestCost = puzzleSolutions.OrderBy(s => s.Metrics.Cost).ThenBy(s => s.Metrics.Cycles).ThenBy(s => s.Metrics.Area).First();
                 CopySolutionToOutputDir(bestCost, "Cost");
 
-                var bestCycles = puzzleSolutions.MinBy(s => s.Metrics.Cycles);
+                var bestCycles = puzzleSolutions.OrderBy(s => s.Metrics.Cycles).ThenBy(s => s.Metrics.Area).ThenBy(s => s.Metrics.Cost).First();
                 CopySolutionToOutputDir(bestCycles, "Cycles");
 
-                var bestArea = puzzleSolutions.MinBy(s => s.Metrics.Area);
+                var bestArea = puzzleSolutions.OrderBy(s => s.Metrics.Area).ThenBy(s => s.Metrics.Cost).ThenBy(s => s.Metrics.Cycles).First();
                 CopySolutionToOutputDir(bestArea, "Area");
 
                 reportWriter.WriteLine($"{puzzleSolutions.Key},{bestCost.Metrics.Cost},{bestCycles.Metrics.Cycles},{bestArea.Metrics.Area}");
