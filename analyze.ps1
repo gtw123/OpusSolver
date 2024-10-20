@@ -1,5 +1,5 @@
 $puzzleDirs = (
-    "test\puzzles\24hour-1-test"
+    "test\puzzles\24hour-1-puzzles"
 )
 
 $args = @("--analyze", "--report", "$PSScriptRoot\puzzles.csv")
