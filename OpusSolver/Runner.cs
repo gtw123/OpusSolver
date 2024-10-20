@@ -148,7 +148,7 @@ namespace OpusSolver
         {
             sm_log.Info("Verifying solutions...");
 
-            var verifier = new SolutionVerifier(logErrorsToConsole: !m_args.GenerateMultipleSolutions);
+            var verifier = new SolutionVerifier(logErrorsToConsole: !m_args.GenerateMultipleSolutions, maxParallel: m_args.MaxParallelVerifiers);
             verifier.Verify(puzzleSolutions.SelectMany(p => p.AllSolutions).ToList());
         }
 

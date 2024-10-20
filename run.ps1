@@ -1,6 +1,7 @@
 param (
    [string]$puzzleName = "",
-   [switch]$optimize = $False
+   [switch]$optimize = $False,
+   [int]$maxParallelVerifiers
 )
 $puzzleDirs = (
     "test\puzzles\24hour-1-puzzles"
@@ -21,6 +22,12 @@ $args = ("--output", $outputDir, "--report", "$PSScriptRoot\report.csv")
 if ($optimize)
 {
 	$args += "--optimize"
+}
+
+if ($maxParallelVerifiers)
+{
+	$args += "--maxparallelverifiers"
+	$args += "$maxParallelVerifiers"
 }
 
 if ($puzzleName -ne "")

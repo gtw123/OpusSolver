@@ -16,10 +16,12 @@ namespace OpusSolver.Verifier
         private static readonly Regex sm_solutionNameRegex = new Regex(@"^SOLUTION: (.*)", RegexOptions.Compiled);
 
         private bool m_logErrorsToConsole;
+        private int m_maxParallel;
 
-        public SolutionVerifier(bool logErrorsToConsole)
+        public SolutionVerifier(bool logErrorsToConsole, int maxParallel)
         {
             m_logErrorsToConsole = logErrorsToConsole;
+            m_maxParallel = maxParallel;
         }
 
         public void Verify(List<GeneratedSolution> generatedSolutions)
@@ -56,7 +58,7 @@ namespace OpusSolver.Verifier
 
         private IEnumerable<List<GeneratedSolution>> CreateBatches(List<GeneratedSolution> generatedSolutions)
         {
-            int numBatches = Environment.ProcessorCount;
+            int numBatches = m_maxParallel;
             int firstIndex = 0;
             for (int i = 0; i < numBatches; i++)
             {
