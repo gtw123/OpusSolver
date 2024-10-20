@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SolutionVerifier", "Solutio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LPSolve", "LPSolve\LPSolve.csproj", "{7B992AA0-AD3B-49AC-B944-324BFA1203C5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpusSolver.Tests", "OpusSolver.Tests\OpusSolver.Tests.csproj", "{B2B47970-61F9-4CA1-8D3B-30DB3EEFDDC3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpusSolver.Tests", "OpusSolver.Tests\OpusSolver.Tests.csproj", "{B2B47970-61F9-4CA1-8D3B-30DB3EEFDDC3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollateBestSolutions", "CollateBestSolutions\CollateBestSolutions.csproj", "{336229C0-135B-4BB1-893C-58B0B037DBAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +37,10 @@ Global
 		{B2B47970-61F9-4CA1-8D3B-30DB3EEFDDC3}.Debug|x64.Build.0 = Debug|x64
 		{B2B47970-61F9-4CA1-8D3B-30DB3EEFDDC3}.Release|x64.ActiveCfg = Release|x64
 		{B2B47970-61F9-4CA1-8D3B-30DB3EEFDDC3}.Release|x64.Build.0 = Release|x64
+		{336229C0-135B-4BB1-893C-58B0B037DBAD}.Debug|x64.ActiveCfg = Debug|x64
+		{336229C0-135B-4BB1-893C-58B0B037DBAD}.Debug|x64.Build.0 = Debug|x64
+		{336229C0-135B-4BB1-893C-58B0B037DBAD}.Release|x64.ActiveCfg = Release|x64
+		{336229C0-135B-4BB1-893C-58B0B037DBAD}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
