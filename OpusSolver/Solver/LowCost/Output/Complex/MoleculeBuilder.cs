@@ -32,6 +32,11 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             /// The delta rotation required to bond the next atom after this one.
             /// </summary>
             public HexRotation RotationToNext { get; set; }
+
+            /// <summary>
+            /// The type of this bond (single or triplex).
+            /// </summary>
+            public BondType BondType { get; set; }
         }
 
         private record class BondedAtom(Atom Atom, Atom Parent);
@@ -75,8 +80,8 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 var parentAtom = bondedAtom.Parent;
 
                 var bondDir = (atom.Position - parentAtom.Position).ToRotation().Value;
-
                 ops[i].MoleculeRotation = -bondDir + ComplexAssembler.BondingDirection;
+                ops[i].BondType = parentAtom.Bonds[bondDir];
             }
 
             // The rotation for the first operation is arbitrary since there'll be only one atom at that stage.

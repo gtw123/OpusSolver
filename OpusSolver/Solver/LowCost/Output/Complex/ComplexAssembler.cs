@@ -11,6 +11,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
         private readonly IReadOnlyList<MoleculeBuilder> m_builders;
         private readonly Dictionary<int, LoopingCoroutine<object>> m_assembleCoroutines;
         private readonly Glyph m_bonder;
+        private readonly Glyph m_triplexBonder;
 
         private readonly Dictionary<int, Product> m_outputs = new();
 
@@ -18,8 +19,11 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         private static readonly Transform2D LowerBonderPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D UpperBonderPosition = new Transform2D(new Vector2(-1, 1), HexRotation.R0);
+        private static readonly Transform2D TriplexBonderLowerPosition = new Transform2D(new Vector2(-2, 2), HexRotation.R0);
+        private static readonly Transform2D TriplexBonderUpperPosition = new Transform2D(new Vector2(-3, 3), HexRotation.R0);
 
-        public override IEnumerable<Transform2D> RequiredAccessPoints => [LowerBonderPosition, UpperBonderPosition];
+        private List<Transform2D> m_accessPoints = [];
+        public override IEnumerable<Transform2D> RequiredAccessPoints => m_accessPoints;
 
         /// <summary>
         /// The direction in which this assembler's bonder creates bonds, from the previous atom to the new atom.
@@ -32,6 +36,16 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             m_builders = builders.ToList();
             m_assembleCoroutines = builders.ToDictionary(b => b.Product.ID, b => new LoopingCoroutine<object>(() => Assemble(b)));
             m_bonder = new Glyph(this, LowerBonderPosition.Position, BondingDirection - HexRotation.R180, GlyphType.Bonding);
+
+            m_accessPoints.Add(LowerBonderPosition);
+            m_accessPoints.Add(UpperBonderPosition);
+
+            if (builders.Any(b => b.Product.HasTriplex))
+            {
+                m_triplexBonder = new Glyph(this, TriplexBonderLowerPosition.Position, HexRotation.R60, GlyphType.TriplexBonding);
+                m_accessPoints.Add(TriplexBonderLowerPosition);
+                m_accessPoints.Add(TriplexBonderUpperPosition);
+            }
         }
 
         public override void BeginSolution()
@@ -52,7 +66,12 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
             var possibleRotations = HexRotation.All;
             var possiblePivots = HexRotation.All;
-            var possiblePositions = new[] { UpperBonderPosition.Position, LowerBonderPosition.Position };
+            var possiblePositions = new List<Vector2> { UpperBonderPosition.Position, LowerBonderPosition.Position };
+            if (m_triplexBonder != null)
+            {
+                possiblePositions.AddRange([TriplexBonderLowerPosition.Position, TriplexBonderUpperPosition.Position]);
+            }
+
             var rotationCases = (
                 from rotation in possibleRotations
                 from pivot in possiblePivots
@@ -131,6 +150,10 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             m_assembleCoroutines[productID].Next();
         }
 
+        private Transform2D GetUpperBonderPosition(BondType bondType) => bondType == BondType.Triplex ? TriplexBonderUpperPosition : UpperBonderPosition;
+        private Transform2D GetLowerBonderPosition(BondType bondType) => bondType == BondType.Triplex ? TriplexBonderLowerPosition : LowerBonderPosition;
+        private Glyph GetBonder(BondType bondType) => bondType == BondType.Triplex ? m_triplexBonder : m_bonder;
+
         private IEnumerable<object> Assemble(MoleculeBuilder builder)
         {
             if (builder.Product.Atoms.Count() == 1)
@@ -143,7 +166,8 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             // Process the first atom
             var operations = builder.Operations;
             var op = operations[0];
-            var assembledMolecule = ArmController.DropMoleculeAt(UpperBonderPosition, this);
+            var firstBondType = operations[1].BondType;
+            var assembledMolecule = ArmController.DropMoleculeAt(GetUpperBonderPosition(firstBondType), this);
 
             // Adjust the atom position so it matches the corresponding target molecule, but also update
             // the transform so that the atom has the same world transform as before.
@@ -154,13 +178,16 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             assembledMolecule.TargetMolecule = new AtomCollection(builder.Product, new Transform2D());
             yield return null;
 
-            var targetBondPosition = LowerBonderPosition;
+            var targetBondPosition = GetLowerBonderPosition(firstBondType);
 
             for (int opIndex = 1; opIndex < operations.Count; opIndex++)
             {
+                op = operations[opIndex];
+
                 // Try to move the new atom onto the bonder
                 if (!ArmController.MoveMoleculeTo(targetBondPosition, this, options: new ArmMovementOptions { AllowExternalBonds = true }, throwOnFailure: false))
                 {
+                    // TODO: Update this block to handle either bonder
                     var newAtom = ArmController.DropMolecule();
 
                     var originalAssembledMoleculeTransform = assembledMolecule.WorldTransform;
@@ -198,7 +225,23 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     }
                 }
 
-                ArmController.BondMoleculeToAtoms(assembledMolecule, m_bonder);
+                ArmController.BondMoleculeToAtoms(assembledMolecule, GetBonder(op.BondType));
+
+                if (op.BondType == BondType.Triplex)
+                {
+                    // Add the other two triplex bonds if necessary
+
+                    // TODO: Don't bother adding these if they've already been added
+                    var triplexBondPosition = GetLowerBonderPosition(BondType.Triplex).Position;
+                    var triplexTargetTransform = new Transform2D(triplexBondPosition - op.Atom.Position, HexRotation.R0);
+                    triplexTargetTransform = triplexTargetTransform.RotateAbout(triplexBondPosition, op.MoleculeRotation - HexRotation.R60);
+                    ArmController.MoveMoleculeTo(triplexTargetTransform, this);
+
+                    triplexBondPosition = GetUpperBonderPosition(BondType.Triplex).Position;
+                    triplexTargetTransform = new Transform2D(triplexBondPosition - op.ParentAtom.Position, HexRotation.R0);
+                    triplexTargetTransform = triplexTargetTransform.RotateAbout(triplexBondPosition, op.MoleculeRotation + HexRotation.R60);
+                    ArmController.MoveMoleculeTo(triplexTargetTransform, this);
+                }
 
                 if (opIndex == operations.Count - 1)
                 {
@@ -209,21 +252,23 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
                 var nextOp = operations[opIndex + 1];
 
+
                 // Figure out where we need to position the molecule for the next bond
-                var targetTransform = new Transform2D(UpperBonderPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
-                targetTransform = targetTransform.RotateAbout(UpperBonderPosition.Position, nextOp.MoleculeRotation);
+                var upperPosition = GetUpperBonderPosition(nextOp.BondType);
+                var targetTransform = new Transform2D(upperPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
+                targetTransform = targetTransform.RotateAbout(upperPosition.Position, nextOp.MoleculeRotation);
 
                 // Make sure the molecule won't overlap the track when it's positioned at the target transform. However,
                 // we will allow it to overlap the track cell that provides access to the upper bonder position as we don't
                 // need to access that right now.
                 bool moved = false;
                 var atomPositions = assembledMolecule.GetTransformedAtomPositions(targetTransform, this);
-                var upperTrackWorldPosition = ArmController.GrabberTransformToArmTransform(GetWorldTransform().Apply(UpperBonderPosition)).Position;
+                var upperTrackWorldPosition = ArmController.GrabberTransformToArmTransform(GetWorldTransform().Apply(upperPosition)).Position;
                 if (!atomPositions.Any(p => p.position != upperTrackWorldPosition && GridState.GetTrack(p.position) != null))
                 {
                     if (ArmController.MoveMoleculeTo(targetTransform, this, throwOnFailure: false))
                     {
-                        targetBondPosition = LowerBonderPosition;
+                        targetBondPosition = GetLowerBonderPosition(nextOp.BondType);
                         moved = true;
                     }
                 }
@@ -231,10 +276,11 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                 if (!moved)
                 {
                     // Position it so we can bond on the other side of the bonder instead
-                    targetTransform = new Transform2D(LowerBonderPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
-                    targetTransform = targetTransform.RotateAbout(LowerBonderPosition.Position, nextOp.MoleculeRotation + HexRotation.R180);
+                    var lowerPosition = GetLowerBonderPosition(nextOp.BondType);
+                    targetTransform = new Transform2D(lowerPosition.Position - nextOp.ParentAtom.Position, HexRotation.R0);
+                    targetTransform = targetTransform.RotateAbout(lowerPosition.Position, nextOp.MoleculeRotation + HexRotation.R180);
                     ArmController.MoveMoleculeTo(targetTransform, this);
-                    targetBondPosition = UpperBonderPosition;
+                    targetBondPosition = GetUpperBonderPosition(nextOp.BondType);
                 }
 
                 ArmController.DropMolecule();
@@ -252,6 +298,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     var bondType = atom.Bonds[bondDir];
                     if (bondType == BondType.None && assembledMolecule.TargetMolecule.GetAtom(atom.Position).Bonds[bondDir] != BondType.None)
                     {                       
+                        // TODO: Handle triplex bonds here
                         var rot = -bondDir + BondingDirection;
                         var targetTransform = new Transform2D(UpperBonderPosition.Position - atom.Position, HexRotation.R0);
                         targetTransform = targetTransform.RotateAbout(UpperBonderPosition.Position, rot);

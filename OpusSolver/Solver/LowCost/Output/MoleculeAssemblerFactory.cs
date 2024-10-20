@@ -17,11 +17,7 @@ namespace OpusSolver.Solver.LowCost.Output
         {
             bool reverseElementOrder = paramSet.GetParameterValue(SolutionParameterRegistry.Common.ReverseProductElementOrder);
 
-            if (products.Any(p => p.HasTriplex))
-            {
-                throw new UnsupportedException("LowCost solver can't currently handle products with triplex bonds.");
-            }
-            else if (products.Any(p => p.HasRepeats))
+            if (products.Any(p => p.HasRepeats))
             {
                 throw new UnsupportedException("LowCost solver can't currently handle products with repeats.");
             }

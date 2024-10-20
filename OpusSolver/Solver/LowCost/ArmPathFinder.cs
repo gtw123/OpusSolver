@@ -360,6 +360,7 @@ namespace OpusSolver.Solver.LowCost
                         GlyphType.Calcification => IsMovementAllowedOverCalcification(atom, pos, glyph, options),
                         GlyphType.Duplication => IsMovementAllowedOverDuplication(atom, pos, glyph, options),
                         GlyphType.Bonding => IsMovementAllowedOverBonder(targetState, moleculeToMove, atom, pos, glyph, options),
+                        GlyphType.TriplexBonding => IsMovementAllowedOverTriplexBonder(targetState, moleculeToMove, atom, pos, glyph, options),
                         GlyphType.Unbonding => IsMovementAllowedOverUnbonder(targetState, moleculeToMove, atom, pos, glyph, isAtTargetState, options),
                         _ => true
                     };
@@ -448,7 +449,7 @@ namespace OpusSolver.Solver.LowCost
                     if (atom.Bonds[bondDir] == BondType.None)
                     {
                         // Disallow this bond unless the target molecule has it
-                        if (moleculeToMove.TargetMolecule == null || moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] == BondType.None)
+                        if (moleculeToMove.TargetMolecule == null || moleculeToMove.TargetMolecule.GetAtom(currentAtomLocalPos).Bonds[bondDir] != BondType.Single)
                         {
                             return false;
                         }
@@ -457,6 +458,58 @@ namespace OpusSolver.Solver.LowCost
             }
 
             return true;
+        }
+
+        private bool IsMovementAllowedOverTriplexBonder(ArmState targetState, AtomCollection moleculeToMove, Atom atom, Vector2 atomWorldPos, Glyph glyph, ArmMovementOptions options)
+        {
+            if (atom.Element != Element.Fire)
+            {
+                return true;
+            }
+
+            // TODO: Consolidate this code with IsMovementAllowedOverBonder
+
+            // Check what's on top of the other cells of the bonder (if anything)
+            var bonderCells = glyph.GetWorldCells();
+            foreach (var bonderCell in bonderCells)
+            {
+                if (bonderCell != atomWorldPos && m_gridState.GetAtom(bonderCell) == Element.Fire)
+                {
+                    // A static atom is on the other cell of the bonder
+                    if (!options.AllowExternalBonds)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // Now check for internal bonds
+            var moleculeInverse = targetState.MoleculeTransform.Inverse();
+            var possibleAtoms = bonderCells.Select(p => moleculeToMove.GetAtom(moleculeInverse.Apply(p))).ToArray();
+
+            return AllowPossibleBond(possibleAtoms[0], possibleAtoms[1], BondType.TriplexGray) &&
+                AllowPossibleBond(possibleAtoms[1], possibleAtoms[2], BondType.TriplexRed) &&
+                AllowPossibleBond(possibleAtoms[2], possibleAtoms[0], BondType.TriplexYellow);
+
+            bool AllowPossibleBond(Atom atom1, Atom atom2, BondType bondType)
+            {
+                if (atom1 != null && atom2 != null && atom1.Element == Element.Fire && atom2.Element == Element.Fire)
+                {
+                    // Two atoms of the molecule are over the bonder. Check if this would cause a bond to be added.
+                    var bondDir = (atom2.Position - atom1.Position).ToRotation() ?? throw new InvalidOperationException($"Expected atoms on bonder cells {atom1.Position} and {atom2.Position} to be adjacent.");
+                    var currentBond = atom.Bonds[bondDir];
+                    if (currentBond == BondType.None || (currentBond.HasTriplexComponents() && (currentBond & bondType) == 0))
+                    {
+                        // Disallow this bond unless the target molecule has it
+                        if (moleculeToMove.TargetMolecule == null || (moleculeToMove.TargetMolecule.GetAtom(atom1.Position).Bonds[bondDir] & bondType) == 0)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
         }
 
         private bool IsMovementAllowedOverUnbonder(ArmState targetState, AtomCollection moleculeToMove, Atom atom, Vector2 atomWorldPos, Glyph glyph, bool isAtTargetState, ArmMovementOptions options)
@@ -567,6 +620,9 @@ namespace OpusSolver.Solver.LowCost
                             case GlyphType.Bonding:
                                 UpdateMoleculeOverBonder(moleculeToMove, atom, pos, glyph);
                                 break;
+                            case GlyphType.TriplexBonding:
+                                UpdateMoleculeOverTriplexBonder(moleculeToMove, atom, pos, glyph);
+                                break;
                             case GlyphType.Unbonding:
                                 UpdateMoleculeOverUnbonder(moleculeToMove, atom, pos, glyph);
                                 break;
@@ -590,7 +646,30 @@ namespace OpusSolver.Solver.LowCost
             if (otherAtom != null)
             {
                 var currentAtomLocalPos = moleculeInverse.Apply(atomWorldPos);
-                molecule.AddBond(currentAtomLocalPos, otherAtomLocalPos, ignoreExisting: true);
+                molecule.AddBond(currentAtomLocalPos, otherAtomLocalPos, BondType.Single);
+            }
+        }
+
+        private void UpdateMoleculeOverTriplexBonder(AtomCollection molecule, Atom atom, Vector2 atomWorldPos, Glyph glyph)
+        {
+            var bonderCells = glyph.GetWorldCells();
+
+            // We don't care about external bonds here because we only allow them at the end of the path
+            // and we expect code elsewhere to add them
+
+            var moleculeInverse = molecule.WorldTransform.Inverse();
+            var possibleAtoms = bonderCells.Select(p => molecule.GetAtom(moleculeInverse.Apply(p))).ToArray();
+
+            AddPossibleBond(possibleAtoms[0], possibleAtoms[1], BondType.TriplexGray);
+            AddPossibleBond(possibleAtoms[1], possibleAtoms[2], BondType.TriplexRed);
+            AddPossibleBond(possibleAtoms[2], possibleAtoms[0], BondType.TriplexYellow);
+
+            void AddPossibleBond(Atom atom1, Atom atom2, BondType bondType)
+            {
+                if (atom1 != null && atom2 != null)
+                {
+                    molecule.AddBond(atom1.Position, atom2.Position, bondType);
+                }
             }
         }
 

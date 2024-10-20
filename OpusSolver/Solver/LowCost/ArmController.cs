@@ -203,11 +203,6 @@ namespace OpusSolver.Solver.LowCost
                 throw new SolverException("Cannot bond atoms when not holding a molecule.");
             }
 
-            if (bonder.Type != GlyphType.Bonding)
-            {
-                throw new SolverException($"{nameof(BondMoleculeToAtoms)} currently supports single bonders only.");
-            }
-
             m_gridState.UnregisterMolecule(bondToAtoms);
 
             var bondToAtomsInverse = bondToAtoms.WorldTransform.Inverse();
@@ -217,8 +212,31 @@ namespace OpusSolver.Solver.LowCost
                 bondToAtoms.AddAtom(atom);
             }
 
+            void AddBond(Atom atom1, Atom atom2, BondType bondType)
+            {
+                if (atom1 != null && atom2 != null)
+                {
+                    bondToAtoms.AddBond(atom1.Position, atom2.Position, bondType);
+                }
+            }
+
             var bonderCells = bonder.GetWorldCells();
-            bondToAtoms.AddBond(bondToAtomsInverse.Apply(bonderCells[0]), bondToAtomsInverse.Apply(bonderCells[1]));
+            var possibleAtoms = bonderCells.Select(p => bondToAtoms.GetAtom(bondToAtomsInverse.Apply(p))).ToArray();
+
+            if (bonder.Type == GlyphType.Bonding)
+            {
+                AddBond(possibleAtoms[0], possibleAtoms[1], BondType.Single);
+            }
+            else if (bonder.Type == GlyphType.TriplexBonding)
+            {
+                AddBond(possibleAtoms[0], possibleAtoms[1], BondType.TriplexGray);
+                AddBond(possibleAtoms[1], possibleAtoms[2], BondType.TriplexRed);
+                AddBond(possibleAtoms[2], possibleAtoms[0], BondType.TriplexYellow);
+            }
+            else
+            {
+                throw new SolverException($"{nameof(BondMoleculeToAtoms)} doesn't currently support bonder type: {bonder.Type}.");
+            }
 
             m_grabbedMolecule = bondToAtoms;
         }

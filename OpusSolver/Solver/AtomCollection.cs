@@ -86,7 +86,7 @@ namespace OpusSolver.Solver
             return new AtomCollection(atom.Element, new Transform2D(WorldTransform.Apply(atom.Position), HexRotation.R0));
         }
 
-        public void AddBond(Vector2 atom1Pos, Vector2 atom2Pos, bool ignoreExisting = false)
+        public void AddBond(Vector2 atom1Pos, Vector2 atom2Pos, BondType bondType)
         {
             var atom1 = GetAtom(atom1Pos) ?? throw new ArgumentException($"No atom found at {atom1Pos}.");
             var atom2 = GetAtom(atom2Pos) ?? throw new ArgumentException($"No atom found at {atom2Pos}.");
@@ -97,19 +97,22 @@ namespace OpusSolver.Solver
             }
 
             var bondDir1 = (atom2Pos - atom1Pos).ToRotation() ?? throw new InvalidOperationException($"Can't determine bond direction.");
-            if (!ignoreExisting && atom1.Bonds[bondDir1] != BondType.None)
-            {
-                throw new InvalidOperationException($"Atom at {atom1Pos} already has a bond to {atom2Pos}.");
-            }
-
             var bondDir2 = bondDir1 + HexRotation.R180;
-            if (!ignoreExisting && atom2.Bonds[bondDir2] != BondType.None)
+            var existingBondType = atom1.Bonds[bondDir1];
+
+            BondType newBondType = existingBondType;
+            if (bondType == BondType.Single && existingBondType == BondType.None)
             {
-                throw new InvalidOperationException($"Atom at {atom2Pos} already has a bond to {atom1Pos}.");
+                newBondType = BondType.Single;
+            }
+            else if (bondType.HasTriplexComponents() && (existingBondType.HasTriplexComponents() || existingBondType == BondType.None)
+                && atom1.Element == Element.Fire && atom2.Element == Element.Fire)
+            {
+                newBondType = existingBondType | bondType;
             }
 
-            atom1.Bonds[bondDir1] = BondType.Single;
-            atom2.Bonds[bondDir2] = BondType.Single;
+            atom1.Bonds[bondDir1] = newBondType;
+            atom2.Bonds[bondDir2] = newBondType;
         }
 
         public void RemoveBond(Vector2 atom1Pos, Vector2 atom2Pos, bool ignoreNonexistant = false)
