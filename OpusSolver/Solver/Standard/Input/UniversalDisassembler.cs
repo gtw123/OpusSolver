@@ -18,22 +18,66 @@ namespace OpusSolver.Solver.Standard.Input
         private List<Arm> m_upperUnbondArms;
         private List<Arm> m_moveArms;
 
+        private bool m_addVerticalOffsetAtStart;
+
         private LoopingCoroutine<Element> m_extractAtomsCoroutine;
 
         public UniversalDisassembler(SolverComponent parent, ProgramWriter writer, Vector2 position, Molecule molecule)
             : base(parent, writer, position, molecule)
         {
+            m_addVerticalOffsetAtStart = IsProblematicMolecule(molecule);
+
             m_extractAtomsCoroutine = new LoopingCoroutine<Element>(ExtractAtoms);
 
             // The atoms need to be moved at least 3 spaces to fully unbond them
             m_unbondWidth = Math.Max(3, Molecule.Width);
 
+            var reagentOffset = m_addVerticalOffsetAtStart ? new Vector2(0, -1) : new Vector2();
             var reagentPos = new Vector2(-Molecule.Width * 2 - m_unbondWidth - 2, -molecule.Height + 1);
-            new Reagent(this, reagentPos, HexRotation.R0, molecule);
+            new Reagent(this, reagentPos + reagentOffset, HexRotation.R0, molecule);
 
             var armPos = AddArms(reagentPos);
             AddTracks(armPos);
             AddGlyphs();
+        }
+
+        /// <summary>
+        /// Checks if the molecule has a shape which causes a collision with the next reagent as it's moved horizontally
+        /// off the input area. e.g.
+        /// 
+        ///        Sa--Ai      Sa
+        ///             \       \
+        ///              Wa      Sa
+        ///               \     /
+        ///    Sa--Sa--Sa--Sa--Sa
+        ///   /     \     /   /
+        ///  Sa      Sa--Fi  Sa      Sa
+        ///         / \   \ /       /
+        ///        Wa  Sa  Sa--Wa--Ai
+        ///       /     \ /
+        ///      Ai      Sa
+        ///       \       \
+        ///        Sa      Sa--Sa
+        /// </summary>
+        private bool IsProblematicMolecule(Molecule molecule)
+        {
+            if (molecule.Width > 2)
+            {
+                for (int y = 1; y < molecule.Height - 1; y++)
+                {
+                    if (molecule.GetAtom(new(molecule.Width - 1, y)) != null && molecule.GetAtom(new(molecule.Width - 2, y)) == null
+                        && molecule.GetAtom(new(molecule.Width - 1, y - 1)) != null && molecule.GetAtom(new(molecule.Width - 2, y - 1)) != null
+                        && molecule.GetAtom(new(molecule.Width - 1, y + 1)) == null && molecule.GetAtom(new(molecule.Width - 2, y + 1)) == null
+                        && molecule.GetAtom(new(0, y)) != null && molecule.GetAtom(new(1, y)) == null
+                        && molecule.GetAtom(new(0, y + 1)) != null && molecule.GetAtom(new(1, y + 1)) != null
+                        && molecule.GetAtom(new(0, y - 1)) == null && molecule.GetAtom(new(1, y - 1)) == null)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private Vector2 AddArms(Vector2 reagentPos)
@@ -41,8 +85,21 @@ namespace OpusSolver.Solver.Standard.Input
             int grabX = Molecule.GetRow(Molecule.Height - 1).Last().Position.X;
             var armPos = reagentPos.Add(grabX, Molecule.Height + 2);
 
-            m_grabArm = new Arm(this, armPos, HexRotation.R240, ArmType.Arm1, extension: 3);
-            new Track(this, armPos, HexRotation.R0, Molecule.Width);
+            var grabArmPos = armPos;
+            if (m_addVerticalOffsetAtStart)
+            {
+                grabArmPos.Y -= 1;
+            }
+
+            m_grabArm = new Arm(this, grabArmPos, HexRotation.R240, ArmType.Arm1, extension: 3);
+            if (m_addVerticalOffsetAtStart)
+            {
+                new Track(this, grabArmPos, [new(HexRotation.R60, 1), new(HexRotation.R0, Molecule.Width)]);
+            }
+            else
+            {
+                new Track(this, armPos, HexRotation.R0, Molecule.Width);
+            }
 
             armPos = reagentPos.Add(Molecule.Width, Molecule.Height);
             m_lowerUnbondArms = Enumerable.Range(0, Molecule.Width).Select(x => new Arm(this, armPos.Add(x, 0), HexRotation.R240, ArmType.Piston, extension: 2)).ToList();
@@ -83,7 +140,7 @@ namespace OpusSolver.Solver.Standard.Input
         {
             Writer.NewFragment();
 
-            Writer.WriteGrabResetAction(m_grabArm, Enumerable.Repeat(Instruction.MovePositive, Molecule.Width));
+            Writer.WriteGrabResetAction(m_grabArm, Enumerable.Repeat(Instruction.MovePositive, Molecule.Width + (m_addVerticalOffsetAtStart ? 1 : 0)));
 
             var moveLower = Enumerable.Repeat(Instruction.MovePositive, m_unbondWidth).Concat(Enumerable.Repeat(Instruction.MoveNegative, m_unbondWidth));
             var lowerArmsGrab = new[] { Instruction.Grab }.Concat(moveLower).Concat([Instruction.Retract, Instruction.Drop, Instruction.Reset]).ToList();
