@@ -148,21 +148,16 @@ namespace OpusSolver.Solver.LowCost.Input
 
             if (m_unbondedAtom == null)
             {
-                Transform2D targetTransform = new Transform2D(InnerUnbonderPosition.Position, HexRotation.R0);
-                if (disassemblerInfo.Index == 0)
+                var atomPos = new Vector2(0, 0);
+                var requiredRotation = HexRotation.R0;
+                if (disassembler.GetAtomAtPosition(atomPos).Element != element)
                 {
-                    if (disassembler.MoleculeTransform.Rotation == HexRotation.R180)
-                    {
-                        targetTransform = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R180);
-                    }
+                    atomPos = new Vector2(1, 0);
+                    requiredRotation = HexRotation.R180;
                 }
-                else
-                {
-                    if (disassembler.GetAtomAtPosition(new Vector2(0, 0)).Element != element)
-                    {
-                        targetTransform = new Transform2D(OuterUnbonderPosition.Position, HexRotation.R180);
-                    }
-                }
+
+                var targetTransform = new Transform2D(InnerUnbonderPosition.Position - atomPos, HexRotation.R0);
+                targetTransform = targetTransform.RotateAbout(InnerUnbonderPosition.Position, requiredRotation);
 
                 var molecule = disassembler.GrabMolecule();
                 var options = new ArmMovementOptions
@@ -173,7 +168,6 @@ namespace OpusSolver.Solver.LowCost.Input
                 ArmController.MoveMoleculeTo(targetTransform, this, options: options);
 
                 var targetGrabberPosition = GetWorldTransform().Inverse().Apply(ArmController.GetGrabberPosition());
-                var otherAtomPosition = targetGrabberPosition == OuterUnbonderPosition.Position ? InnerUnbonderPosition : OuterUnbonderPosition;
 
                 m_unbondedAtom = new StoredAtom { MoleculeID = id };
 
@@ -183,7 +177,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 {
                     // Keep hold of the atom we've currently got
                     var removedAtoms = ArmController.UnbondGrabbedAtomFromOthers();
-                    m_unbondedAtom.Atoms = new AtomCollection(removedAtoms.Atoms.Single().Element, otherAtomPosition, this);
+                    m_unbondedAtom.Atoms = new AtomCollection(removedAtoms.Atoms.Single().Element, OuterUnbonderPosition, this);
                     GridState.RegisterMolecule(m_unbondedAtom.Atoms);
                 }
                 else
@@ -194,7 +188,7 @@ namespace OpusSolver.Solver.LowCost.Input
                     ArmController.DropMolecule();
 
                     m_unbondedAtom.Atoms = new AtomCollection(grabbedAtom.Element, new Transform2D(targetGrabberPosition, HexRotation.R0), this);
-                    ArmController.SetMoleculeToGrab(new AtomCollection(element, otherAtomPosition, this));
+                    ArmController.SetMoleculeToGrab(new AtomCollection(element, InnerUnbonderPosition, this));
                 }
             }
             else
