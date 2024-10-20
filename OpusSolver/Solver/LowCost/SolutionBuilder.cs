@@ -186,8 +186,13 @@ namespace OpusSolver.Solver.LowCost
                 registry.AddParameter(SolutionParameters.AddExtraDisassemblerAccessPoint);
             }
 
+            if (m_puzzle.Reagents.Any(p => p.Atoms.Count() > 3))
+            {
+                registry.AddParameter(SolutionParameters.UseLeafAtomsFirstForComplexReagents);
+            }
+
             bool IsSingleChain(Molecule molecule) => molecule.Atoms.All(a => a.BondCount <= 2) && molecule.Atoms.Count(a => a.BondCount == 1) == 2;
-            if (m_puzzle.Reagents.Any(p => !IsSingleChain(p)))
+            if (m_puzzle.Reagents.Any(r => !IsSingleChain(r)))
             {
                 registry.AddParameter(SolutionParameters.ReverseReagentBondTraversalDirection);
             }

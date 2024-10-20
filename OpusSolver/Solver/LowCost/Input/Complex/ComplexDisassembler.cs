@@ -212,9 +212,9 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             yield return null;
         }
 
-        public static IEnumerable<MoleculeDismantler> CreateMoleculeDismantlers(IEnumerable<Molecule> reagents, bool reverseElementOrder, bool reverseBondTraversalDirection)
+        public static IEnumerable<MoleculeDismantler> CreateMoleculeDismantlers(IEnumerable<Molecule> reagents, bool reverseElementOrder, bool useLeafAtomsFirst, bool reverseBondTraversalDirection)
         {
-            return reagents.Select(p => new MoleculeDismantler(p, reverseElementOrder, reverseBondTraversalDirection)).ToList();
+            return reagents.Select(p => new MoleculeDismantler(p, reverseElementOrder, useLeafAtomsFirst, reverseBondTraversalDirection)).ToList();
         }
     }
 }

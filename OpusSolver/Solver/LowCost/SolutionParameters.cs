@@ -5,6 +5,7 @@
         public const string UseLength3Arm = nameof(UseLength3Arm);
         public const string AddExtraDisassemblerAccessPoint = nameof(AddExtraDisassemblerAccessPoint);
         public const string UseBreadthFirstOrderForComplexProducts = nameof(UseBreadthFirstOrderForComplexProducts);
+        public const string UseLeafAtomsFirstForComplexReagents = nameof(UseLeafAtomsFirstForComplexReagents);
         public const string ReverseReagentBondTraversalDirection = nameof(ReverseReagentBondTraversalDirection);
         public const string ReverseProductBondTraversalDirection = nameof(ReverseProductBondTraversalDirection);
         public const string UseArmlessAtomBuffer = nameof(UseArmlessAtomBuffer);

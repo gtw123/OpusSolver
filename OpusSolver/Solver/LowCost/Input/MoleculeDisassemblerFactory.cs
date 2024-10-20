@@ -63,8 +63,9 @@ namespace OpusSolver.Solver.LowCost.Input
                     throw new UnsupportedException($"LowCost solver can't currently handle more than {ComplexDisassembler.MaxReagents} complex reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
                 }
 
+                bool useLeafAtomsFirst = paramSet.GetParameterValue(SolutionParameters.UseLeafAtomsFirstForComplexReagents);
                 bool reverseBondTraversalDirection = paramSet.GetParameterValue(SolutionParameters.ReverseReagentBondTraversalDirection);
-                var dismantlers = ComplexDisassembler.CreateMoleculeDismantlers(reagents, reverseElementOrder, reverseBondTraversalDirection);
+                var dismantlers = ComplexDisassembler.CreateMoleculeDismantlers(reagents, reverseElementOrder, useLeafAtomsFirst, reverseBondTraversalDirection);
                 m_reagentElementInfo = reagents.ToDictionary(r => r.ID, r => new SolutionPlan.MoleculeElementInfo(dismantlers.Single(d => d.Molecule.ID == r.ID).GetElementOrder()));
 
                 bool addExtraAccessPoint = paramSet.GetParameterValue(SolutionParameters.AddExtraDisassemblerAccessPoint);

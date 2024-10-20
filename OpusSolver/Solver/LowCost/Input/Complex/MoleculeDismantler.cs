@@ -7,6 +7,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
     {
         public Molecule Molecule { get; private set; }
         private bool m_reverseElementOrder;
+        private bool m_useLeafAtomsFirst;
         private bool m_reverseBondTraversalDirection;
 
         public class Operation
@@ -46,10 +47,11 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
         public IEnumerable<Element> GetElementOrder() => m_operations.Select(op => op.Atom.Element);
 
-        public MoleculeDismantler(Molecule molecule, bool reverseElementOrder, bool reverseBondTraversalDirection)
+        public MoleculeDismantler(Molecule molecule, bool reverseElementOrder, bool useLeafAtomsFirst, bool reverseBondTraversalDirection)
         {
             Molecule = molecule;
             m_reverseElementOrder = reverseElementOrder;
+            m_useLeafAtomsFirst = useLeafAtomsFirst;
             m_reverseBondTraversalDirection = reverseBondTraversalDirection;
 
             GenerateOperations();
@@ -102,9 +104,9 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             BondReducedMolecule = new AtomCollection(Molecule, new());
             var orderedAtoms = new List<UnbondedAtom>();
 
-            Atom GetNextLeafAtom()
+            List<Atom> GetLeafAtoms()
             {
-                var atoms = remainingAtoms.Atoms.Where(a => a.BondCount == 1);
+                var atoms = remainingAtoms.Atoms.Where(a => a.BondCount <= 1);
                 if (m_reverseElementOrder)
                 {
                     atoms = atoms.OrderBy(a => a.Position.X).ThenBy(a => a.Position.Y);
@@ -114,14 +116,14 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                     atoms = atoms.OrderByDescending(a => a.Position.X).ThenByDescending(a => a.Position.Y);
                 }
 
-                return atoms.FirstOrDefault();
+                return atoms.ToList();
             }
 
             while (remainingAtoms.Atoms.Count > 0)
             {
                 // Get the next leaf atom
-                var currentAtom = GetNextLeafAtom();
-                while (currentAtom == null)
+                var leafAtoms = GetLeafAtoms();
+                while (leafAtoms.Count == 0)
                 {
                     // There are no leaf atoms, so try an atom with the fewest numbers of bonds (>= 2)
                     var nextAtoms = remainingAtoms.Atoms.OrderBy(a => a.BondCount).ThenBy(a => a.Position.X).ThenBy(a => a.Position.Y);
@@ -138,24 +140,39 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                     remainingAtoms.RemoveBond(atomsInCycle.Atom.Position, atomsInCycle.Adjacent.Position);
                     BondReducedMolecule.RemoveBond(atomsInCycle.Atom.Position, atomsInCycle.Adjacent.Position);
 
-                    currentAtom = GetNextLeafAtom();
+                    leafAtoms = GetLeafAtoms();
                 }
 
-                // Process the whole atom chain
-                while (currentAtom != null)
+                if (m_useLeafAtomsFirst)
                 {
-                    var bondedAtoms = remainingAtoms.GetAdjacentBondedAtoms(currentAtom);
-                    if (bondedAtoms.Count > 1)
+                    // Process all leaf nodes
+                    foreach (var currentAtom in leafAtoms)
                     {
-                        // This atom is bonded to 2 or more atoms, so it's part of a new chain
-                        break;
+                        var nextAtom = remainingAtoms.GetAdjacentBondedAtoms(currentAtom).SingleOrDefault().Value;
+                        remainingAtoms.RemoveAtom(currentAtom);
+
+                        orderedAtoms.Add(new UnbondedAtom(currentAtom, nextAtom));
                     }
+                }
+                else
+                {
+                    // Process the whole atom chain
+                    var currentAtom = leafAtoms.FirstOrDefault();
+                    while (currentAtom != null)
+                    {
+                        var bondedAtoms = remainingAtoms.GetAdjacentBondedAtoms(currentAtom);
+                        if (bondedAtoms.Count > 1)
+                        {
+                            // This atom is bonded to 2 or more atoms, so it's part of a new chain
+                            break;
+                        }
 
-                    var nextAtom = remainingAtoms.GetAdjacentBondedAtoms(currentAtom).SingleOrDefault().Value;
-                    remainingAtoms.RemoveAtom(currentAtom);
+                        var nextAtom = remainingAtoms.GetAdjacentBondedAtoms(currentAtom).SingleOrDefault().Value;
+                        remainingAtoms.RemoveAtom(currentAtom);
 
-                    orderedAtoms.Add(new UnbondedAtom(currentAtom, nextAtom));
-                    currentAtom = nextAtom;
+                        orderedAtoms.Add(new UnbondedAtom(currentAtom, nextAtom));
+                        currentAtom = nextAtom;
+                    }
                 }
             }
 
