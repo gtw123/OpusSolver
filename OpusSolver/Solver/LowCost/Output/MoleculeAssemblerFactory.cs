@@ -15,7 +15,7 @@ namespace OpusSolver.Solver.LowCost.Output
 
         public MoleculeAssemblerFactory(IEnumerable<Molecule> products, SolutionParameterSet paramSet)
         {
-            var reverseElementOrder = paramSet.GetParameterValue(SolutionParameterRegistry.Common.ReverseProductElementOrder);
+            bool reverseElementOrder = paramSet.GetParameterValue(SolutionParameterRegistry.Common.ReverseProductElementOrder);
 
             if (products.Any(p => p.HasTriplex))
             {
@@ -38,7 +38,8 @@ namespace OpusSolver.Solver.LowCost.Output
             }
             else
             {
-                var builders = ComplexAssembler.CreateMoleculeBuilders(products, reverseElementOrder);
+                bool useBreadthFirstSearch = paramSet.GetParameterValue(SolutionParameterFactory.UseBreadthFirstOrderForComplexProducts);
+                var builders = ComplexAssembler.CreateMoleculeBuilders(products, reverseElementOrder, useBreadthFirstSearch);
                 m_productElementOrders = products.ToDictionary(p => p.ID, p => builders.Single(b => b.Product.ID == p.ID).GetElementsInBuildOrder());
                 m_createAssembler = (parent, writer, armArea) => new ComplexAssembler(parent, writer, armArea, builders);
             }

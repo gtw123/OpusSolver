@@ -7,6 +7,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
     {
         public Molecule Product { get; private set; }
         private bool m_reverseElementOrder;
+        private bool m_useBreadthFirstSearch;
 
         public class Operation
         {
@@ -39,10 +40,11 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
 
         public IEnumerable<Element> GetElementsInBuildOrder() => m_operations.Select(op => op.Atom.Element);
 
-        public MoleculeBuilder(Molecule product, bool reverseElementOrder)
+        public MoleculeBuilder(Molecule product, bool reverseElementOrder, bool useBreadthFirstSearch)
         {
             Product = product;
             m_reverseElementOrder = reverseElementOrder;
+            m_useBreadthFirstSearch = useBreadthFirstSearch;
 
             GenerateOperations();
         }
@@ -132,6 +134,47 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             return ops;
         }
 
+        private enum ContainerType { Stack, Queue };
+
+        private class StackOrQueue<T>
+        {
+            private interface IContainerWrapper
+            {
+                public void Add(T item);
+                public T RemoveNext();
+                public bool IsEmpty { get; }
+            }
+
+            private class StackWrapper : IContainerWrapper
+            {
+                private Stack<T> m_stack = new();
+
+                public void Add(T item) => m_stack.Push(item);
+                public T RemoveNext() => m_stack.Pop();
+                public bool IsEmpty => m_stack.Count == 0;
+            }
+
+            private class QueueWrapper : IContainerWrapper
+            {
+                private Queue<T> m_queue = new();
+
+                public void Add(T item) => m_queue.Enqueue(item);
+                public T RemoveNext() => m_queue.Dequeue();
+                public bool IsEmpty => m_queue.Count == 0;
+            }
+
+            private IContainerWrapper m_container;
+
+            public StackOrQueue(ContainerType type)
+            {
+                m_container = type == ContainerType.Stack ? new StackWrapper() : new QueueWrapper();
+            }
+
+            public void Add(T item) => m_container.Add(item);
+            public T RemoveNext() => m_container.RemoveNext();
+            public bool IsEmpty => m_container.IsEmpty;
+        }
+
         private List<BondedAtom> DetermineAtomOrder()
         {
             // Start with the atom with the fewest bonds, then use X and Y positions as arbitrary tie-breakers
@@ -149,13 +192,15 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
             var seenAtoms = new HashSet<Atom> { firstAtom };
 
             var orderedAtoms = new List<BondedAtom>();
-            var atomsToProcess = new Stack<BondedAtom>();
-            atomsToProcess.Push(new BondedAtom(firstAtom, null));
 
-            // Do a depth-first search so that we build entire molecule chains one at a time
-            while (atomsToProcess.Count > 0)
+            // By default we use depth-first search (stack) so that we build entire molecule chains one at a time.
+            // But for some molecules it's better to use a breadth-first search (queue).
+            var atomsToProcess = new StackOrQueue<BondedAtom>(m_useBreadthFirstSearch ? ContainerType.Queue : ContainerType.Stack);
+            atomsToProcess.Add(new BondedAtom(firstAtom, null));
+
+            while (!atomsToProcess.IsEmpty)
             {
-                var currentAtom = atomsToProcess.Pop();
+                var currentAtom = atomsToProcess.RemoveNext();
                 orderedAtoms.Add(currentAtom);
 
                 foreach (var (_, bondedAtom) in Product.GetAdjacentBondedAtoms(currentAtom.Atom.Position))
@@ -163,7 +208,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                     if (!seenAtoms.Contains(bondedAtom))
                     {
                         seenAtoms.Add(bondedAtom);
-                        atomsToProcess.Push(new BondedAtom(bondedAtom, currentAtom.Atom));
+                        atomsToProcess.Add(new BondedAtom(bondedAtom, currentAtom.Atom));
                     }
                 }
             }
