@@ -54,6 +54,11 @@ namespace OpusSolver.Solver.LowCost
             var elementGenerators = pipeline.ElementGenerators;
             foreach (var elementGenerator in Enumerable.Reverse(elementGenerators))
             {
+                if (m_paramSet.GetParameterValue(SolutionParameters.NoSaltGeneratorRotation) && elementGenerator is ElementGenerators.SaltGenerator)
+                {
+                    baseTransform.Rotation = baseTransform.Rotation.Rotate60Counterclockwise();
+                }
+
                 var atomGenerator = CreateAtomGenerator(elementGenerator, baseTransform.Apply(offsetTransform));
                 m_atomGenerators.Add(atomGenerator);
 
@@ -84,7 +89,7 @@ namespace OpusSolver.Solver.LowCost
                 ElementGenerators.MorsVitaeGenerator => new MorsVitaeGenerator(m_writer, m_armArea),
                 ElementGenerators.QuintessenceDisperserGenerator => new QuintessenceDisperser(m_writer, m_armArea),
                 ElementGenerators.QuintessenceGenerator => new QuintessenceGenerator(m_writer, m_armArea),
-                ElementGenerators.SaltGenerator saltGenerator => saltGenerator.RequiresCardinalPassThrough ? new SaltGenerator(m_writer, m_armArea) : new SaltGeneratorNoCardinalPassThrough(m_writer, m_armArea),
+                ElementGenerators.SaltGenerator saltGenerator => CreateSaltGenerator(saltGenerator),
                 ElementGenerators.VanBerloGenerator => new VanBerloGenerator(m_writer, m_armArea),
                 _ => throw new ArgumentException($"Unknown element generator type {elementGenerator.GetType()}")
             };
@@ -100,6 +105,18 @@ namespace OpusSolver.Solver.LowCost
         {
             var usedReagents = generator.Inputs.Select(i => i.Molecule);
             return m_disassemblerFactory.CreateDisassembler(m_writer, m_armArea, usedReagents);
+        }
+
+        private LowCostAtomGenerator CreateSaltGenerator(ElementGenerators.SaltGenerator generator)
+        {
+            if (generator.RequiresCardinalPassThrough || m_paramSet.GetParameterValue(SolutionParameters.NoSaltGeneratorRotation))
+            {
+                return new SaltGenerator(m_writer, m_armArea);
+            }
+            else
+            {
+                return new SaltGeneratorNoCardinalPassThrough(m_writer, m_armArea);
+            }
         }
 
         private LowCostAtomGenerator CreateAtomBuffer(ElementGenerators.SingleStackElementBuffer.BufferInfo bufferInfo)
@@ -212,6 +229,11 @@ namespace OpusSolver.Solver.LowCost
             {
                 registry.AddParameter(SolutionParameters.UseArmlessAtomBuffer);
                 registry.AddParameter(SolutionParameters.UseLength1ArmInAtomBuffer);
+            }
+
+            if (m_atomGenerators.OfType<SaltGenerator>().Any() || m_atomGenerators.OfType<SaltGeneratorNoCardinalPassThrough>().Any())
+            {
+                registry.AddParameter(SolutionParameters.NoSaltGeneratorRotation);
             }
 
             return registry;

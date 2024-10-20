@@ -12,6 +12,6 @@
         public const string UseLength1ArmInAtomBuffer = nameof(UseLength1ArmInAtomBuffer);
 
         public const string AddDisassemblerExtraWidth = nameof(AddDisassemblerExtraWidth);
-
+        public const string NoSaltGeneratorRotation = nameof(NoSaltGeneratorRotation);
     }
 }
