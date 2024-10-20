@@ -28,7 +28,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
         /// </summary>
         public static HexRotation UnbondingDirection = HexRotation.R300;
 
-        public ComplexDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeDismantler> dismantlers, bool addExtraAcessPoint)
+        public ComplexDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeDismantler> dismantlers, bool addExtraAccessPoint)
             : base(writer, armArea)
         {
             m_dismantlers = dismantlers;
@@ -42,7 +42,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
             m_accessPoints.Add(LowerUnbonderPosition);
             m_accessPoints.Add(UpperUnbonderPosition);
-            if (addExtraAcessPoint)
+            if (addExtraAccessPoint)
             {
                 m_accessPoints.Add(ExtraAccessPoint);
             }
