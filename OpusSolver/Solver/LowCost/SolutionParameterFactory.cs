@@ -6,6 +6,7 @@ namespace OpusSolver.Solver.LowCost
     {
         public const string UseLength3Arm = nameof(UseLength3Arm);
         public const string UseBreadthFirstOrderForComplexProducts = nameof(UseBreadthFirstOrderForComplexProducts);
+        public const string ReverseProductBondTraversalDirection = nameof(ReverseProductBondTraversalDirection);
 
         public static SolutionParameterRegistry CreateParameterRegistry(Puzzle puzzle, Recipe recipe)
         {
@@ -32,6 +33,7 @@ namespace OpusSolver.Solver.LowCost
             if (puzzle.Products.Any(p => !IsSingleChain(p)))
             {
                 registry.AddParameter(UseBreadthFirstOrderForComplexProducts);
+                registry.AddParameter(ReverseProductBondTraversalDirection);
             }
 
             return registry;
