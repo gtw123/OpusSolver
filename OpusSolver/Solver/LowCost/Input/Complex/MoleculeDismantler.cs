@@ -58,51 +58,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
         private void GenerateOperations()
         {
             var orderedAtoms = DetermineAtomOrder();
-            var ops1 = BuildOperations(orderedAtoms);
-
-            // If it's a single-chain molecule, try reversing the order
-            if (Molecule.Atoms.All(a => a.BondCount <= 2) && Molecule.Atoms.Count(a => a.BondCount == 1) == 2)
-            {
-                var reverseOrderedAtoms = new List<UnbondedAtom>();
-                for (int i = orderedAtoms.Count - 1; i >= 0; i--)
-                {
-                    var next = (i > 0) ? orderedAtoms[i - 1].Atom : null;
-                    reverseOrderedAtoms.Add(new UnbondedAtom(orderedAtoms[i].Atom, next));
-                }
-
-                var ops2 = BuildOperations(reverseOrderedAtoms);
-
-                // Choose the order that minimises the number of counterclockwise rotations, since those are most likely to cause collisions
-                int c1 = ops1.Count(o => o.RotationToNext == HexRotation.R120);
-                int c2 = ops2.Count(o => o.RotationToNext == HexRotation.R120);
-
-                if (c1 < c2)
-                {
-                    m_operations = ops1;
-                }
-                else if (c1 > c2)
-                {
-                    m_operations = ops2;
-                }
-                else
-                {
-                    c1 = ops1.Count(o => o.RotationToNext == HexRotation.R60);
-                    c2 = ops2.Count(o => o.RotationToNext == HexRotation.R60);
-
-                    if (c1 < c2)
-                    {
-                        m_operations = ops1;
-                    }
-                    else
-                    {
-                        m_operations = ops2;
-                    }
-                }
-            }
-            else
-            {
-                m_operations = ops1;
-            }
+            m_operations = BuildOperations(orderedAtoms);
         }
 
         private List<Operation> BuildOperations(List<UnbondedAtom> orderedAtoms)
