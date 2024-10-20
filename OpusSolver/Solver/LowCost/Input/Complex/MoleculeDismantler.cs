@@ -7,6 +7,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
     {
         public Molecule Molecule { get; private set; }
         private bool m_reverseElementOrder;
+        private bool m_reverseBondTraversalDirection;
 
         public class Operation
         {
@@ -45,10 +46,11 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
         public IEnumerable<Element> GetElementOrder() => m_operations.Select(op => op.Atom.Element);
 
-        public MoleculeDismantler(Molecule molecule, bool reverseElementOrder)
+        public MoleculeDismantler(Molecule molecule, bool reverseElementOrder, bool reverseBondTraversalDirection)
         {
             Molecule = molecule;
             m_reverseElementOrder = reverseElementOrder;
+            m_reverseBondTraversalDirection = reverseBondTraversalDirection;
 
             GenerateOperations();
         }
@@ -204,14 +206,14 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             return orderedAtoms;
         }
 
-        private static Atom FindAdjacentAtomOnCycle(AtomCollection molecule, Atom startAtom)
+        private Atom FindAdjacentAtomOnCycle(AtomCollection molecule, Atom startAtom)
         {
             var seenAtoms = new HashSet<Atom>();
 
             Atom FindAtomInCycle(Atom currentAtom, Atom parent)
             {
                 seenAtoms.Add(currentAtom);
-                foreach (var (_, bondedAtom) in molecule.GetAdjacentBondedAtoms(currentAtom))
+                foreach (var (_, bondedAtom) in molecule.GetAdjacentBondedAtoms(currentAtom).ConditionalReverse(m_reverseBondTraversalDirection))
                 {
                     if (!seenAtoms.Contains(bondedAtom))
                     {

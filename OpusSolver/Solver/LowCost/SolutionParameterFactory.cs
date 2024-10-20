@@ -6,6 +6,7 @@ namespace OpusSolver.Solver.LowCost
     {
         public const string UseLength3Arm = nameof(UseLength3Arm);
         public const string UseBreadthFirstOrderForComplexProducts = nameof(UseBreadthFirstOrderForComplexProducts);
+        public const string ReverseReagentBondTraversalDirection = nameof(ReverseReagentBondTraversalDirection);
         public const string ReverseProductBondTraversalDirection = nameof(ReverseProductBondTraversalDirection);
 
         public static SolutionParameterRegistry CreateParameterRegistry(Puzzle puzzle, Recipe recipe)
@@ -30,6 +31,11 @@ namespace OpusSolver.Solver.LowCost
             }
 
             bool IsSingleChain(Molecule molecule) => molecule.Atoms.All(a => a.BondCount <= 2) && molecule.Atoms.Count(a => a.BondCount == 1) == 2;
+            if (puzzle.Reagents.Any(p => !IsSingleChain(p)))
+            {
+                registry.AddParameter(ReverseReagentBondTraversalDirection);
+            }
+
             if (puzzle.Products.Any(p => !IsSingleChain(p)))
             {
                 registry.AddParameter(UseBreadthFirstOrderForComplexProducts);
