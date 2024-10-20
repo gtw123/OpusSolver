@@ -86,7 +86,7 @@ namespace OpusSolver.Solver
             return new AtomCollection(atom.Element, new Transform2D(WorldTransform.Apply(atom.Position), HexRotation.R0));
         }
 
-        public void AddBond(Vector2 atom1Pos, Vector2 atom2Pos)
+        public void AddBond(Vector2 atom1Pos, Vector2 atom2Pos, bool ignoreExisting = false)
         {
             var atom1 = GetAtom(atom1Pos) ?? throw new ArgumentException($"No atom found at {atom1Pos}.");
             var atom2 = GetAtom(atom2Pos) ?? throw new ArgumentException($"No atom found at {atom2Pos}.");
@@ -97,13 +97,13 @@ namespace OpusSolver.Solver
             }
 
             var bondDir1 = (atom2Pos - atom1Pos).ToRotation() ?? throw new InvalidOperationException($"Can't determine bond direction.");
-            if (atom1.Bonds[bondDir1] != BondType.None)
+            if (!ignoreExisting && atom1.Bonds[bondDir1] != BondType.None)
             {
                 throw new InvalidOperationException($"Atom at {atom1Pos} already has a bond to {atom2Pos}.");
             }
 
             var bondDir2 = bondDir1 + HexRotation.R180;
-            if (atom2.Bonds[bondDir2] != BondType.None)
+            if (!ignoreExisting && atom2.Bonds[bondDir2] != BondType.None)
             {
                 throw new InvalidOperationException($"Atom at {atom2Pos} already has a bond to {atom1Pos}.");
             }
@@ -112,7 +112,7 @@ namespace OpusSolver.Solver
             atom2.Bonds[bondDir2] = BondType.Single;
         }
 
-        public void RemoveBond(Vector2 atom1Pos, Vector2 atom2Pos)
+        public void RemoveBond(Vector2 atom1Pos, Vector2 atom2Pos, bool ignoreNonexistant = false)
         {
             var atom1 = GetAtom(atom1Pos) ?? throw new ArgumentException($"No atom found at {atom1Pos}.");
             var atom2 = GetAtom(atom2Pos) ?? throw new ArgumentException($"No atom found at {atom2Pos}.");
@@ -123,13 +123,13 @@ namespace OpusSolver.Solver
             }
 
             var bondDir1 = (atom2Pos - atom1Pos).ToRotation() ?? throw new InvalidOperationException($"Can't determine bond direction.");
-            if (atom1.Bonds[bondDir1] == BondType.None)
+            if (!ignoreNonexistant && atom1.Bonds[bondDir1] == BondType.None)
             {
                 throw new InvalidOperationException($"Atom at {atom1Pos} doesn't already have a bond to {atom2Pos}.");
             }
 
             var bondDir2 = bondDir1 + HexRotation.R180;
-            if (atom2.Bonds[bondDir2] == BondType.None)
+            if (!ignoreNonexistant && atom2.Bonds[bondDir2] == BondType.None)
             {
                 throw new InvalidOperationException($"Atom at {atom2Pos} doesn't already have a bond to {atom1Pos}.");
             }

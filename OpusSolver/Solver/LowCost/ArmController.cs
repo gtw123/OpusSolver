@@ -91,12 +91,6 @@ namespace OpusSolver.Solver.LowCost
 
             m_writer.Write(m_mainArm, result.Instructions);
 
-            if (m_grabbedMolecule != null)
-            {
-                var relativeTransform = targetArmTransform.Apply(m_armTransform.Inverse());
-                m_grabbedMolecule.WorldTransform = relativeTransform.Apply(m_grabbedMolecule.WorldTransform);
-            }
-
             m_armTransform = targetArmTransform;
 
             return true;
@@ -136,7 +130,6 @@ namespace OpusSolver.Solver.LowCost
             m_writer.Write(m_mainArm, result.Instructions);
 
             m_grabbedMolecule = moleculeToMove;
-            m_grabbedMolecule.WorldTransform = targetTransform;
             m_armTransform = result.FinalArmTransform;
             m_moleculeToGrab = null;
 

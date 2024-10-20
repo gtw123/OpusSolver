@@ -262,8 +262,7 @@ namespace OpusSolver.Solver.LowCost.Output.Complex
                             ArmController.MoveMoleculeTo(targetTransform, this);
                         }
 
-                        var otherAtom = assembledMolecule.GetAtom(atom.Position + new Vector2(1, 0).RotateBy(bondDir));
-                        assembledMolecule.AddBond(atom.Position, otherAtom.Position);
+                        // ArmController will automatically add internal bonds so we don't need to do it explicitly here
                     }
                 }
             }

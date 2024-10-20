@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
 
 namespace OpusSolver.Solver.LowCost
 {
@@ -70,6 +71,11 @@ namespace OpusSolver.Solver.LowCost
                 return new PathResult(Success: false, null, new());
             }
 
+            if (moleculeToMove != null)
+            {
+                UpdateMoleculeForPath(moleculeToMove, path);
+            }
+
             return new PathResult(Success: true, GetInstructionsForPath(startState, path), endTransform);
         }
 
@@ -136,6 +142,8 @@ namespace OpusSolver.Solver.LowCost
             {
                 return new PathResult(Success: false, null, new());
             }
+
+            UpdateMoleculeForPath(moleculeToMove, path);
 
             return new PathResult(Success: true, GetInstructionsForPath(startState, path), GetArmTransform(path.LastOrDefault() ?? startState));
         }
@@ -328,7 +336,8 @@ namespace OpusSolver.Solver.LowCost
 
             var collidableAtomPositions = new HashSet<Vector2>(m_gridState.GetAllCollidableAtomPositions(moleculeToMove.GetTransformedAtomPositions(currentState.MoleculeTransform).Select(p => p.position)));
 
-            foreach (var (atom, pos) in moleculeToMove.GetTransformedAtomPositions(targetState.MoleculeTransform))
+            var atomPositions = moleculeToMove.GetTransformedAtomPositions(targetState.MoleculeTransform).ToArray();
+            foreach (var (atom, pos) in atomPositions)
             {
                 if (collidableAtomPositions.Contains(pos))
                 {
@@ -339,7 +348,10 @@ namespace OpusSolver.Solver.LowCost
                 {
                     return false;
                 }
+            }
 
+            foreach (var (atom, pos) in atomPositions)
+            {
                 var glyph = m_gridState.GetGlyph(pos);
                 if (glyph != null)
                 {
@@ -538,5 +550,64 @@ namespace OpusSolver.Solver.LowCost
 
             return instructions;
         }
+
+        private void UpdateMoleculeForPath(AtomCollection moleculeToMove, IEnumerable<ArmState> path)
+        {
+            foreach (var state in path)
+            {
+                moleculeToMove.WorldTransform = state.MoleculeTransform;
+                foreach (var (atom, pos) in moleculeToMove.GetWorldAtomPositions())
+                {
+                    var glyph = m_gridState.GetGlyph(pos);
+                    if (glyph != null)
+                    {
+                        switch (glyph.Type)
+                        {
+                            // TODO: Handle other glyph types too so that we don't need to manually element changes elsewhere
+                            case GlyphType.Bonding:
+                                UpdateMoleculeOverBonder(moleculeToMove, atom, pos, glyph);
+                                break;
+                            case GlyphType.Unbonding:
+                                UpdateMoleculeOverUnbonder(moleculeToMove, atom, pos, glyph);
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void UpdateMoleculeOverBonder(AtomCollection molecule, Atom atom, Vector2 atomWorldPos, Glyph glyph)
+        {
+            var bonderCells = glyph.GetWorldCells();
+            var otherPos = bonderCells[0] != atomWorldPos ? bonderCells[0] : bonderCells[1];
+
+            // We don't care about external bonds here because we only allow them at the end of the path
+            // and we expect code elsewhere to add them
+
+            var moleculeInverse = molecule.WorldTransform.Inverse();
+            var otherAtomLocalPos = moleculeInverse.Apply(otherPos);
+            var otherAtom = molecule.GetAtom(otherAtomLocalPos);
+            if (otherAtom != null)
+            {
+                var currentAtomLocalPos = moleculeInverse.Apply(atomWorldPos);
+                molecule.AddBond(currentAtomLocalPos, otherAtomLocalPos, ignoreExisting: true);
+            }
+        }
+
+        private void UpdateMoleculeOverUnbonder(AtomCollection molecule, Atom atom, Vector2 atomWorldPos, Glyph glyph)
+        {
+            var bonderCells = glyph.GetWorldCells();
+            var otherPos = bonderCells[0] != atomWorldPos ? bonderCells[0] : bonderCells[1];
+
+            var moleculeInverse = molecule.WorldTransform.Inverse();
+            var otherAtomLocalPos = moleculeInverse.Apply(otherPos);
+            var otherAtom = molecule.GetAtom(otherAtomLocalPos);
+            if (otherAtom != null)
+            {
+                var currentAtomLocalPos = moleculeInverse.Apply(atomWorldPos);
+                molecule.RemoveBond(currentAtomLocalPos, otherAtomLocalPos, ignoreNonexistant: true);
+            }
+        }
     }
 }
+

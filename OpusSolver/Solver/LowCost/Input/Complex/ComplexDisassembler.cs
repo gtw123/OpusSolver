@@ -170,7 +170,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
                         ArmController.MoveMoleculeTo(targetTransform, this, options: options);
                     }
 
-                    remainingAtoms.RemoveBond(op.Atom.Position, otherAtom.Position);
+                    // ArmController will automatically remove bonds so we don't need to do it explicitly here
                 }
 
                 // Make sure we're grabbing the atom we want to move
