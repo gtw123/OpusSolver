@@ -97,5 +97,17 @@ namespace OpusSolver.Solver.Standard
         {
             return m_rootAtomGenerator.GetAllObjects();
         }
+
+        public SolutionParameterRegistry GetAvailableParameters()
+        {
+            var registry = new SolutionParameterRegistry();
+
+            if (m_puzzle.Products.Count > 1)
+            {
+                registry.AddParameter(SolutionParameterRegistry.Common.ReverseProductBuildOrder);
+            }
+
+            return registry;
+        }
     }
 }

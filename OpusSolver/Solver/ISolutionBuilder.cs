@@ -9,5 +9,7 @@ namespace OpusSolver.Solver
         void CreateAtomGenerators(ElementPipeline pipeline);
 
         IEnumerable<GameObject> GetAllObjects();
+
+        SolutionParameterRegistry GetAvailableParameters();
     }
 }

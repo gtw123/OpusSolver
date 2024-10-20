@@ -33,6 +33,22 @@ namespace OpusSolver.Solver
             _ => throw new ArgumentException($"Invalid solution type {m_solutionType}.")
         };
 
+        /// <summary>
+        /// Generates a partial solution then analyzes it determine what solution parameters are available for it.
+        /// </summary>
+        public SolutionParameterRegistry GetAvailableParameters()
+        {
+            var builder = CreateSolutionBuilder();
+
+            // TODO: Consolidate this code with Generate, or figure out a cleaner way to do this.
+            var plan = builder.CreatePlan();
+            var pipeline = new ElementPipeline(plan);
+            pipeline.GenerateCommandSequence();
+            builder.CreateAtomGenerators(pipeline);
+
+            return builder.GetAvailableParameters();
+        }
+
         public Solution Generate()
         {
             Arm.ResetArmIDs();

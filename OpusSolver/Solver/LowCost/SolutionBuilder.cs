@@ -44,7 +44,7 @@ namespace OpusSolver.Solver.LowCost
 
         public void CreateAtomGenerators(ElementPipeline pipeline)
         {
-            int armLength = m_paramSet.GetParameterValue(SolutionParameterFactory.UseLength3Arm) ? 3 : 2;
+            int armLength = m_paramSet.GetParameterValue(SolutionParameters.UseLength3Arm) ? 3 : 2;
             m_armArea = new ArmArea(null, m_writer, armLength);
 
             var baseTransform = new Transform2D();
@@ -154,6 +154,42 @@ namespace OpusSolver.Solver.LowCost
                     m_armArea.GridState.RegisterStaticArm(arm);
                 }
             }
+        }
+
+        public SolutionParameterRegistry GetAvailableParameters()
+        {
+            var registry = new SolutionParameterRegistry();
+
+            registry.AddParameter(SolutionParameters.UseLength3Arm);
+
+            if (m_puzzle.Products.Count > 1)
+            {
+                registry.AddParameter(SolutionParameterRegistry.Common.ReverseProductBuildOrder);
+            }
+
+            if (m_puzzle.Products.Any(p => p.Atoms.Count() > 1))
+            {
+                registry.AddParameter(SolutionParameterRegistry.Common.ReverseProductElementOrder);
+            }
+
+            if (m_puzzle.Reagents.Any(p => p.Atoms.Count() > 1))
+            {
+                registry.AddParameter(SolutionParameterRegistry.Common.ReverseReagentElementOrder);
+            }
+
+            bool IsSingleChain(Molecule molecule) => molecule.Atoms.All(a => a.BondCount <= 2) && molecule.Atoms.Count(a => a.BondCount == 1) == 2;
+            if (m_puzzle.Reagents.Any(p => !IsSingleChain(p)))
+            {
+                registry.AddParameter(SolutionParameters.ReverseReagentBondTraversalDirection);
+            }
+
+            if (m_puzzle.Products.Any(p => !IsSingleChain(p)))
+            {
+                registry.AddParameter(SolutionParameters.UseBreadthFirstOrderForComplexProducts);
+                registry.AddParameter(SolutionParameters.ReverseProductBondTraversalDirection);
+            }
+
+            return registry;
         }
     }
 }

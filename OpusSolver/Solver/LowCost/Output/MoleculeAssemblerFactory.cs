@@ -38,8 +38,8 @@ namespace OpusSolver.Solver.LowCost.Output
             }
             else
             {
-                bool useBreadthFirstSearch = paramSet.GetParameterValue(SolutionParameterFactory.UseBreadthFirstOrderForComplexProducts);
-                bool reverseBondTraversalDirection = paramSet.GetParameterValue(SolutionParameterFactory.ReverseProductBondTraversalDirection);
+                bool useBreadthFirstSearch = paramSet.GetParameterValue(SolutionParameters.UseBreadthFirstOrderForComplexProducts);
+                bool reverseBondTraversalDirection = paramSet.GetParameterValue(SolutionParameters.ReverseProductBondTraversalDirection);
                 var builders = ComplexAssembler.CreateMoleculeBuilders(products, reverseElementOrder, useBreadthFirstSearch, reverseBondTraversalDirection);
                 m_productElementOrders = products.ToDictionary(p => p.ID, p => builders.Single(b => b.Product.ID == p.ID).GetElementsInBuildOrder());
                 m_createAssembler = (parent, writer, armArea) => new ComplexAssembler(parent, writer, armArea, builders);
