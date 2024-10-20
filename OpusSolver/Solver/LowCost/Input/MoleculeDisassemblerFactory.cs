@@ -68,7 +68,8 @@ namespace OpusSolver.Solver.LowCost.Input
                 m_reagentElementInfo = reagents.ToDictionary(r => r.ID, r => new SolutionPlan.MoleculeElementInfo(dismantlers.Single(d => d.Molecule.ID == r.ID).GetElementOrder()));
 
                 bool addExtraAccessPoint = paramSet.GetParameterValue(SolutionParameters.AddExtraDisassemblerAccessPoint);
-                m_createDisassembler = (writer, armArea, usedReagents) => new ComplexDisassembler(writer, armArea, dismantlers, addExtraAccessPoint);
+                bool addExtraWidth = paramSet.GetParameterValue(SolutionParameters.AddComplexDisassemblerExtraWidth);
+                m_createDisassembler = (writer, armArea, usedReagents) => new ComplexDisassembler(writer, armArea, dismantlers, addExtraAccessPoint, addExtraWidth);
             }
         }
     }

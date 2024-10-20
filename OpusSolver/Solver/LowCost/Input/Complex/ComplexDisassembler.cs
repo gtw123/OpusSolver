@@ -14,7 +14,8 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
 
         public const int MaxReagents = 1;
 
-        public override int RequiredWidth => 2;
+        private readonly int m_requiredWidth;
+        public override int RequiredWidth => m_requiredWidth;
 
         private static readonly Transform2D LowerUnbonderPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
         private static readonly Transform2D UpperUnbonderPosition = new Transform2D(new Vector2(-1, 1), HexRotation.R0);
@@ -28,7 +29,7 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
         /// </summary>
         public static HexRotation UnbondingDirection = HexRotation.R300;
 
-        public ComplexDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeDismantler> dismantlers, bool addExtraAccessPoint)
+        public ComplexDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<MoleculeDismantler> dismantlers, bool addExtraAccessPoint, bool addExtraWidth)
             : base(writer, armArea)
         {
             m_dismantlers = dismantlers;
@@ -39,6 +40,8 @@ namespace OpusSolver.Solver.LowCost.Input.Complex
             {
                 throw new SolverException($"{nameof(ComplexDisassembler)} currently only supports {MaxReagents} reagents (requested {m_dismantlers.Count()}).");
             }
+
+            m_requiredWidth = addExtraWidth ? 3 : 2;
 
             m_accessPoints.Add(LowerUnbonderPosition);
             m_accessPoints.Add(UpperUnbonderPosition);
