@@ -203,9 +203,9 @@ namespace OpusSolver.Solver.LowCost
                 registry.AddParameter(SolutionParameters.ReverseProductBondTraversalDirection);
             }
 
-            if (m_puzzle.Reagents.Any(r => r.Size > 2))
+            if (m_puzzle.Reagents.Any(r => r.Size > 1))
             {
-                registry.AddParameter(SolutionParameters.AddComplexDisassemblerExtraWidth);
+                registry.AddParameter(SolutionParameters.AddDisassemblerExtraWidth);
             }
 
             if (m_atomGenerators.OfType<AtomBufferNoWaste>().Any())

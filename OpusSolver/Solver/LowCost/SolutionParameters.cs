@@ -11,7 +11,7 @@
         public const string UseArmlessAtomBuffer = nameof(UseArmlessAtomBuffer);
         public const string UseLength1ArmInAtomBuffer = nameof(UseLength1ArmInAtomBuffer);
 
-        public const string AddComplexDisassemblerExtraWidth = nameof(AddComplexDisassemblerExtraWidth);
+        public const string AddDisassemblerExtraWidth = nameof(AddDisassemblerExtraWidth);
 
     }
 }
