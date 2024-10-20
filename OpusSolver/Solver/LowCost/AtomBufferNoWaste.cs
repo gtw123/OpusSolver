@@ -24,12 +24,12 @@ namespace OpusSolver.Solver.LowCost
 
         public override IEnumerable<Transform2D> RequiredAccessPoints => [GrabPosition];
 
-        public AtomBufferNoWaste(ProgramWriter writer, ArmArea armArea, SingleStackElementBuffer.BufferInfo bufferInfo)
+        public AtomBufferNoWaste(ProgramWriter writer, ArmArea armArea, SingleStackElementBuffer.BufferInfo bufferInfo, int armLength)
             : base(writer, armArea)
         {
             m_bufferInfo = bufferInfo;
 
-            m_arm = new Arm(this, new(2, 0), HexRotation.R180, ArmType.Arm1, extension: 2);
+            m_arm = new Arm(this, new(armLength, 0), HexRotation.R180, ArmType.Arm1, extension: armLength);
         }
 
         public override void BeginSolution()

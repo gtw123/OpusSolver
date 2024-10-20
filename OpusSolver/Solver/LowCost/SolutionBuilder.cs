@@ -115,7 +115,15 @@ namespace OpusSolver.Solver.LowCost
             }
             else if (bufferInfo.Elements.All(e => !e.IsWaste))
             {
-                return new AtomBufferNoWaste(m_writer, m_armArea, bufferInfo);
+                if (m_paramSet.GetParameterValue(SolutionParameters.UseArmlessAtomBuffer))
+                {
+                    return new AtomBufferNoWasteArmless(m_writer, m_armArea, bufferInfo);
+                }
+                else
+                {
+                    int armLength = m_paramSet.GetParameterValue(SolutionParameters.UseLength1ArmInAtomBuffer) ? 1 : 2;
+                    return new AtomBufferNoWaste(m_writer, m_armArea, bufferInfo, armLength);
+                }
             }
             else
             {
@@ -187,6 +195,12 @@ namespace OpusSolver.Solver.LowCost
             {
                 registry.AddParameter(SolutionParameters.UseBreadthFirstOrderForComplexProducts);
                 registry.AddParameter(SolutionParameters.ReverseProductBondTraversalDirection);
+            }
+
+            if (m_atomGenerators.OfType<AtomBufferNoWaste>().Any())
+            {
+                registry.AddParameter(SolutionParameters.UseArmlessAtomBuffer);
+                registry.AddParameter(SolutionParameters.UseLength1ArmInAtomBuffer);
             }
 
             return registry;

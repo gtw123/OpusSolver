@@ -6,5 +6,7 @@
         public const string UseBreadthFirstOrderForComplexProducts = nameof(UseBreadthFirstOrderForComplexProducts);
         public const string ReverseReagentBondTraversalDirection = nameof(ReverseReagentBondTraversalDirection);
         public const string ReverseProductBondTraversalDirection = nameof(ReverseProductBondTraversalDirection);
-   }
+        public const string UseArmlessAtomBuffer = nameof(UseArmlessAtomBuffer);
+        public const string UseLength1ArmInAtomBuffer = nameof(UseLength1ArmInAtomBuffer);
+    }
 }
