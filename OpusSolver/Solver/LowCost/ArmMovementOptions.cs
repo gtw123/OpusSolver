@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace OpusSolver.Solver.LowCost
+﻿namespace OpusSolver.Solver.LowCost
 {
     public class ArmMovementOptions
     {

@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Reflection;
 
 namespace OpusSolver.Solver.LowCost
 {
