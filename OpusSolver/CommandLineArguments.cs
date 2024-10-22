@@ -9,7 +9,7 @@ namespace OpusSolver
         public List<string> PuzzleFiles = new();
         public string OutputDir;
         public SolutionType SolutionType = SolutionType.Standard;
-        public string ReportFile;
+        public string ReportFile = "report.csv";
         public bool GenerateMultipleSolutions = false;
         public bool AnalyzeOnly = false;
         public int MaxParallelVerifiers = Environment.ProcessorCount;

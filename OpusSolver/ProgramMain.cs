@@ -175,7 +175,7 @@ namespace OpusSolver
             sm_log.Error("    --optimize            Generate multiple solutions for each puzzle and keep those with the best metrics.");
             sm_log.Error("                          Note: Using this option will greatly increase run time.");
             sm_log.Error("    --analyze             Analyze puzzles instead of solving them. Output will be written to the report file");
-            sm_log.Error("    --report <file>       Generate a report file summarizing the solutions and their metrics");
+            sm_log.Error("    --report <file>       Generate a report file summarizing the solutions and their metrics (default is report.csv)");
             sm_log.Error("    --maxparallelverifiers <number> Maximum number of processes to spawn in parallel when verifying solutions. Defaults to current device's number of logical CPU cores.");
         }
     }
