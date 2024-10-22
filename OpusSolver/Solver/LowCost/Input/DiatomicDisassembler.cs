@@ -25,7 +25,9 @@ namespace OpusSolver.Solver.LowCost.Input
 
         public const int MaxReagents = 3;
 
-        private int m_requiredWidth;
+        private readonly bool m_reverseElementOrder;
+
+        private readonly int m_requiredWidth;
         public override int RequiredWidth => m_requiredWidth;
 
         private static readonly Transform2D InnerUnbonderPosition = new Transform2D(new Vector2(0, 0), HexRotation.R0);
@@ -35,7 +37,7 @@ namespace OpusSolver.Solver.LowCost.Input
         private readonly List<Transform2D> m_accessPoints = new();
         public override IEnumerable<Transform2D> RequiredAccessPoints => m_accessPoints;
 
-        public DiatomicDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents, bool addExtraWidth)
+        public DiatomicDisassembler(ProgramWriter writer, ArmArea armArea, IEnumerable<Molecule> reagents, bool reverseElementOrder, bool addExtraWidth)
             : base(writer, armArea)
         {
             if (reagents.Any(r => r.Atoms.Count() > 2))
@@ -48,6 +50,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 throw new ArgumentException(Invariant($"{nameof(DiatomicDisassembler)} can't handle more than {MaxReagents} distinct reagents."));
             }
 
+            m_reverseElementOrder = reverseElementOrder;
             m_requiredWidth = addExtraWidth ? 2 : 1;
 
             new Glyph(this, InnerUnbonderPosition.Position, HexRotation.R0, GlyphType.Unbonding);
@@ -161,6 +164,12 @@ namespace OpusSolver.Solver.LowCost.Input
                     requiredRotation = HexRotation.R180;
                 }
 
+                if (m_reverseElementOrder)
+                {
+                    atomPos.X = 1 - atomPos.X;
+                    requiredRotation = HexRotation.R180 - requiredRotation;
+                }
+
                 var targetTransform = new Transform2D(InnerUnbonderPosition.Position - atomPos, HexRotation.R0);
                 targetTransform = targetTransform.RotateAbout(InnerUnbonderPosition.Position, requiredRotation);
 
@@ -173,6 +182,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 ArmController.MoveMoleculeTo(targetTransform, this, options: options);
 
                 var targetGrabberPosition = GetWorldTransform().Inverse().Apply(ArmController.GetGrabberPosition());
+                var otherAtomPosition = targetGrabberPosition == OuterUnbonderPosition.Position ? InnerUnbonderPosition : OuterUnbonderPosition;
 
                 m_unbondedAtom = new StoredAtom { MoleculeID = id };
 
@@ -182,7 +192,7 @@ namespace OpusSolver.Solver.LowCost.Input
                 {
                     // Keep hold of the atom we've currently got
                     var removedAtoms = ArmController.UnbondGrabbedAtomFromOthers();
-                    m_unbondedAtom.Atoms = new AtomCollection(removedAtoms.Atoms.Single().Element, OuterUnbonderPosition, this);
+                    m_unbondedAtom.Atoms = new AtomCollection(removedAtoms.Atoms.Single().Element, otherAtomPosition, this);
                     GridState.RegisterMolecule(m_unbondedAtom.Atoms);
                 }
                 else
@@ -193,7 +203,7 @@ namespace OpusSolver.Solver.LowCost.Input
                     ArmController.DropMolecule();
 
                     m_unbondedAtom.Atoms = new AtomCollection(grabbedAtom.Element, new Transform2D(targetGrabberPosition, HexRotation.R0), this);
-                    ArmController.SetMoleculeToGrab(new AtomCollection(element, InnerUnbonderPosition, this));
+                    ArmController.SetMoleculeToGrab(new AtomCollection(element, otherAtomPosition, this));
                 }
             }
             else

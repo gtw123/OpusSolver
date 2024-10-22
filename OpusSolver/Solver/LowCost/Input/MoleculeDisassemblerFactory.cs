@@ -44,8 +44,7 @@ namespace OpusSolver.Solver.LowCost.Input
                     throw new UnsupportedException($"LowCost solver can't currently handle more than {DiatomicDisassembler.MaxReagents} diatomic reagents (requested {reagents.Count()}: {string.Join(", ", reagents.Select(r => r.Atoms.Count()))}).");
                 }
 
-                bool useLeafAtomsFirst = paramSet.GetParameterValue(SolutionParameters.UseLeafAtomsFirstForComplexReagents);
-                m_createDisassembler = (writer, armArea, usedReagents) => new DiatomicDisassembler(writer, armArea, usedReagents, addExtraWidth);
+                m_createDisassembler = (writer, armArea, usedReagents) => new DiatomicDisassembler(writer, armArea, usedReagents, reverseElementOrder, addExtraWidth);
                 m_reagentElementInfo = reagents.ToDictionary(r => r.ID, r => new SolutionPlan.MoleculeElementInfo(GetDefaultElementOrder(r), IsElementOrderReversible: true));
             }
             else if (reagents.All(r => r.Height == 1))
