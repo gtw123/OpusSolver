@@ -10,7 +10,8 @@ namespace OpusSolver.Solver
         public class Common
         {
             public const string ReverseReagentElementOrder = nameof(ReverseReagentElementOrder);
-            public const string ReverseProductElementOrder = nameof(ReverseProductElementOrder);
+            public const string ReverseFirstProductElementOrder = nameof(ReverseFirstProductElementOrder);
+            public const string ReverseOtherProductElementOrder = nameof(ReverseOtherProductElementOrder);
             public const string ReverseProductBuildOrder = nameof(ReverseProductBuildOrder);
         }
 

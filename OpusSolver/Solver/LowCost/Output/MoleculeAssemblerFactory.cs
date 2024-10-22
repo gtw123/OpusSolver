@@ -15,8 +15,6 @@ namespace OpusSolver.Solver.LowCost.Output
 
         public MoleculeAssemblerFactory(IEnumerable<Molecule> products, SolutionParameterSet paramSet)
         {
-            bool reverseElementOrder = paramSet.GetParameterValue(SolutionParameterRegistry.Common.ReverseProductElementOrder);
-
             if (products.Any(p => p.HasRepeats))
             {
                 throw new UnsupportedException("LowCost solver can't currently handle products with repeats.");
@@ -34,9 +32,13 @@ namespace OpusSolver.Solver.LowCost.Output
             }
             else
             {
+                bool reverseFirstProductElementOrder = paramSet.GetParameterValue(SolutionParameterRegistry.Common.ReverseFirstProductElementOrder);
+                bool reverseOtherProductElementOrder = paramSet.GetParameterValue(SolutionParameterRegistry.Common.ReverseOtherProductElementOrder);
                 bool useBreadthFirstSearch = paramSet.GetParameterValue(SolutionParameters.UseBreadthFirstOrderForComplexProducts);
                 bool reverseBondTraversalDirection = paramSet.GetParameterValue(SolutionParameters.ReverseProductBondTraversalDirection);
-                var builders = ComplexAssembler.CreateMoleculeBuilders(products, reverseElementOrder, useBreadthFirstSearch, reverseBondTraversalDirection);
+
+                var builders = ComplexAssembler.CreateMoleculeBuilders(products, reverseFirstProductElementOrder, reverseOtherProductElementOrder,
+                    useBreadthFirstSearch, reverseBondTraversalDirection);
                 m_productElementOrders = products.ToDictionary(p => p.ID, p => builders.Single(b => b.Product.ID == p.ID).GetElementsInBuildOrder());
                 m_createAssembler = (parent, writer, armArea) => new ComplexAssembler(parent, writer, armArea, builders);
             }

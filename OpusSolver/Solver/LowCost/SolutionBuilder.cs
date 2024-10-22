@@ -194,7 +194,16 @@ namespace OpusSolver.Solver.LowCost
 
             if (m_puzzle.Products.Any(p => p.Atoms.Count() > 1))
             {
-                registry.AddParameter(SolutionParameterRegistry.Common.ReverseProductElementOrder);
+                // Ideally we'd independently reverse each product's elements rather than just the first product
+                // and all the "other" products. However, that would be quite expensive and all of the generated
+                // puzzles with more than 2 products only have at most 2 atoms per product anyway, so it's not
+                // really worth it.
+                registry.AddParameter(SolutionParameterRegistry.Common.ReverseFirstProductElementOrder);
+
+                if (m_puzzle.Products.Count > 1)
+                {
+                    registry.AddParameter(SolutionParameterRegistry.Common.ReverseOtherProductElementOrder);
+                }
             }
 
             if (m_puzzle.Reagents.Any(p => p.Atoms.Count() > 1))
