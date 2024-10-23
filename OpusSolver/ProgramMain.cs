@@ -83,16 +83,16 @@ namespace OpusSolver
                         excludedFiles.Add(args[++i]);
                         break;
                     }
-                    case "--type":
+                    case "--solver":
                     {
                         if (i + 1 >= args.Length)
                         {
-                            throw new ArgumentException("Missing file for '--type' argument.");
+                            throw new ArgumentException("Missing file for '--solver' argument.");
                         }
                         string type = args[++i];
                         if (!Enum.TryParse(type, true, out commandArgs.SolutionType))
                         {
-                            throw new ArgumentException($"Unknown solution type {type}.");
+                            throw new ArgumentException($"Unknown solver {type}.");
                         }
                         break;
                     }
@@ -171,7 +171,7 @@ namespace OpusSolver
             sm_log.Error("    --output <dir>        Directory to write solutions to (default is current dir)");
             sm_log.Error("    --exclude <file name> Name of a puzzle file to skip");
             string solutionTypes = string.Join(", ", Enum.GetNames(typeof(Solver.SolutionType)));
-            sm_log.Error($"    --type <type>         Generates solutions of this type. Valid types: {solutionTypes}");
+            sm_log.Error($"    --solver <solver>    Generates solutions using this solver. Valid solvers: {solutionTypes}");
             sm_log.Error("    --optimize            Generate multiple solutions for each puzzle and keep those with the best metrics.");
             sm_log.Error("                          Note: Using this option will greatly increase run time.");
             sm_log.Error("    --analyze             Analyze puzzles instead of solving them. Output will be written to the report file");
