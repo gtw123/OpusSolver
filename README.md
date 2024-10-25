@@ -2,6 +2,9 @@
 
 An autosolver for [Opus Magnum](http://www.zachtronics.com/opus-magnum/) puzzles.
 
+[<img alt="example solution" width="400px" src="/images/GEN000.png" />](https://imgur.com/a/opussolver-low-cost-solutions-ZcTDolh)
+[<img alt="example solution" width="400px" src="/images/GEN702.png" />](https://imgur.com/a/opussolver-low-cost-solutions-with-large-molecules-dNZW4Gw)
+
 This version is a command-line program which generates `.solution` files from `.puzzle` files. If you're looking for the original version which works on the actual game screen, see https://github.com/gtw123/OpusSolver/tree/v1.0
 
 ## What can it solve?
