@@ -29,8 +29,8 @@
     <AssemblyTitle>OpusSolver</AssemblyTitle>
     <Product>OpusSolver</Product>
     <Copyright>Copyright © 2024 gtw123</Copyright>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.17" />
